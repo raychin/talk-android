@@ -62,6 +62,12 @@ android {
                 versionCode 1
                 versionName "1"
             }
+            clps {
+                applicationId "com.nextcloud.talk2.clps"
+                dimension "default"
+//                versionCode 1
+//                versionName "1"
+            }
         }
 
         // Enabling multidex support.
