@@ -1,0 +1,15 @@
+<!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2021 Andy Scherzinger <info@andy-scherzinger.de>
+  ~ SPDX-FileCopyrightText: 2017-2020 Mario Danic <mario@lovelyhq.com>
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<resources>
+    <style name="IPAppTheme.Immersive" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowTranslucentStatus">true</item> <!-- 透明状态栏 -->
+        <item name="android:windowTranslucentNavigation">true</item> <!-- 透明导航栏 -->
+        <item name="android:windowFullscreen">true</item> <!-- 全屏 -->
+    </style>
+
+</resources>

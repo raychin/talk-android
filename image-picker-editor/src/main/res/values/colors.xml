@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ip_color_black">#000000</color>
+    <color name="ip_ps_color_grey">#f6f7f8</color>
+    <color name="ip_ps_color_white">#ffffff</color>
+</resources>
