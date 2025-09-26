@@ -1,0 +1,17 @@
+<!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2025 Your Name <your@email.com>
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+  -->
+
+<!-- multimedia-module/src/main/res/values/strings.xml -->
+<resources>
+    <string name="multimedia_module_name">Multimedia Module</string>
+    <string name="image_picker_title">选择图片</string>
+    <string name="image_editor_title">编辑图片</string>
+    <string name="image_cropper_title">裁剪图片</string>
+    <string name="apply">应用</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+</resources>
