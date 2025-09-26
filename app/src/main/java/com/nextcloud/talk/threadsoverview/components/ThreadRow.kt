@@ -1,13 +1,16 @@
 /*
  * Nextcloud Talk - Android Client
  *
- * SPDX-FileCopyrightText: 2025 Your Name <your@email.com>
+ * SPDX-FileCopyrightText: 2025 Marcel Hibbe <dev@mhibbe.de>
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 package com.nextcloud.talk.threadsoverview.components
 
+import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,32 +19,34 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.nextcloud.talk.R
+import com.nextcloud.talk.utils.ColorGenerator
 
 @Suppress("LongParameterList", "Detekt.LongMethod")
 @Composable
 fun ThreadRow(
     roomToken: String,
     threadId: Int,
-    firstLineTitle: String,
-    firstLine: String,
+    title: String,
     secondLineTitle: String,
     secondLine: String,
     numReplies: String,
     date: String,
-    imageRequest: ImageRequest?,
     onClick: ((String, Int) -> Unit?)?
 ) {
     Row(
@@ -53,39 +58,25 @@ fun ThreadRow(
             .padding(vertical = 8.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.Companion.CenterVertically
     ) {
-        AsyncImage(
-            model = imageRequest,
-            contentDescription = stringResource(R.string.user_avatar),
-            modifier = Modifier.Companion.size(48.dp)
-        )
+        ThreadsIcon(title)
 
         Spacer(modifier = Modifier.Companion.width(12.dp))
 
         Column {
             Row {
                 Text(
-                    text = firstLineTitle,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Companion.Ellipsis
-                )
-                Spacer(modifier = Modifier.Companion.width(4.dp))
-                Text(
                     modifier = Modifier.Companion.weight(1f),
-                    text = firstLine,
+                    text = title,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Thin,
+                    fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Companion.Ellipsis
                 )
                 Spacer(modifier = Modifier.Companion.width(4.dp))
                 Text(
                     text = numReplies,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
 
@@ -97,7 +88,7 @@ fun ThreadRow(
                 Text(
                     text = secondLineTitle,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Companion.Ellipsis
                 )
@@ -106,7 +97,7 @@ fun ThreadRow(
                     modifier = Modifier.Companion.weight(1f),
                     text = secondLine,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Thin,
+                    fontWeight = FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Companion.Ellipsis
                 )
@@ -123,20 +114,56 @@ fun ThreadRow(
     }
 }
 
+@Composable
+fun ThreadsIcon(title: String) {
+    val baseColorInt = ColorGenerator.usernameToColor(title)
+
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(Color(baseColorInt).copy(alpha = 0.1f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.outline_forum_24),
+            contentDescription = null,
+            tint = Color(baseColorInt).copy(alpha = 0.9f),
+            modifier = Modifier.size(32.dp)
+        )
+    }
+}
+
 @Preview
 @Composable
 fun ThreadRowPreview() {
     ThreadRow(
         roomToken = "1234",
         threadId = 123,
-        firstLine = "first message",
+        title = "title1",
         secondLine = "last message",
-        firstLineTitle = "Marsellus",
         secondLineTitle = "Mia:",
         numReplies = "12 replies",
         date = "14 sec ago",
-        onClick = null,
-        imageRequest = null
+        onClick = null
+    )
+}
+
+@Preview(
+    name = "Dark Mode",
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun ThreadRowPreviewDark() {
+    ThreadRow(
+        roomToken = "1234",
+        threadId = 123,
+        title = "title2",
+        secondLine = "last message",
+        secondLineTitle = "Mia:",
+        numReplies = "12 replies",
+        date = "14 sec ago",
+        onClick = null
     )
 }
 
@@ -146,14 +173,12 @@ fun ThreadRowUnreadMessagePreview() {
     ThreadRow(
         roomToken = "1234",
         threadId = 123,
-        firstLine = "first message",
+        title = "title3",
         secondLine = "last message",
-        firstLineTitle = "Marsellus",
         secondLineTitle = "Mia:",
         numReplies = "12 replies",
         date = "14 sec ago",
-        onClick = null,
-        imageRequest = null
+        onClick = null
     )
 }
 
@@ -163,14 +188,12 @@ fun ThreadRowMentionPreview() {
     ThreadRow(
         roomToken = "1234",
         threadId = 123,
-        firstLine = "first message",
+        title = "title3",
         secondLine = "last message",
-        firstLineTitle = "Marsellus",
         secondLineTitle = "Mia:",
         numReplies = "12 replies",
         date = "14 sec ago",
-        onClick = null,
-        imageRequest = null
+        onClick = null
     )
 }
 
@@ -180,13 +203,11 @@ fun ThreadRowDirectMentionPreview() {
     ThreadRow(
         roomToken = "1234",
         threadId = 123,
-        firstLine = "first message with a verrrrrrrrrrrrrrrrrrrrrrrrry long text",
-        secondLine = "last message with a verrrrrrrrrrrrrrrrrrrrrrrrry long text",
-        firstLineTitle = "Marsellus",
+        title = "title with a verrrrrrrrrrrrrrrrrrrrrrrrry long text",
+        secondLine = "title with a verrrrrrrrrrrrrrrrrrrrrrrrry long text",
         secondLineTitle = "Mia:",
         numReplies = "12 replies",
         date = "14 sec ago",
-        onClick = null,
-        imageRequest = null
+        onClick = null
     )
 }

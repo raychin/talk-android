@@ -5,6 +5,7 @@
     <string name="add_to_notes">Lisa Märkmetesse</string>
     <string name="added_to_favorites">„%1$s“ vestlus on märgitud lemmikuks</string>
     <string name="appbar_search_in">Otsi siin: %s</string>
+    <string name="appear_offline">Sellega paistad olema võrgust väljas</string>
     <string name="archive_conversation">Arhiveeri vestlus</string>
     <string name="archive_hint">Kui vestlus on arhiveeritud, siis on ta vaikimisi peidetud. Saad neid leida, kui kasutad filtrivalikut „Arhiveeritud“. Otsemainimiste teave liigub sellele vaatamata.</string>
     <string name="archived">Arhiveeritud</string>
@@ -22,6 +23,7 @@
     <string name="ban">Sea suhtluskeeld</string>
     <string name="ban_participant">Sea osalejale suhtluskeeld</string>
     <string name="bans_list">Suhtluskeelu saanute loend</string>
+    <string name="busy">Hõivatud</string>
     <string name="calendar">Kalender</string>
     <string name="call_more_actions_dialog_headline">Kõne lisavalikud</string>
     <string name="call_running_since_one_hour">Kõne on kestnud üle tunni.</string>
@@ -61,6 +63,7 @@
     <string name="error_loading_chats">Sinu vestluste laadimisel tekkis viga</string>
     <string name="error_unbanning">Osaleja suhtluskeelu eemaldamisel tekkis viga</string>
     <string name="failed_to_save">„%1$s“ salvestamine ei õnnestunud</string>
+    <string name="fifteenMinutes">15 minutit</string>
     <string name="file_list_folder">kaust</string>
     <string name="file_list_loading">Laadimisel...</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -76,6 +79,10 @@
     <string name="left_conversation">Sa lahkusid %1$s vestlusest</string>
     <string name="load_more_results">Laadi veel tulemusi</string>
     <string name="local_time">Kohalik aeg: %1$s</string>
+    <string name="location_permission_denied">Õigused asukoha tuvastamiseks on keelatud</string>
+    <string name="location_permission_denied_msg">Palun luba see rakenduse seadistustest</string>
+    <string name="location_services_disabled">Asukohateenused pole sisse lülitatud</string>
+    <string name="location_services_disabled_msg">Selle funktsionaalsuses kasutamiseks palun luba asukohateenused (GPS)</string>
     <string name="lock_conversation">Lukusta vestlus</string>
     <string name="lock_symbol">Lukuikoon</string>
     <string name="lower_hand">Lase käsi alla</string>
@@ -89,6 +96,7 @@
     <string name="menu_item_sort_by_size_biggest_first">Suuremad esimesena</string>
     <string name="menu_item_sort_by_size_smallest_first">Väiksemad esimesenaa</string>
     <string name="message_copied">Sõnum on kopeeritud</string>
+    <string name="message_delete_are_you_sure">Kas oled kindel, et tahad selle sõnumi kustutada?</string>
     <string name="message_deleted_by_you">Sina kustutasid sõnumi</string>
     <string name="message_last_edited_by">%1$s muutis sõnumit</string>
     <string name="message_poll_tap_to_open">Küsitluse avamiseks klõpsi</string>
@@ -96,7 +104,7 @@
     <string name="message_search_begin_typing">Otsimiseks alusta kirjutamist…</string>
     <string name="message_search_hint">Otsi…</string>
     <string name="messages">Sõnumid</string>
-    <string name="messages_could_not_be_loaded">Sõnumite laadimine ei õnnestunud</string>
+    <string name="mute_all_notifications">Sellega summutad teavitused</string>
     <string name="nc_Server_account_imported">Valitud kasutajakonto on nüüd imporditud ja saadaval</string>
     <string name="nc_about">Info</string>
     <string name="nc_account_chooser_active_user">Aktiivne kasutaja</string>
@@ -181,7 +189,7 @@
     <string name="nc_delete_all">Kustuta kõik</string>
     <string name="nc_delete_call">Kustuta vestlus</string>
     <string name="nc_delete_conversation_more">Kui kustutad selle vestluse, siis kustub see ka kõikide osalejate jaoks.</string>
-    <string name="nc_delete_message">Kustuta</string>
+    <string name="nc_delete_message">Kustuta sõnum</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Sõnumi kustutamine õnnestus, kuid võis juhtuda, et ta oli juba teistesse sõnumiteenustesse edastatud</string>
     <string name="nc_delete_now">Kustuta kohe</string>
     <string name="nc_deleted_user">Kasutaja „%1$s“ on eemaldatud</string>
@@ -426,7 +434,6 @@
     <string name="nc_sent_deck_card" formatted="true">%1$s saatis kanbani kaardi</string>
     <string name="nc_server_connect">Testi ühendust serveriga</string>
     <string name="nc_server_db_upgrade_needed">Palun uuenda oma %1$si andmebaasi</string>
-    <string name="nc_server_down">Ei õnnestu luua ühendust serveriga</string>
     <string name="nc_server_failed_to_import_account">Valitud kasutajakonto importimine ei õnnestunud</string>
     <string name="nc_server_helper_text">See on sinu %1$s kasutajaliidese veebiaadress, kui sa avad ta veebibrauseris.</string>
     <string name="nc_server_import_account">Impordi kasutajakonto rakendusest %1$s</string>
@@ -546,6 +553,11 @@
     <string name="no_conversations_archived">Arhiveeritud vestlusi pole</string>
     <string name="no_offline_messages_saved">Ühtegi vallasrežiimis salvestatud sõnumit ei leidu</string>
     <string name="no_phone_book_integration_due_to_permissions">Telefoninumbrite lõiming ei toimi puuduvate õiguste tõttu</string>
+    <string name="notification_all_messages">Kõik sõnumid</string>
+    <string name="notification_mention_only">Vaid @-mainimised</string>
+    <string name="notification_off">Pole kasutusel</string>
+    <string name="notifications_default">Vaikimisi</string>
+    <string name="notifications_default_description">Järgi vestluse seadistusi</string>
     <string name="oneHour">1 tund</string>
     <string name="online">Online</string>
     <string name="online_status">Võrgus staatus</string>
@@ -555,7 +567,6 @@
     <string name="open_thread">Ava jutulõng</string>
     <string name="play_pause_voice_message">Esita häälsõnumit või peata esitus</string>
     <string name="playback_speed_control">Taasesituse kiiruse juhtimine</string>
-    <string name="please_continue_the_login_process_in_the_browser">Palun jätka sisselogimisprotsessi veebibrauseris</string>
     <string name="polls_add_option">Lisa valik</string>
     <string name="polls_edit_vote">Muuda oma häält</string>
     <string name="polls_end_poll">Lõpeta küsitlus</string>
@@ -633,10 +644,9 @@
     <string name="shared_items_voice">Hääl</string>
     <string name="show_ban_reason">Näita suhtluskeelu seadmise põhjus</string>
     <string name="show_banned_participants">Näita suhtluskeelu saanud osalejaid</string>
-    <string name="show_threads_overview">Näita jutulõngu</string>
     <string name="starred">Lemmik</string>
     <string name="startCallForbidden">Sul pole luba kõne algatamiseks</string>
-    <string name="start_thread">Koosta jutulõng</string>
+    <string name="start_thread">Alusta jutulõnga</string>
     <string name="started_a_call">helistas</string>
     <string name="status_message">Staatuse teade</string>
     <string name="status_reverted">Olek on tagasi pööratud</string>
@@ -655,8 +665,12 @@
     <string name="thisWeek">Käesolev nädal</string>
     <string name="this_is_a_test_message">See on testsõnum</string>
     <string name="this_weekend">See nädalavahetus</string>
-    <string name="thread_replies_amount">%1$d vastust</string>
+    <string name="thread_cancel">Katkesta jutulõnga koostamine</string>
+    <string name="thread_notifications">Jutulõngade teavitused</string>
+    <string name="thread_reply">Vasta</string>
     <string name="thread_title">Jutulõnga pealkiri</string>
+    <string name="threads">Jutulõngad</string>
+    <string name="threads_list_empty">Ühtegi jutulõnga ei leidu</string>
     <string name="today">Täna</string>
     <string name="tomorrow">Homme</string>
     <string name="translate">Tõlgi</string>
@@ -701,6 +715,10 @@
     <plurals name="nc_conversation_auto_delete_info">
         <item quantity="one">See vestlus kustub automaatselt kõigi osalejate jaoks, kui siin pole olnud tegevust %1$d päeva jooksul.</item>
         <item quantity="other">See vestlus kustub automaatselt kõigi osalejate jaoks, kui siin pole olnud tegevust %1$d päeva jooksul.</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d vastus</item>
+        <item quantity="other">%d vastust</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d hääl</item>

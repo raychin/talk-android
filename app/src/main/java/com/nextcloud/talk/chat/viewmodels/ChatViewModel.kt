@@ -18,6 +18,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.nextcloud.talk.arbitrarystorage.ArbitraryStorageManager
 import com.nextcloud.talk.chat.data.ChatMessageRepository
 import com.nextcloud.talk.chat.data.io.AudioFocusRequestManager
 import com.nextcloud.talk.chat.data.io.MediaPlayerManager
@@ -25,6 +26,7 @@ import com.nextcloud.talk.chat.data.io.MediaRecorderManager
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.chat.data.network.ChatNetworkDataSource
 import com.nextcloud.talk.conversationlist.data.OfflineConversationsRepository
+import com.nextcloud.talk.conversationlist.viewmodels.ConversationsListViewModel.Companion.FOLLOWED_THREADS_EXIST
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.extensions.toIntOrZero
 import com.nextcloud.talk.jobs.UploadAndShareFilesWorker
@@ -33,7 +35,6 @@ import com.nextcloud.talk.models.domain.ConversationModel
 import com.nextcloud.talk.models.domain.ReactionAddedModel
 import com.nextcloud.talk.models.domain.ReactionDeletedModel
 import com.nextcloud.talk.models.json.capabilities.SpreedCapability
-import com.nextcloud.talk.models.json.chat.ChatMessageJson
 import com.nextcloud.talk.models.json.chat.ChatOverallSingleMessage
 import com.nextcloud.talk.models.json.conversations.RoomOverall
 import com.nextcloud.talk.models.json.generic.GenericOverall
@@ -45,6 +46,7 @@ import com.nextcloud.talk.repositories.reactions.ReactionsRepository
 import com.nextcloud.talk.threadsoverview.data.ThreadsRepository
 import com.nextcloud.talk.ui.PlaybackSpeed
 import com.nextcloud.talk.utils.ParticipantPermissions
+import com.nextcloud.talk.utils.UserIdUtils
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import com.nextcloud.talk.utils.database.user.CurrentUserProviderNew
 import com.nextcloud.talk.utils.preferences.AppPreferences
@@ -81,6 +83,9 @@ class ChatViewModel @Inject constructor(
 ) : ViewModel(),
     DefaultLifecycleObserver {
 
+    @Inject
+    lateinit var arbitraryStorageManager: ArbitraryStorageManager
+
     enum class LifeCycleFlag {
         PAUSED,
         RESUMED,
@@ -116,16 +121,6 @@ class ChatViewModel @Inject constructor(
         mediaPlayerManager.handleOnPause()
 
         saveMessageDraft()
-    }
-
-    private fun saveMessageDraft() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val model = conversationRepository.getLocallyStoredConversation(chatRoomToken)
-            model?.let {
-                it.messageDraft = messageDraft
-                conversationRepository.updateConversation(it)
-            }
-        }
     }
 
     override fun onStop(owner: LifecycleOwner) {
@@ -174,13 +169,6 @@ class ChatViewModel @Inject constructor(
     private val _voiceMessagePlaybackSpeedPreferences: MutableLiveData<Map<String, PlaybackSpeed>> = MutableLiveData()
     val voiceMessagePlaybackSpeedPreferences: LiveData<Map<String, PlaybackSpeed>>
         get() = _voiceMessagePlaybackSpeedPreferences
-
-    private val _getContextChatMessages: MutableLiveData<List<ChatMessageJson>> = MutableLiveData()
-    val getContextChatMessages: LiveData<List<ChatMessageJson>>
-        get() = _getContextChatMessages
-
-    private val _threadCreationState = MutableStateFlow<ThreadCreationUiState>(ThreadCreationUiState.None)
-    val threadCreationState: StateFlow<ThreadCreationUiState> = _threadCreationState
 
     private val _threadRetrieveState = MutableStateFlow<ThreadRetrieveUiState>(ThreadRetrieveUiState.None)
     val threadRetrieveState: StateFlow<ThreadRetrieveUiState> = _threadRetrieveState
@@ -461,22 +449,37 @@ class ChatViewModel @Inject constructor(
     }
 
     @Suppress("Detekt.TooGenericExceptionCaught")
-    fun createThread(credentials: String, url: String) {
-        viewModelScope.launch {
-            try {
-                val thread = chatNetworkDataSource.createThread(credentials, url)
-                _threadCreationState.value = ThreadCreationUiState.Success(thread.ocs?.data)
-            } catch (exception: Exception) {
-                _threadCreationState.value = ThreadCreationUiState.Error(exception)
-            }
-        }
-    }
-
-    @Suppress("Detekt.TooGenericExceptionCaught")
     fun getThread(credentials: String, url: String) {
         viewModelScope.launch {
             try {
                 val thread = threadsRepository.getThread(credentials, url)
+                _threadRetrieveState.value = ThreadRetrieveUiState.Success(thread.ocs?.data)
+            } catch (exception: Exception) {
+                _threadRetrieveState.value = ThreadRetrieveUiState.Error(exception)
+            }
+        }
+    }
+
+    @Suppress("Detekt.TooGenericExceptionCaught", "MagicNumber")
+    fun setThreadNotificationLevel(credentials: String, url: String, level: Int) {
+        fun updateFollowedThreadsIndicator(notificationLevel: Int?) {
+            when (notificationLevel) {
+                1, 2 -> {
+                    val accountId = UserIdUtils.getIdForUser(userProvider.currentUser.blockingGet())
+                    arbitraryStorageManager.storeStorageSetting(
+                        accountId,
+                        FOLLOWED_THREADS_EXIST,
+                        true.toString(),
+                        ""
+                    )
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            try {
+                val thread = threadsRepository.setThreadNotificationLevel(credentials, url, level)
+                updateFollowedThreadsIndicator(thread.ocs?.data?.attendee?.notificationLevel)
                 _threadRetrieveState.value = ThreadRetrieveUiState.Success(thread.ocs?.data)
             } catch (exception: Exception) {
                 _threadRetrieveState.value = ThreadRetrieveUiState.Error(exception)
@@ -799,6 +802,8 @@ class ChatViewModel @Inject constructor(
             emit(message.first())
         }
 
+    suspend fun getNumberOfThreadReplies(threadId: Long): Int = chatRepository.getNumberOfThreadReplies(threadId)
+
     fun setPlayBack(speed: PlaybackSpeed) {
         mediaPlayerManager.setPlayBackSpeed(speed)
         CoroutineScope(Dispatchers.Default).launch {
@@ -934,20 +939,6 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun getContextForChatMessages(credentials: String, baseUrl: String, token: String, messageId: String, limit: Int) {
-        viewModelScope.launch {
-            val messages = chatNetworkDataSource.getContextForChatMessage(
-                credentials,
-                baseUrl,
-                token,
-                messageId,
-                limit
-            )
-
-            _getContextChatMessages.value = messages
-        }
-    }
-
     fun getOpenGraph(credentials: String, baseUrl: String, urlToPreview: String) {
         viewModelScope.launch {
             _getOpenGraph.value = chatNetworkDataSource.getOpenGraph(credentials, baseUrl, urlToPreview)
@@ -958,6 +949,16 @@ class ChatViewModel @Inject constructor(
         val model = conversationRepository.getLocallyStoredConversation(chatRoomToken)
         model?.messageDraft?.let {
             messageDraft = it
+        }
+    }
+
+    fun saveMessageDraft() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val model = conversationRepository.getLocallyStoredConversation(chatRoomToken)
+            model?.let {
+                it.messageDraft = messageDraft
+                conversationRepository.updateConversation(it)
+            }
         }
     }
 
@@ -982,12 +983,6 @@ class ChatViewModel @Inject constructor(
         data object None : UnbindRoomUiState()
         data class Success(val statusCode: Int) : UnbindRoomUiState()
         data class Error(val message: String) : UnbindRoomUiState()
-    }
-
-    sealed class ThreadCreationUiState {
-        data object None : ThreadCreationUiState()
-        data class Success(val thread: ThreadInfo?) : ThreadCreationUiState()
-        data class Error(val exception: Exception) : ThreadCreationUiState()
     }
 
     sealed class ThreadRetrieveUiState {

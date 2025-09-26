@@ -81,6 +81,15 @@ class IncomingPollMessageViewHolder(incomingView: View, payload: Any) :
 
         setPollPreview(message)
 
+        val chatActivity = commonMessageInterface as ChatActivity
+        Thread().showThreadPreview(
+            chatActivity,
+            message,
+            threadBinding = binding.threadTitleWrapper,
+            reactionsBinding = binding.reactions,
+            openThread = { openThread(message) }
+        )
+
         Reaction().showReactions(
             message,
             ::clickOnReaction,
@@ -98,6 +107,10 @@ class IncomingPollMessageViewHolder(incomingView: View, payload: Any) :
 
     private fun clickOnReaction(chatMessage: ChatMessage, emoji: String) {
         commonMessageInterface.onClickReaction(chatMessage, emoji)
+    }
+
+    private fun openThread(chatMessage: ChatMessage) {
+        commonMessageInterface.openThread(chatMessage)
     }
 
     private fun setPollPreview(message: ChatMessage) {
@@ -211,7 +224,7 @@ class IncomingPollMessageViewHolder(incomingView: View, payload: Any) :
                     viewThemeUtils.talk.themeParentMessage(
                         parentChatMessage,
                         message,
-                        binding.messageQuote.quoteColoredView
+                        binding.messageQuote.quotedChatMessageView
                     )
                     binding.messageQuote.quotedChatMessageView.visibility =
                         if (!message.isDeleted &&

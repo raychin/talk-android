@@ -5,6 +5,7 @@
     <string name="add_to_notes">Додај у Белешке</string>
     <string name="added_to_favorites">Разговор %1$s је додат у омиљене</string>
     <string name="appbar_search_in">Тражи у %s</string>
+    <string name="appear_offline">Прикажи као ван мреже</string>
     <string name="archive_conversation">Архивирај разговор</string>
     <string name="archive_hint">Када се разговор архивира, подразумевано ће бити сакривен. Да бисте видели архивиране разговоре, изаберите филтер „Архивирано”. И даље ће се примати директна помињања.</string>
     <string name="archived">Архивирано</string>
@@ -22,6 +23,7 @@
     <string name="ban">Забрана</string>
     <string name="ban_participant">Забрани учесника</string>
     <string name="bans_list">Листа забрањених</string>
+    <string name="busy">Заузет</string>
     <string name="calendar">Календар</string>
     <string name="call_more_actions_dialog_headline">Напредне опције позива</string>
     <string name="call_running_since_one_hour">Позив траје један сат.</string>
@@ -61,6 +63,7 @@
     <string name="error_loading_chats">Дошло је до проблема приликом учитавања ваших четова</string>
     <string name="error_unbanning">Дошло је до грешке приликом укидања забране за учесника</string>
     <string name="failed_to_save">Није успело чување %1$s</string>
+    <string name="fifteenMinutes">15 минута</string>
     <string name="file_list_folder">фасцикли</string>
     <string name="file_list_loading">Учитавање…</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -76,6 +79,10 @@
     <string name="left_conversation">Напустили сте разговор %1$s</string>
     <string name="load_more_results">Учитај још резултата</string>
     <string name="local_time">Локално време: %1$s</string>
+    <string name="location_permission_denied">Одбијена је дозвола за локацију</string>
+    <string name="location_permission_denied_msg">Молимо вас да је укључите у подешавањима апликације</string>
+    <string name="location_services_disabled">Искључени су сервиси локације</string>
+    <string name="location_services_disabled_msg">Да бисте користили ову функционалност, молимо вас да укључите сервисе локације (GPS)</string>
     <string name="lock_conversation">Закључај разговор</string>
     <string name="lock_symbol">Симбол катанца</string>
     <string name="lower_hand">Спуштена рука</string>
@@ -89,6 +96,7 @@
     <string name="menu_item_sort_by_size_biggest_first">Прво највеће</string>
     <string name="menu_item_sort_by_size_smallest_first">Прво најмање</string>
     <string name="message_copied">Порука је копирана</string>
+    <string name="message_delete_are_you_sure">Да ли сте сигурни да желите да обришете ову поруку?</string>
     <string name="message_deleted_by_you">Обрисали сте поруку</string>
     <string name="message_last_edited_by">Уредио је %1$s</string>
     <string name="message_poll_tap_to_open">Тапните да отворите гласање</string>
@@ -96,6 +104,7 @@
     <string name="message_search_begin_typing">Крените да куцате и претрага почиње ...</string>
     <string name="message_search_hint">Претрага ...</string>
     <string name="messages">Поруке</string>
+    <string name="mute_all_notifications">Искључи сва обавештења</string>
     <string name="nc_Server_account_imported">Одабрани налог је сада увезен и доступан</string>
     <string name="nc_about">О програму</string>
     <string name="nc_account_chooser_active_user">Активни корисник</string>
@@ -180,7 +189,7 @@
     <string name="nc_delete_all">Обриши све</string>
     <string name="nc_delete_call">Обриши разговор</string>
     <string name="nc_delete_conversation_more">Ако обришете разговор, он ће бити обрисан и за све друге учеснике.</string>
-    <string name="nc_delete_message">Избриши</string>
+    <string name="nc_delete_message">Обриши поруку</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Порука је успешно обрисана, али је можда процурела на друге сервисе</string>
     <string name="nc_delete_now">Обриши одмах</string>
     <string name="nc_deleted_user">Корисник %1$s је уклоњен</string>
@@ -544,6 +553,11 @@
     <string name="no_conversations_archived">Нема архивираних разговора</string>
     <string name="no_offline_messages_saved">Није сачувана ниједна порука за ван мреже</string>
     <string name="no_phone_book_integration_due_to_permissions">Нема интеграције броја телефона јер недостају дозволе</string>
+    <string name="notification_all_messages">Све поруке</string>
+    <string name="notification_mention_only">Само @-помињања</string>
+    <string name="notification_off">Искључено</string>
+    <string name="notifications_default">Подразумевано</string>
+    <string name="notifications_default_description">Прати подешавања разговора</string>
     <string name="oneHour">1 сат</string>
     <string name="online">На мрежи</string>
     <string name="online_status">Мрежни статус</string>
@@ -553,7 +567,6 @@
     <string name="open_thread">Иди на нит</string>
     <string name="play_pause_voice_message">Пусти/паузирај гласовну поруку</string>
     <string name="playback_speed_control">Контрола брзине репродукције</string>
-    <string name="please_continue_the_login_process_in_the_browser">Молимо вас да процес пријаве наставите у интернет прегледачу</string>
     <string name="polls_add_option">Додај ставку</string>
     <string name="polls_edit_vote">Уреди гласање</string>
     <string name="polls_end_poll">Заврши гласање</string>
@@ -633,6 +646,7 @@
     <string name="show_banned_participants">Прикажи забрањене кориснике</string>
     <string name="starred">Омиљени</string>
     <string name="startCallForbidden">Није вам дозвољене да започнете позив</string>
+    <string name="start_thread">Креирај нит</string>
     <string name="started_a_call">је започео позив</string>
     <string name="status_message">Порука стања</string>
     <string name="status_reverted">Враћено је старо стање статуса</string>
@@ -651,6 +665,12 @@
     <string name="thisWeek">Ове недеље</string>
     <string name="this_is_a_test_message">Ово је тест порука</string>
     <string name="this_weekend">Овог викенда</string>
+    <string name="thread_cancel">Откажи креирање нити</string>
+    <string name="thread_notifications">Обавештења низова</string>
+    <string name="thread_reply">Одговори</string>
+    <string name="thread_title">Наслов нити</string>
+    <string name="threads">Нити</string>
+    <string name="threads_list_empty">Није пронађен ниједан низ</string>
     <string name="today">Данас</string>
     <string name="tomorrow">Сутра</string>
     <string name="translate">Превођење</string>
@@ -697,6 +717,11 @@
         <item quantity="one">Овај разговор ће се аутоматски обрисати за све након %1$d дана неактивности</item>
         <item quantity="few">Овај разговор ће се аутоматски обрисати за све након %1$d дана неактивности</item>
         <item quantity="other">Овај разговор ће се аутоматски обрисати за све након %1$d дана неактивности</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d одговор</item>
+        <item quantity="few">%d одговора</item>
+        <item quantity="other">%d одговора</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d глас</item>

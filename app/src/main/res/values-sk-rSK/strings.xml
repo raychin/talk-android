@@ -21,6 +21,7 @@
     <string name="ban">Ban</string>
     <string name="ban_participant">Udeliť účastníkovy ban</string>
     <string name="bans_list">Zoznam banov</string>
+    <string name="busy">Zaneprázdnený</string>
     <string name="calendar">Kalendár</string>
     <string name="call_more_actions_dialog_headline">Pokročilé možnosti hovoru</string>
     <string name="call_running_since_one_hour">Hovor už trvá viac ako jednu hodinu.</string>
@@ -56,6 +57,7 @@
     <string name="error_loading_chats">Nastal problém s načítaním vašich správ</string>
     <string name="error_unbanning">Pri rušení banu pre účastníka sa vyskytla chyba</string>
     <string name="failed_to_save">Nepodarilo sa uložiť %1$s</string>
+    <string name="fifteenMinutes">15 minút</string>
     <string name="file_list_folder">priečinok</string>
     <string name="file_list_loading">Načítavam …</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -172,7 +174,7 @@
     <string name="nc_delete_all">Vymazať všetko</string>
     <string name="nc_delete_call">Zmazať konverzáciu</string>
     <string name="nc_delete_conversation_more">Ak zmažete konverzáciu, bude takisto zmazaná pre všetkých ostatných zúčastnených</string>
-    <string name="nc_delete_message">Zmazať</string>
+    <string name="nc_delete_message">Zmazať správu</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Správa úspešne odstránená, ale mohla uniknúť na iné serveri.</string>
     <string name="nc_deleted_user">Užívateľ %1$s bol vymazaný</string>
     <string name="nc_demote">Odobrať moderovanie</string>
@@ -212,7 +214,7 @@
     <string name="nc_diagnose_notification_messages_channel_permission">Je povolený kanál upozornení pre správy?</string>
     <string name="nc_diagnose_notification_permission">Povolenia upozornení</string>
     <string name="nc_diagnose_phone_category_title">Telefón</string>
-    <string name="nc_diagnose_server_talk_version">Verzia servera Talk /Rozhovor/</string>
+    <string name="nc_diagnose_server_talk_version">Verzia servera Talk</string>
     <string name="nc_diagnose_server_version">Verzia servera</string>
     <string name="nc_diagnose_signaling_mode_extern">Externý</string>
     <string name="nc_diagnose_signaling_mode_intern">Interné</string>
@@ -403,7 +405,7 @@
     <string name="nc_server_maintenance">Prosím vypnite váš %1$s z režimu údržby</string>
     <string name="nc_server_not_installed">Prosím dokončite vašu %1$s inštaláciu</string>
     <string name="nc_server_testing_connection">Testuje sa pripojenie</string>
-    <string name="nc_server_unsupported">Na serveri nie je nainštalovaná podporovaná apka Rozhovor</string>
+    <string name="nc_server_unsupported">Na serveri nie je nainštalovaná podporovaná apka Talk</string>
     <string name="nc_server_url">Adresa servera https://…</string>
     <string name="nc_server_version">%1$spracuje iba s %2$s13 a vyššie</string>
     <string name="nc_set_new_password">Vytvoriť nové heslo</string>
@@ -419,7 +421,7 @@
     <string name="nc_settings_incognito_keyboard_desc">Klávesnica bude pracovať bez personalizovaného učenia (bez záruky)</string>
     <string name="nc_settings_incognito_keyboard_title">Súkromná klávesnica</string>
     <string name="nc_settings_no_ringtone">Žiadny zvuk</string>
-    <string name="nc_settings_no_talk_installed">Aplikácia Rozhovor nie je na serveri, voči ktorému ste sa chceli overiť nainštalovaná.</string>
+    <string name="nc_settings_no_talk_installed">Aplikácia Talk nie je na serveri, voči ktorému ste sa chceli overiť nainštalovaná.</string>
     <string name="nc_settings_notification_sounds_post_oreo">Upozornenia</string>
     <string name="nc_settings_notifications_declined">Upozornenia sú odmietnuté</string>
     <string name="nc_settings_notifications_granted">Upozornenia sú povolené</string>
@@ -507,6 +509,9 @@
     <string name="next_week">Nasledujúci týždeň</string>
     <string name="no_offline_messages_saved">Žiadne správy pri odpojení neboli uložené</string>
     <string name="no_phone_book_integration_due_to_permissions">Registrácia telefónneho čísla nie je povolená pre chýbajúce oprávnenia</string>
+    <string name="notification_mention_only">Iba zmienky v tvare @-meno</string>
+    <string name="notification_off">Vypnúť</string>
+    <string name="notifications_default">Predvolené</string>
     <string name="oneHour">1 hodina</string>
     <string name="online">Pripojený</string>
     <string name="online_status">Stav pripojenia</string>
@@ -609,6 +614,7 @@
     <string name="thisWeek">Tento týždeň</string>
     <string name="this_is_a_test_message">Toto je skúšobná správa</string>
     <string name="this_weekend">Tento víkend</string>
+    <string name="thread_reply">Odpovedať</string>
     <string name="today">Dnes</string>
     <string name="tomorrow">Zajtra</string>
     <string name="translate">Preložiť</string>

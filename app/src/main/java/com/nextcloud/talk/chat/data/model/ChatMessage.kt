@@ -49,6 +49,10 @@ data class ChatMessage(
 
     var isThread: Boolean = false,
 
+    var threadTitle: String? = null,
+
+    var threadReplies: Int? = 0,
+
     // guests or users
     var actorType: String? = null,
 
@@ -311,6 +315,7 @@ data class ChatMessage(
                             true
                         )
                     }
+
                     else -> {
                         var apiId: String? = sharedApplication!!.getString(R.string.nc_guest)
                         if (!TextUtils.isEmpty(actorDisplayName)) {

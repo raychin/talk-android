@@ -5,6 +5,7 @@
     <string name="add_to_notes">Ajouter à Notes</string>
     <string name="added_to_favorites">La conversation %1$s a été ajoutée aux favoris</string>
     <string name="appbar_search_in">Rechercher dans %s</string>
+    <string name="appear_offline">Apparaître hors-ligne</string>
     <string name="archive_conversation">Archiver la conversation</string>
     <string name="archive_hint">Lorsqu\'une conversation est archivée, elle est cachée par défaut. Choisissez le filtre \"Archivés\" pour voir les conversations archivées. Les mentions directes seront toujours bien reçues.</string>
     <string name="archived">Archivé</string>
@@ -15,13 +16,14 @@
     <string name="audio_output_phone">Téléphone</string>
     <string name="audio_output_speaker">Haut-parleur</string>
     <string name="audio_output_wired_headset">Écouteurs filaires</string>
-    <string name="automatic_status_set">Votre état a été automatiquement défini</string>
+    <string name="automatic_status_set">Votre statut a été automatiquement défini</string>
     <string name="avatar">Avatar</string>
     <string name="away">Absent(e)</string>
     <string name="back_button">Bouton précédent</string>
     <string name="ban">Bannir</string>
     <string name="ban_participant">Bannir le participant</string>
     <string name="bans_list">Liste des bannis</string>
+    <string name="busy">Occupé</string>
     <string name="calendar">Agenda</string>
     <string name="call_more_actions_dialog_headline">Options d\'appel avancées</string>
     <string name="call_running_since_one_hour">L\'appel est en cours depuis une heure.</string>
@@ -47,6 +49,7 @@
     <string name="danger_zone">Zone de danger</string>
     <string name="deck_card_description">%1$s dans %2$s</string>
     <string name="delete_avatar">Supprimer l\'avatar</string>
+    <string name="delete_voice_recording">Supprimer l\'enregistrement vocal</string>
     <string name="deleted_conversation">La conversation %1$s a été supprimée</string>
     <string name="dnd">Ne pas déranger</string>
     <string name="dontClear">Ne pas effacer</string>
@@ -60,6 +63,7 @@
     <string name="error_loading_chats">Un problème est survenu lors du chargement de vos discussions</string>
     <string name="error_unbanning">Une erreur est survenue à la réintégration du participant</string>
     <string name="failed_to_save">Échec de la sauvegarde de %1$s</string>
+    <string name="fifteenMinutes">15 minutes</string>
     <string name="file_list_folder">Dossier</string>
     <string name="file_list_loading">Chargement…</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -75,6 +79,8 @@
     <string name="left_conversation">Vous avez quitté la conversation %1$s</string>
     <string name="load_more_results">Charger plus de résultats</string>
     <string name="local_time">Heure locale : %1$s</string>
+    <string name="location_permission_denied">Autorisation de localisation refusée</string>
+    <string name="location_services_disabled">Services de localisation désactivés</string>
     <string name="lock_conversation">Verrouiller la conversation</string>
     <string name="lock_symbol">Symbole de verrouillage</string>
     <string name="lower_hand">Baisser la main</string>
@@ -88,6 +94,7 @@
     <string name="menu_item_sort_by_size_biggest_first">Les plus gros d\'abord</string>
     <string name="menu_item_sort_by_size_smallest_first">Le plus petit en premier</string>
     <string name="message_copied">Message copié</string>
+    <string name="message_delete_are_you_sure">Êtes-vous sûr de vouloir effacer ce message ?</string>
     <string name="message_deleted_by_you">Message supprimé par vous</string>
     <string name="message_last_edited_by">Modifié par %1$s</string>
     <string name="message_poll_tap_to_open">Toucher pour ouvrir le sondage</string>
@@ -95,6 +102,7 @@
     <string name="message_search_begin_typing">Commencer à taper pour lancer la recherche…</string>
     <string name="message_search_hint">Recherche…</string>
     <string name="messages">Messages</string>
+    <string name="mute_all_notifications">Désactiver les notifications</string>
     <string name="nc_Server_account_imported">Le compte sélectionné est maintenant importé et disponible</string>
     <string name="nc_about">À propos</string>
     <string name="nc_account_chooser_active_user">Utilisateur actif</string>
@@ -179,7 +187,7 @@
     <string name="nc_delete_all">Supprimer tout</string>
     <string name="nc_delete_call">Supprimer la conversation</string>
     <string name="nc_delete_conversation_more">Si vous supprimez la conversation, elle sera supprimée pour tous les participants.</string>
-    <string name="nc_delete_message">Supprimer</string>
+    <string name="nc_delete_message">Supprimer le message</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Message supprimé avec succès, mais il pourrait avoir été divulgué à d’autres services</string>
     <string name="nc_delete_now">Supprimer maintenant</string>
     <string name="nc_deleted_user">L\'utilisateur %1$s a été supprimé</string>
@@ -287,7 +295,7 @@
     <string name="nc_ignore_battery_optimization_dialog_text">L\'optimisation de la batterie n\'est pas ignorée. Ceci devrait être modifié pour vous assurer que les notifications fonctionnent en arrière-plan. Merci de cliquer OK et sélectionner \"Toutes les applications\" -> %1$s -> Ne pas optimiser</string>
     <string name="nc_ignore_battery_optimization_dialog_title">Ignorer l\'optimisation de batterie</string>
     <string name="nc_important_conversation">Conversation importante</string>
-    <string name="nc_important_conversation_desc">Le statut utilisateur  \"Ne pas déranger\" est ignoré pour les conversations importantes.</string>
+    <string name="nc_important_conversation_desc">Le statut utilisateur  \"Ne pas déranger\" est ignoré pour les conversations importantes</string>
     <string name="nc_invalid_time">Heure invalide</string>
     <string name="nc_invitations">Invitations</string>
     <string name="nc_join_open_conversations">Rejoindre des conversations ouvertes</string>
@@ -324,6 +332,7 @@
     <string name="nc_message_read">Message lu</string>
     <string name="nc_message_sending">Envoi en cours</string>
     <string name="nc_message_sent">Message envoyé</string>
+    <string name="nc_microphone_enabled_audio_recording">Le micro est activé et le son est enregistré</string>
     <string name="nc_microphone_permission_hint">Pour autoriser la communication audio, merci de donner l\'autorisation « Microphone ».</string>
     <string name="nc_missed_call">Vous avez manqué un appel de %s</string>
     <string name="nc_moderator">Modérateur</string>
@@ -393,7 +402,7 @@
     <string name="nc_rename_confirm">Renommer</string>
     <string name="nc_reply">Répondre</string>
     <string name="nc_reply_privately">Répondre en privé</string>
-    <string name="nc_room_retention">Salle retenue avec succès</string>
+    <string name="nc_room_retention">Salle réservée avec succès</string>
     <string name="nc_save_message">Enregistrer</string>
     <string name="nc_save_success">Enregistré avec succès</string>
     <string name="nc_screen_lock_timeout_30">30 secondes</string>
@@ -409,6 +418,7 @@
     <string name="nc_search_clear">Effacer la recherche</string>
     <string name="nc_select_an_account">Choisissez un compte</string>
     <string name="nc_send_edit_message">Message de mise à jour</string>
+    <string name="nc_send_voice_recording">Envoyer l\'enregistrement vocal</string>
     <string name="nc_sensitive_conversation">Conversation sensible</string>
     <string name="nc_sensitive_conversation_hint">La prévisualisation des messages sera désactivée dans la liste des conversations et les notifiactions</string>
     <string name="nc_sent_a_gif" formatted="true">%1$s a envoyé un GIF.</string>
@@ -488,7 +498,7 @@
     <string name="nc_settings_theme_light">Clair</string>
     <string name="nc_settings_theme_title">Thème</string>
     <string name="nc_settings_typing_status_desc">Partager mon statut de saisie et montrer le statut de saisie des autres</string>
-    <string name="nc_settings_typing_status_hpb_description">L\'état de saisie n\'est disponible que lors de l\'utilisation d\'un backend haute performance (HPB).</string>
+    <string name="nc_settings_typing_status_hpb_description">Le statut de saisie n\'est disponible que lors de l\'utilisation d\'un backend haute performance (HPB).</string>
     <string name="nc_settings_typing_status_title">État de saisie</string>
     <string name="nc_settings_use_credentials_title">Le proxy requiert les informations d\'identification</string>
     <string name="nc_settings_warning">Attention</string>
@@ -541,6 +551,10 @@
     <string name="no_conversations_archived">Aucune conversation archivée</string>
     <string name="no_offline_messages_saved">Aucun message hors-ligne trouvé</string>
     <string name="no_phone_book_integration_due_to_permissions">Pas d\'intégration avec le carnet d\'adresses à cause d\'autorisations manquantes</string>
+    <string name="notification_mention_only">Seulement les mentions @</string>
+    <string name="notification_off">Désactiver</string>
+    <string name="notifications_default">Défaut</string>
+    <string name="notifications_default_description">Utiliser les paramètres de la conversation</string>
     <string name="oneHour">1 heure</string>
     <string name="online">En ligne</string>
     <string name="online_status">Statut de connexion</string>
@@ -567,6 +581,7 @@
     <string name="polls_submit_vote">Vote</string>
     <string name="polls_voted_hidden_success">Vote soumis</string>
     <string name="previously_set">Précédemment défini</string>
+    <string name="qr_code_error">Le code QR ne peut être lu</string>
     <string name="raise_hand">Lever la main</string>
     <string name="reactions_tab_all">Tout</string>
     <string name="read_storage_no_permission">le partage de fichier n\'est pas possible sans les permissions</string>
@@ -588,10 +603,10 @@
     <string name="removed_from_favorites">La conversation %1$s a été supprimée des favorites</string>
     <string name="renamed_conversation">La conversation %1$s a été renommée</string>
     <string name="resend_message">Renvoyer</string>
-    <string name="reset_status">Réinitialiser l\'état</string>
+    <string name="reset_status">Réinitialiser le statut</string>
     <string name="restrict_join_other_room_while_call">Il est impossible de rejoindre une autre salle pendant un appel</string>
     <string name="save">Sauvegarder</string>
-    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="scan_qr_code">Scanner le QR Code</string>
     <string name="scope_federated_description">Synchronisation avec les serveurs de confiance uniquement</string>
     <string name="scope_federated_title">Fédéré</string>
     <string name="scope_local_description">Visible uniquement aux personnes dans l\'instance et aux invités</string>
@@ -628,6 +643,7 @@
     <string name="show_banned_participants">Afficher les participants bannis</string>
     <string name="starred">Favori</string>
     <string name="startCallForbidden">Vous n\'êtes pas autorisé à lancer un appel</string>
+    <string name="start_thread">Créer une conversation</string>
     <string name="started_a_call">a lancé un appel</string>
     <string name="status_message">Message d\'état</string>
     <string name="status_reverted">Statut rétabli</string>
@@ -646,8 +662,11 @@
     <string name="thisWeek">Cette semaine</string>
     <string name="this_is_a_test_message">Ceci est un message de test</string>
     <string name="this_weekend">Ce week-end</string>
-    <string name="thread_replies_amount">%1$d réponses</string>
+    <string name="thread_cancel">Annuler la création de la conversation</string>
+    <string name="thread_notifications">Notifications de conversation</string>
+    <string name="thread_reply">Répondre</string>
     <string name="thread_title">Titre de la conversation</string>
+    <string name="threads">Conversations</string>
     <string name="today">Aujourd\'hui</string>
     <string name="tomorrow">Demain</string>
     <string name="translate">Traduire</string>
@@ -684,7 +703,7 @@
     <string name="userinfo_no_info_headline">Aucunes informations personnelles renseignées</string>
     <string name="userinfo_no_info_text">Ajoutez vos nom, photo et coordonnées sur votre page de profil.</string>
     <string name="video_call">Appel vidéo</string>
-    <string name="whats_your_status">Quel est votre état ?</string>
+    <string name="whats_your_status">Quel est votre statut ?</string>
     <plurals name="see_similar_system_messages">
         <item quantity="one">Voir %d message similaire</item>
         <item quantity="many">Voir %d messages similaires</item>
@@ -694,6 +713,11 @@
         <item quantity="one">Cette conversation sera automatiquement supprimée pour tout le monde après %1$d jour d\'inactivité</item>
         <item quantity="many">Cette conversation sera automatiquement supprimée pour tout le monde après %1$d jours d\'inactivité</item>
         <item quantity="other">Cette conversation sera automatiquement supprimée pour tout le monde après %1$d jours d\'inactivité</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d réponses</item>
+        <item quantity="many">%d réponses</item>
+        <item quantity="other">%d réponses</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d vote</item>

@@ -78,6 +78,7 @@ import com.nextcloud.talk.utils.CharPolicy
 import com.nextcloud.talk.utils.EmojiTextInputEditText
 import com.nextcloud.talk.utils.ImageEmojiEditText
 import com.nextcloud.talk.utils.SpreedFeatures
+import com.nextcloud.talk.utils.bundle.BundleKeys
 import com.nextcloud.talk.utils.database.user.CurrentUserProviderNew
 import com.nextcloud.talk.utils.message.MessageUtils
 import com.nextcloud.talk.utils.text.Spans
@@ -95,26 +96,6 @@ import javax.inject.Inject
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass", "LongMethod")
 @AutoInjector(NextcloudTalkApplication::class)
 class MessageInputFragment : Fragment() {
-
-    companion object {
-        fun newInstance() = MessageInputFragment()
-        private val TAG: String = MessageInputFragment::class.java.simpleName
-        private const val TYPING_DURATION_TO_SEND_NEXT_TYPING_MESSAGE = 10000L
-        private const val TYPING_INTERVAL_TO_SEND_NEXT_TYPING_MESSAGE = 1000L
-        private const val TYPING_STARTED_SIGNALING_MESSAGE_TYPE = "startedTyping"
-        private const val TYPING_STOPPED_SIGNALING_MESSAGE_TYPE = "stoppedTyping"
-        private const val QUOTED_MESSAGE_IMAGE_MAX_HEIGHT = 96f
-        private const val MENTION_AUTO_COMPLETE_ELEVATION = 6f
-        private const val MINIMUM_VOICE_RECORD_DURATION: Int = 1000
-        private const val ANIMATION_DURATION: Long = 750
-        private const val VOICE_RECORD_CANCEL_SLIDER_X: Int = -150
-        private const val VOICE_RECORD_LOCK_THRESHOLD: Float = 100f
-        private const val INCREMENT = 8f
-        private const val CURSOR_KEY = "_cursor"
-        private const val CONNECTION_ESTABLISHED_ANIM_DURATION: Long = 3000
-        private const val FULLY_OPAQUE: Float = 1.0f
-        private const val FULLY_TRANSPARENT: Float = 0.0f
-    }
 
     @Inject
     lateinit var viewThemeUtils: ViewThemeUtils
@@ -146,6 +127,12 @@ class MessageInputFragment : Fragment() {
         super.onCreate(savedInstanceState)
         sharedApplication!!.componentApplication.inject(this)
         conversationInternalId = arguments?.getString(ChatActivity.CONVERSATION_INTERNAL_ID).orEmpty()
+        chatActivity = requireActivity() as ChatActivity
+        val sharedText = arguments?.getString(BundleKeys.KEY_SHARED_TEXT).orEmpty()
+        if (sharedText.isNotEmpty()) {
+            chatActivity.chatViewModel.messageDraft.messageText = sharedText
+            chatActivity.chatViewModel.saveMessageDraft()
+        }
         if (conversationInternalId.isEmpty()) {
             Log.e(TAG, "internalId for conversation passed to MessageInputFragment is empty")
         }
@@ -153,12 +140,12 @@ class MessageInputFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentMessageInputBinding.inflate(inflater)
-        chatActivity = requireActivity() as ChatActivity
         themeMessageInputView()
         initMessageInputView()
         initSmileyKeyboardToggler()
         setupMentionAutocomplete()
         initVoiceRecordButton()
+        initThreadHandling()
         restoreState()
         return binding.root
     }
@@ -177,7 +164,7 @@ class MessageInputFragment : Fragment() {
 
         binding.fragmentCreateThreadView.createThreadView.findViewById<EmojiTextInputEditText>(
             R.id
-                .createThread
+                .createThreadInput
         ).doAfterTextChanged { text ->
             val threadTitle = text.toString()
             chatActivity.chatViewModel.messageDraft.threadTitle = threadTitle
@@ -212,7 +199,7 @@ class MessageInputFragment : Fragment() {
                 is MessageInputViewModel.CreateThreadEditState -> {
                     binding.fragmentCreateThreadView.createThreadView.visibility = View.VISIBLE
                     binding.fragmentCreateThreadView.createThreadView
-                        .findViewById<EmojiTextInputEditText>(R.id.createThread)?.setText(
+                        .findViewById<EmojiTextInputEditText>(R.id.createThreadInput)?.setText(
                             chatActivity.chatViewModel.messageDraft.threadTitle
                         )
                 }
@@ -420,6 +407,7 @@ class MessageInputFragment : Fragment() {
                 val text = binding.fragmentMessageInputView.messageInput.text.toString()
                 chatActivity.chatViewModel.messageDraft.messageCursor = cursor
                 chatActivity.chatViewModel.messageDraft.messageText = text
+                handleButtonsVisibility()
             }
         })
 
@@ -435,10 +423,6 @@ class MessageInputFragment : Fragment() {
                 replyToMessageId = chatActivity.getReplyToMessageId(),
                 displayName = chatActivity.currentConversation?.displayName!!
             )
-        }
-
-        if (chatActivity.sharedText.isNotEmpty()) {
-            binding.fragmentMessageInputView.inputEditText?.setText(chatActivity.sharedText)
         }
 
         binding.fragmentMessageInputView.setAttachmentsListener {
@@ -526,10 +510,6 @@ class MessageInputFragment : Fragment() {
     @Suppress("ClickableViewAccessibility", "CyclomaticComplexMethod", "LongMethod")
     private fun initVoiceRecordButton() {
         handleButtonsVisibility()
-
-        binding.fragmentMessageInputView.inputEditText.doAfterTextChanged {
-            handleButtonsVisibility()
-        }
 
         var prevDx = 0f
         var voiceRecordStartTime = 0L
@@ -643,6 +623,16 @@ class MessageInputFragment : Fragment() {
         }
     }
 
+    private fun initThreadHandling() {
+        binding.fragmentMessageInputView.submitThreadButton.setOnClickListener {
+            submitMessage(false)
+        }
+
+        binding.fragmentCreateThreadView.createThreadInput.doAfterTextChanged {
+            handleButtonsVisibility()
+        }
+    }
+
     private fun handleButtonsVisibility() {
         fun View.setVisible(isVisible: Boolean) {
             visibility = if (isVisible) View.VISIBLE else View.GONE
@@ -651,20 +641,43 @@ class MessageInputFragment : Fragment() {
         val isEditModeActive = binding.fragmentEditView.editMessageView.isVisible
         val isThreadCreateModeActive = binding.fragmentCreateThreadView.createThreadView.isVisible
         val inputContainsText = binding.fragmentMessageInputView.messageInput.text.isNotEmpty()
+        val threadTitleContainsText = binding.fragmentCreateThreadView.createThreadInput.text?.isNotEmpty() ?: false
 
         binding.fragmentMessageInputView.apply {
             when {
                 isEditModeActive -> {
                     messageSendButton.setVisible(false)
                     recordAudioButton.setVisible(false)
+                    submitThreadButton.setVisible(false)
+                    attachmentButton.setVisible(true)
                 }
-                inputContainsText || isThreadCreateModeActive -> {
-                    messageSendButton.setVisible(true)
+
+                isThreadCreateModeActive -> {
+                    messageSendButton.setVisible(false)
                     recordAudioButton.setVisible(false)
+                    attachmentButton.setVisible(false)
+                    submitThreadButton.setVisible(true)
+                    if (inputContainsText && threadTitleContainsText) {
+                        submitThreadButton.isEnabled = true
+                        submitThreadButton.alpha = FULLY_OPAQUE
+                    } else {
+                        submitThreadButton.isEnabled = false
+                        submitThreadButton.alpha = OPACITY_DISABLED
+                    }
                 }
+
+                inputContainsText -> {
+                    recordAudioButton.setVisible(false)
+                    submitThreadButton.setVisible(false)
+                    messageSendButton.setVisible(true)
+                    attachmentButton.setVisible(true)
+                }
+
                 else -> {
                     messageSendButton.setVisible(false)
+                    submitThreadButton.setVisible(false)
                     recordAudioButton.setVisible(true)
+                    attachmentButton.setVisible(true)
                 }
             }
         }
@@ -984,6 +997,7 @@ class MessageInputFragment : Fragment() {
         binding.fragmentMessageInputView.inputEditText.setSelection(end)
         binding.fragmentMessageInputView.messageSendButton.visibility = View.GONE
         binding.fragmentMessageInputView.recordAudioButton.visibility = View.GONE
+        binding.fragmentMessageInputView.submitThreadButton.visibility = View.GONE
         binding.fragmentMessageInputView.editMessageButton.visibility = View.VISIBLE
         binding.fragmentEditView.editMessageView.visibility = View.VISIBLE
         binding.fragmentMessageInputView.attachmentButton.visibility = View.GONE
@@ -1057,6 +1071,14 @@ class MessageInputFragment : Fragment() {
         binding.fragmentCallStarted.callStartedCloseBtn.apply {
             viewThemeUtils.platform.colorImageView(this, ColorRole.PRIMARY)
         }
+
+        binding.fragmentMessageInputView.submitThreadButton.apply {
+            viewThemeUtils.platform.colorImageView(this, ColorRole.SECONDARY)
+        }
+
+        binding.fragmentCreateThreadView.createThreadInput.apply {
+            viewThemeUtils.platform.colorEditText(this)
+        }
     }
 
     private fun cancelCreateThread() {
@@ -1079,5 +1101,26 @@ class MessageInputFragment : Fragment() {
     private fun isInReplyState(): Boolean {
         val jsonId = chatActivity.chatViewModel.messageDraft.quotedJsonId
         return jsonId != null
+    }
+
+    companion object {
+        fun newInstance() = MessageInputFragment()
+        private val TAG: String = MessageInputFragment::class.java.simpleName
+        private const val TYPING_DURATION_TO_SEND_NEXT_TYPING_MESSAGE = 10000L
+        private const val TYPING_INTERVAL_TO_SEND_NEXT_TYPING_MESSAGE = 1000L
+        private const val TYPING_STARTED_SIGNALING_MESSAGE_TYPE = "startedTyping"
+        private const val TYPING_STOPPED_SIGNALING_MESSAGE_TYPE = "stoppedTyping"
+        private const val QUOTED_MESSAGE_IMAGE_MAX_HEIGHT = 96f
+        private const val MENTION_AUTO_COMPLETE_ELEVATION = 6f
+        private const val MINIMUM_VOICE_RECORD_DURATION: Int = 1000
+        private const val ANIMATION_DURATION: Long = 750
+        private const val VOICE_RECORD_CANCEL_SLIDER_X: Int = -150
+        private const val VOICE_RECORD_LOCK_THRESHOLD: Float = 100f
+        private const val INCREMENT = 8f
+        private const val CURSOR_KEY = "_cursor"
+        private const val CONNECTION_ESTABLISHED_ANIM_DURATION: Long = 3000
+        private const val FULLY_OPAQUE: Float = 1.0f
+        private const val FULLY_TRANSPARENT: Float = 0.0f
+        private const val OPACITY_DISABLED = 0.7f
     }
 }
