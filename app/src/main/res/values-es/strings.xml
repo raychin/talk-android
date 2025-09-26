@@ -5,6 +5,7 @@
     <string name="add_to_notes">Añadir a Notas</string>
     <string name="added_to_favorites">Se añadió la conversación %1$s a los favoritos</string>
     <string name="appbar_search_in">Buscar en %s</string>
+    <string name="appear_offline">Aparecer como desconectado</string>
     <string name="archive_conversation">Archivar conversación</string>
     <string name="archive_hint">Una vez que una conversación es archivada, estará escondida por defecto. Seleccione el filtro \"Archivadas\" para ver las conversaciones archivadas. Cualquier mención directa seguirá siendo recibida.</string>
     <string name="archived">Archivada</string>
@@ -22,6 +23,7 @@
     <string name="ban">Bloquear</string>
     <string name="ban_participant">Bloquear participante</string>
     <string name="bans_list">Lista de bloqueados</string>
+    <string name="busy">Ocupado</string>
     <string name="calendar">Calendario</string>
     <string name="call_more_actions_dialog_headline">Opciones avanzadas de llamada</string>
     <string name="call_running_since_one_hour">La llamada ha estado activa por una hora.</string>
@@ -61,6 +63,7 @@
     <string name="error_loading_chats">Hubo un problema cargando sus chats</string>
     <string name="error_unbanning">Ocurrió un error al desbloquear al participante</string>
     <string name="failed_to_save">Fallo al guardar %1$s</string>
+    <string name="fifteenMinutes">15 minutos</string>
     <string name="file_list_folder">carpeta</string>
     <string name="file_list_loading">Cargando …</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -76,6 +79,10 @@
     <string name="left_conversation">Ud. Abandonó la conversación %1$s</string>
     <string name="load_more_results">Cargar más resultados</string>
     <string name="local_time">Hora local: %1$s</string>
+    <string name="location_permission_denied">Se denegó el permiso de ubicación</string>
+    <string name="location_permission_denied_msg">Por favor, habilítelo en los ajustes de aplicación</string>
+    <string name="location_services_disabled">Servicios de ubicación desactivados</string>
+    <string name="location_services_disabled_msg">Por favor, habilite los servicios de ubicación (GPS) para utilizar esta característica</string>
     <string name="lock_conversation">Bloquear conversación</string>
     <string name="lock_symbol">Símbolo de bloqueo</string>
     <string name="lower_hand">Bajar la mano</string>
@@ -89,6 +96,7 @@
     <string name="menu_item_sort_by_size_biggest_first">Más grandes primero</string>
     <string name="menu_item_sort_by_size_smallest_first">Más pequeñas primero</string>
     <string name="message_copied">Mensaje copiado</string>
+    <string name="message_delete_are_you_sure">¿Está seguro que desea eliminar este mensaje?</string>
     <string name="message_deleted_by_you">Has eliminado este mensaje</string>
     <string name="message_last_edited_by">Editado por %1$s</string>
     <string name="message_poll_tap_to_open">Pulse para abrir la encuesta</string>
@@ -96,6 +104,7 @@
     <string name="message_search_begin_typing">Empiece a escribir para buscar…</string>
     <string name="message_search_hint">Buscar …</string>
     <string name="messages">Mensajes</string>
+    <string name="mute_all_notifications">Silenciar todas las notificaciones</string>
     <string name="nc_Server_account_imported">La cuenta seleccionada ha sido importada y está disponible</string>
     <string name="nc_about">Acerca de</string>
     <string name="nc_account_chooser_active_user">Activar usuario</string>
@@ -180,7 +189,7 @@
     <string name="nc_delete_all">Eliminar todos</string>
     <string name="nc_delete_call">Eliminar conversación</string>
     <string name="nc_delete_conversation_more">Si borras la conversación, también se borrará para los demás participantes.</string>
-    <string name="nc_delete_message">Eliminar</string>
+    <string name="nc_delete_message">Eliminar mensaje</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Mensaje borrado con éxito, pero puede haber sido filtrado a otros servicios</string>
     <string name="nc_delete_now">Eliminar ahora</string>
     <string name="nc_deleted_user">El Usuario %1$s fue eliminado</string>
@@ -545,6 +554,11 @@
     <string name="no_conversations_archived">No hay conversaciones archivadas</string>
     <string name="no_offline_messages_saved">No hay mensajes fuera de línea guardados</string>
     <string name="no_phone_book_integration_due_to_permissions">No hubo integración de la agenda telefónica debido a la falta de permisos</string>
+    <string name="notification_all_messages">Todos los mensajes</string>
+    <string name="notification_mention_only">Solo las menciones con @</string>
+    <string name="notification_off">Apagado</string>
+    <string name="notifications_default">Predeterminado</string>
+    <string name="notifications_default_description">Seguir los ajustes de la conversación</string>
     <string name="oneHour">1 hora</string>
     <string name="online">En línea</string>
     <string name="online_status">Estado en línea</string>
@@ -554,7 +568,6 @@
     <string name="open_thread">Ir al hilo</string>
     <string name="play_pause_voice_message">Reproducir/pausar mensaje de voz</string>
     <string name="playback_speed_control">Control de velocidad de reproducción</string>
-    <string name="please_continue_the_login_process_in_the_browser">Por favor, continúe el proceso de inicio de sesión en el navegador</string>
     <string name="polls_add_option">Añadir opción</string>
     <string name="polls_edit_vote">Editar voto</string>
     <string name="polls_end_poll">Cerrar la encuesta</string>
@@ -632,10 +645,9 @@
     <string name="shared_items_voice">Voz</string>
     <string name="show_ban_reason">Mostrar razón de bloqueo</string>
     <string name="show_banned_participants">Mostrar participantes bloqueados</string>
-    <string name="show_threads_overview">Mostrar hilos</string>
     <string name="starred">Favorito</string>
     <string name="startCallForbidden">No está autorizado a iniciar una llamada</string>
-    <string name="start_thread">Iniciar un hilo</string>
+    <string name="start_thread">Crear un hilo</string>
     <string name="started_a_call">inició una llamada</string>
     <string name="status_message">Mensaje de estado</string>
     <string name="status_reverted">El estado ha sido revertido</string>
@@ -654,8 +666,12 @@
     <string name="thisWeek">Esta semana</string>
     <string name="this_is_a_test_message">Esto es un mensaje de prueba</string>
     <string name="this_weekend">Este fin de semana</string>
-    <string name="thread_replies_amount">%1$d respuestas</string>
+    <string name="thread_cancel">Cancelar la creación del hilo</string>
+    <string name="thread_notifications">Notificaciones para hilos</string>
+    <string name="thread_reply">Responder</string>
     <string name="thread_title">Título del hilo</string>
+    <string name="threads">Hilos</string>
+    <string name="threads_list_empty">No se encontraron hilos</string>
     <string name="today">Hoy</string>
     <string name="tomorrow">Mañana</string>
     <string name="translate">Traducir</string>
@@ -702,6 +718,11 @@
         <item quantity="one">Esta conversación será eliminada automáticamente para todos tras %1$d día de inactividad</item>
         <item quantity="many">Esta conversación será eliminada automáticamente para todos tras %1$d días de inactividad</item>
         <item quantity="other">Esta conversación será eliminada automáticamente para todos tras %1$d días de inactividad</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d respuesta</item>
+        <item quantity="many">%d respuestas</item>
+        <item quantity="other">%d respuestas</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d voto</item>

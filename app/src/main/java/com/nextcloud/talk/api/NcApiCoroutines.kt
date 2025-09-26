@@ -14,7 +14,6 @@ import com.nextcloud.talk.models.json.chat.ChatOverall
 import com.nextcloud.talk.models.json.chat.ChatOverallSingleMessage
 import com.nextcloud.talk.models.json.conversations.RoomOverall
 import com.nextcloud.talk.models.json.generic.GenericOverall
-import com.nextcloud.talk.models.json.generic.Status
 import com.nextcloud.talk.models.json.participants.AddParticipantOverall
 import com.nextcloud.talk.models.json.participants.TalkBan
 import com.nextcloud.talk.models.json.participants.TalkBanOverall
@@ -278,7 +277,8 @@ interface NcApiCoroutines {
     suspend fun getContextOfChatMessage(
         @Header("Authorization") authorization: String,
         @Url url: String,
-        @Query("limit") limit: Int
+        @Query("limit") limit: Int,
+        @Query("threadId") threadId: Int?
     ): ChatOverall
 
     @GET
@@ -290,15 +290,21 @@ interface NcApiCoroutines {
     @DELETE
     suspend fun unbindRoom(@Header("Authorization") authorization: String, @Url url: String): GenericOverall
 
-    @POST
-    suspend fun createThread(@Header("Authorization") authorization: String, @Url url: String): ThreadOverall
-
     @GET
-    suspend fun getThreads(@Header("Authorization") authorization: String, @Url url: String): ThreadsOverall
+    suspend fun getThreads(
+        @Header("Authorization") authorization: String,
+        @Url url: String,
+        @Query("limit") limit: Int?
+    ): ThreadsOverall
 
     @GET
     suspend fun getThread(@Header("Authorization") authorization: String, @Url url: String): ThreadOverall
 
-    @GET
-    suspend fun getServerStatus(@Url url: String): Status
+    @FormUrlEncoded
+    @POST
+    suspend fun setThreadNotificationLevel(
+        @Header("Authorization") authorization: String,
+        @Url url: String,
+        @Field("level") level: Int
+    ): ThreadOverall
 }

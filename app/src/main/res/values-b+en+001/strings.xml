@@ -5,6 +5,7 @@
     <string name="add_to_notes">Add to Notes</string>
     <string name="added_to_favorites">Added conversation %1$s to favourites</string>
     <string name="appbar_search_in">Search in %s</string>
+    <string name="appear_offline">Appear offline</string>
     <string name="archive_conversation">Archive conversation</string>
     <string name="archive_hint">Once a conversation is archived, it will be hidden by default. Select the filter \"Archived\" to view archived conversations. Direct mentions will still be received.</string>
     <string name="archived">Archived</string>
@@ -22,6 +23,7 @@
     <string name="ban">Ban</string>
     <string name="ban_participant">Ban participant</string>
     <string name="bans_list">Bans list</string>
+    <string name="busy">Busy</string>
     <string name="calendar">Calendar</string>
     <string name="call_more_actions_dialog_headline">Advanced call options</string>
     <string name="call_running_since_one_hour">Note: the call has been going on for an hour already.</string>
@@ -61,6 +63,7 @@
     <string name="error_loading_chats">There was a problem loading your chats</string>
     <string name="error_unbanning">Error occurred when unbanning participant</string>
     <string name="failed_to_save">Failed to save %1$s</string>
+    <string name="fifteenMinutes">15 minutes</string>
     <string name="file_list_folder">folder</string>
     <string name="file_list_loading">Loading …</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -76,6 +79,10 @@
     <string name="left_conversation">You left the conversation %1$s</string>
     <string name="load_more_results">Load more results</string>
     <string name="local_time">Local time: %1$s</string>
+    <string name="location_permission_denied">Location permission denied</string>
+    <string name="location_permission_denied_msg">Please enable it in the app settings</string>
+    <string name="location_services_disabled">Location services disabled</string>
+    <string name="location_services_disabled_msg">Please enable location services (GPS) to use this feature</string>
     <string name="lock_conversation">Lock conversation</string>
     <string name="lock_symbol">Lock symbol</string>
     <string name="lower_hand">Lower hand</string>
@@ -89,6 +96,7 @@
     <string name="menu_item_sort_by_size_biggest_first">Biggest first</string>
     <string name="menu_item_sort_by_size_smallest_first">Smallest first</string>
     <string name="message_copied">Message copied</string>
+    <string name="message_delete_are_you_sure">Are you sure you want to delete this message?</string>
     <string name="message_deleted_by_you">Message deleted by you</string>
     <string name="message_last_edited_by">Edited by %1$s</string>
     <string name="message_poll_tap_to_open">Tap to open poll</string>
@@ -96,6 +104,7 @@
     <string name="message_search_begin_typing">Start typing to search …</string>
     <string name="message_search_hint">Search …</string>
     <string name="messages">Messages</string>
+    <string name="mute_all_notifications">Mute all notifications</string>
     <string name="nc_Server_account_imported">Selected account is now imported and available</string>
     <string name="nc_about">About</string>
     <string name="nc_account_chooser_active_user">Active user</string>
@@ -180,7 +189,7 @@
     <string name="nc_delete_all">Delete all</string>
     <string name="nc_delete_call">Delete conversation</string>
     <string name="nc_delete_conversation_more">If you delete the conversation, it will also be deleted for all other participants.</string>
-    <string name="nc_delete_message">Delete</string>
+    <string name="nc_delete_message">Delete message</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Message deleted successfully, but it might have been leaked to other services</string>
     <string name="nc_delete_now">Delete now</string>
     <string name="nc_deleted_user">User %1$s was removed</string>
@@ -544,6 +553,11 @@
     <string name="no_conversations_archived">No archived conversations</string>
     <string name="no_offline_messages_saved">No offline messages saved</string>
     <string name="no_phone_book_integration_due_to_permissions">No phone number integration due to missing permissions</string>
+    <string name="notification_all_messages">All messages</string>
+    <string name="notification_mention_only">\@-mentions only</string>
+    <string name="notification_off">Off</string>
+    <string name="notifications_default">Default</string>
+    <string name="notifications_default_description">Follow conversation settings</string>
     <string name="oneHour">1 hour</string>
     <string name="online">Online</string>
     <string name="online_status">Online status</string>
@@ -553,7 +567,6 @@
     <string name="open_thread">Go to thread</string>
     <string name="play_pause_voice_message">Play/pause voice message</string>
     <string name="playback_speed_control">Playback speed control</string>
-    <string name="please_continue_the_login_process_in_the_browser">Please continue the login process in the browser</string>
     <string name="polls_add_option">Add option</string>
     <string name="polls_edit_vote">Edit vote</string>
     <string name="polls_end_poll">End poll</string>
@@ -631,10 +644,9 @@
     <string name="shared_items_voice">Voice</string>
     <string name="show_ban_reason">Show ban reason</string>
     <string name="show_banned_participants">Show banned participants</string>
-    <string name="show_threads_overview">Show threads</string>
     <string name="starred">Favourite</string>
     <string name="startCallForbidden">You are not allowed to start a call</string>
-    <string name="start_thread">Start a thread</string>
+    <string name="start_thread">Create a thread</string>
     <string name="started_a_call">started a call</string>
     <string name="status_message">Status message</string>
     <string name="status_reverted">Status Reverted</string>
@@ -653,8 +665,12 @@
     <string name="thisWeek">This week</string>
     <string name="this_is_a_test_message">This is a test message</string>
     <string name="this_weekend">This weekend</string>
-    <string name="thread_replies_amount">%1$d replies</string>
+    <string name="thread_cancel">Cancel thread creation</string>
+    <string name="thread_notifications">Thread notifications</string>
+    <string name="thread_reply">Reply</string>
     <string name="thread_title">Thread title</string>
+    <string name="threads">Threads</string>
+    <string name="threads_list_empty">No threads found</string>
     <string name="today">Today</string>
     <string name="tomorrow">Tomorrow</string>
     <string name="translate">Translate</string>
@@ -699,6 +715,10 @@
     <plurals name="nc_conversation_auto_delete_info">
         <item quantity="one">This conversation will be automatically deleted for everyone in %1$d day of no activity</item>
         <item quantity="other">This conversation will be automatically deleted for everyone in %1$d days of no activity</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d reply</item>
+        <item quantity="other">%d replies</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d vote</item>

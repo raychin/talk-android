@@ -220,6 +220,14 @@ class OutcomingTextMessageViewHolder(itemView: View) :
 
         itemView.setTag(R.string.replyable_message_view_tag, message.replyable)
 
+        Thread().showThreadPreview(
+            chatActivity,
+            message,
+            threadBinding = binding.threadTitleWrapper,
+            reactionsBinding = binding.reactions,
+            openThread = { openThread(message) }
+        )
+
         Reaction().showReactions(
             message,
             ::clickOnReaction,
@@ -357,6 +365,10 @@ class OutcomingTextMessageViewHolder(itemView: View) :
         commonMessageInterface.onClickReaction(chatMessage, emoji)
     }
 
+    private fun openThread(chatMessage: ChatMessage) {
+        commonMessageInterface.openThread(chatMessage)
+    }
+
     @Suppress("Detekt.TooGenericExceptionCaught")
     private fun processParentMessage(message: ChatMessage) {
         if (message.parentMessageId != null && !message.isDeleted) {
@@ -401,7 +413,11 @@ class OutcomingTextMessageViewHolder(itemView: View) :
 
                     viewThemeUtils.talk.colorOutgoingQuoteText(binding.messageQuote.quotedMessage)
                     viewThemeUtils.talk.colorOutgoingQuoteAuthorText(binding.messageQuote.quotedMessageAuthor)
-                    viewThemeUtils.talk.colorOutgoingQuoteBackground(binding.messageQuote.quoteColoredView)
+                    viewThemeUtils.talk.themeParentMessage(
+                        parentChatMessage,
+                        message,
+                        binding.messageQuote.quotedChatMessageView
+                    )
 
                     binding.messageQuote.quotedChatMessageView.setOnClickListener {
                         chatActivity.jumpToQuotedMessage(parentChatMessage)

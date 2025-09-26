@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,8 +33,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
@@ -45,12 +47,11 @@ import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.chat.ChatActivity.Companion.TAG
 import com.nextcloud.talk.components.ColoredStatusBar
 import com.nextcloud.talk.components.StandardAppBar
-import com.nextcloud.talk.contacts.loadImage
+import com.nextcloud.talk.data.database.mappers.asModel
 import com.nextcloud.talk.models.json.threads.ThreadInfo
 import com.nextcloud.talk.threadsoverview.components.ThreadRow
 import com.nextcloud.talk.threadsoverview.viewmodels.ThreadsOverviewViewModel
 import com.nextcloud.talk.users.UserManager
-import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_ROOM_TOKEN
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_THREAD_ID
 import javax.inject.Inject
@@ -69,7 +70,8 @@ class ThreadsOverviewActivity : BaseActivity() {
 
     lateinit var threadsOverviewViewModel: ThreadsOverviewViewModel
 
-    var roomToken: String = ""
+    var threadsSourceUrl: String = ""
+    var appbarTitle: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +84,8 @@ class ThreadsOverviewActivity : BaseActivity() {
         val colorScheme = viewThemeUtils.getColorScheme(this)
 
         val extras: Bundle? = intent.extras
-        roomToken = extras?.getString(KEY_ROOM_TOKEN).orEmpty()
+        threadsSourceUrl = extras?.getString(KEY_THREADS_SOURCE_URL).orEmpty()
+        appbarTitle = extras?.getString(KEY_APPBAR_TITLE).orEmpty()
 
         setContent {
             val backgroundColor = colorResource(id = R.color.bg_default)
@@ -96,7 +99,7 @@ class ThreadsOverviewActivity : BaseActivity() {
                         .statusBarsPadding(),
                     topBar = {
                         StandardAppBar(
-                            title = stringResource(R.string.recent_threads),
+                            title = appbarTitle,
                             null
                         )
                     },
@@ -111,11 +114,9 @@ class ThreadsOverviewActivity : BaseActivity() {
                         ) {
                             ThreadsOverviewScreen(
                                 uiState,
-                                roomToken,
                                 onThreadClick = { roomToken, threadId ->
                                     navigateToChatActivity(roomToken, threadId)
-                                },
-                                threadsOverviewViewModel
+                                }
                             )
                         }
                     }
@@ -136,20 +137,20 @@ class ThreadsOverviewActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         supportActionBar?.show()
-        threadsOverviewViewModel.init(roomToken)
+        threadsOverviewViewModel.init(threadsSourceUrl)
     }
 
     companion object {
         val TAG = ThreadsOverviewActivity::class.java.simpleName
+        val KEY_APPBAR_TITLE = "KEY_APPBAR_TITLE"
+        val KEY_THREADS_SOURCE_URL = "KEY_THREADS_SOURCE_URL"
     }
 }
 
 @Composable
 fun ThreadsOverviewScreen(
     uiState: ThreadsOverviewViewModel.ThreadsListUiState,
-    roomToken: String,
-    onThreadClick: (roomToken: String, threadId: Int) -> Unit,
-    threadsOverviewViewModel: ThreadsOverviewViewModel
+    onThreadClick: (roomToken: String, threadId: Int) -> Unit
 ) {
     when (val state = uiState) {
         is ThreadsOverviewViewModel.ThreadsListUiState.None -> {
@@ -159,9 +160,7 @@ fun ThreadsOverviewScreen(
         is ThreadsOverviewViewModel.ThreadsListUiState.Success -> {
             ThreadsList(
                 threads = state.threadsList!!,
-                roomToken = roomToken,
-                onThreadClick = onThreadClick,
-                threadsOverviewViewModel
+                onThreadClick = onThreadClick
             )
         }
 
@@ -173,13 +172,8 @@ fun ThreadsOverviewScreen(
 }
 
 @Composable
-fun ThreadsList(
-    threads: List<ThreadInfo>,
-    roomToken: String,
-    onThreadClick: (roomToken: String, threadId: Int) -> Unit,
-    threadsOverviewViewModel: ThreadsOverviewViewModel
-) {
-    val context = LocalContext.current
+fun ThreadsList(threads: List<ThreadInfo>, onThreadClick: (roomToken: String, threadId: Int) -> Unit) {
+    val space = ' '
     if (threads.isEmpty()) {
         Box(
             modifier = Modifier
@@ -187,7 +181,7 @@ fun ThreadsList(
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text("No threads found.")
+            Text(stringResource(R.string.threads_list_empty))
         }
         return
     }
@@ -201,31 +195,26 @@ fun ThreadsList(
             items = threads,
             key = { threadInfo -> threadInfo.thread!!.id }
         ) { threadInfo ->
-            val imageUri = ApiUtils.getUrlForAvatar(
-                threadsOverviewViewModel.currentUser.baseUrl,
-                threadInfo.first?.actorId,
-                true
-            )
-            val errorPlaceholderImage: Int = R.drawable.account_circle_96dp
-            val imageRequest = loadImage(imageUri, context, errorPlaceholderImage)
+            val messageJson = threadInfo.last ?: threadInfo.first
+            val messageModel = messageJson?.asModel()
 
             ThreadRow(
-                roomToken = roomToken,
+                roomToken = threadInfo.thread!!.roomToken,
                 threadId = threadInfo.thread!!.id,
-                firstLineTitle = threadInfo.first?.actorDisplayName.orEmpty(),
-                firstLine = threadInfo.first?.message.orEmpty(),
-                numReplies = String.format(
-                    stringResource(
-                        R.string.thread_replies_amount,
-                        threadInfo.thread?.numReplies ?: 0
-                    )
+                title = threadInfo.thread?.title.orEmpty(),
+                numReplies = pluralStringResource(
+                    R.plurals.thread_replies,
+                    threadInfo.thread?.numReplies ?: 0,
+                    threadInfo.thread?.numReplies ?: 0
                 ),
-                secondLineTitle = threadInfo.last?.actorDisplayName?.let { "$it:" }.orEmpty(),
-                secondLine = threadInfo.last?.message.orEmpty(),
+                secondLineTitle = messageModel?.actorDisplayName?.substringBefore(space)?.let { "$it:" }.orEmpty(),
+                secondLine = messageModel?.text.orEmpty(),
                 date = getLastActivityDate(threadInfo), // replace with value from api when available
-                imageRequest = imageRequest,
                 onClick = onThreadClick
             )
+        }
+        item {
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -234,9 +223,7 @@ fun ThreadsList(
 private fun getLastActivityDate(threadInfo: ThreadInfo): String {
     val oneSecond = 1000L
 
-    val lastActivityTimestamp = threadInfo.last?.timestamp
-        ?: threadInfo.first?.timestamp
-        ?: 0
+    val lastActivityTimestamp = threadInfo.thread?.lastActivity ?: 0
 
     val lastActivityDate = DateUtils.getRelativeTimeSpanString(
         lastActivityTimestamp.times(oneSecond),

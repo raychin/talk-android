@@ -5,6 +5,7 @@
     <string name="add_to_notes">Přidat do Poznámek</string>
     <string name="added_to_favorites">Konverzace %1$s přidána do oblíbených</string>
     <string name="appbar_search_in">Hledat v %s</string>
+    <string name="appear_offline">Jevit se offline</string>
     <string name="archive_conversation">Archivovat konverzaci</string>
     <string name="archive_hint">Jakmile je konverzace archivována, bude ve výchozím stavu skrytá. Pokud si chcete zobrazit archivované konverzace, vyberte filtr „Archivováno“. Přímá zmínění budou chodit i nadále.</string>
     <string name="archived">Archivováno</string>
@@ -22,6 +23,7 @@
     <string name="ban">Vyloučit</string>
     <string name="ban_participant">Vyloučit účastníka</string>
     <string name="bans_list">Seznam vyloučení</string>
+    <string name="busy">Zaneprázdněn(a)</string>
     <string name="calendar">Kalendář</string>
     <string name="call_more_actions_dialog_headline">Pokročilé předvolby pro hovor</string>
     <string name="call_running_since_one_hour">Hovor trvá už hodinu.</string>
@@ -61,6 +63,7 @@
     <string name="error_loading_chats">Došlo k problému při načítání vašich chatů</string>
     <string name="error_unbanning">Došlo k chybě při rušení vyloučení účastníka</string>
     <string name="failed_to_save">Nepodařilo se uložit %1$s</string>
+    <string name="fifteenMinutes">15 minut</string>
     <string name="file_list_folder">složka</string>
     <string name="file_list_loading">Načítání…</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -76,6 +79,10 @@
     <string name="left_conversation">Opustili jste konverzaci %1$s</string>
     <string name="load_more_results">Načíst další výsledky</string>
     <string name="local_time">Místní čas: %1$s</string>
+    <string name="location_permission_denied">Oprávnění k přístupu k poloze odepřeno</string>
+    <string name="location_permission_denied_msg">Povolte to v nastavení aplikace</string>
+    <string name="location_services_disabled">Služby určování polohy vypnuty</string>
+    <string name="location_services_disabled_msg">Abyste mohli používat tuto funkci zapněte polohové služby (GPS)</string>
     <string name="lock_conversation">Uzamknout konverzaci</string>
     <string name="lock_symbol">Symbol zámku</string>
     <string name="lower_hand">Přestat se hlásit</string>
@@ -89,6 +96,7 @@
     <string name="menu_item_sort_by_size_biggest_first">Největší jako první</string>
     <string name="menu_item_sort_by_size_smallest_first">Nejmenší jako první</string>
     <string name="message_copied">Zpráva zkopírována</string>
+    <string name="message_delete_are_you_sure">Opravdu chcete tuto zprávu smazat?</string>
     <string name="message_deleted_by_you">Zprávu jste smazali</string>
     <string name="message_last_edited_by">Upraveno %1$s</string>
     <string name="message_poll_tap_to_open">Klepnutím anketu otevřete</string>
@@ -96,6 +104,7 @@
     <string name="message_search_begin_typing">Hledejte psaním…</string>
     <string name="message_search_hint">Hledat…</string>
     <string name="messages">Zprávy</string>
+    <string name="mute_all_notifications">Ztlumit veškerá upozornění</string>
     <string name="nc_Server_account_imported">Zvolený účet byl naimportován a je k dispozici</string>
     <string name="nc_about">O aplikaci</string>
     <string name="nc_account_chooser_active_user">Aktivní uživatel</string>
@@ -180,7 +189,7 @@
     <string name="nc_delete_all">Smazat vše</string>
     <string name="nc_delete_call">Smazat konverzaci</string>
     <string name="nc_delete_conversation_more">Pokud konverzaci smažete, bude smazána také pro všechny její ostatní účastníky.</string>
-    <string name="nc_delete_message">Smazat</string>
+    <string name="nc_delete_message">Smazat zprávu</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Zpráva úspěšně smazána, ale možná unikla do jiných služeb</string>
     <string name="nc_delete_now">Smazat nyní</string>
     <string name="nc_deleted_user">Uživatel %1$s byl odebrán</string>
@@ -544,6 +553,11 @@
     <string name="no_conversations_archived">Žádné archivované konverzace</string>
     <string name="no_offline_messages_saved">Neuloženy žádné zprávy pro režim bez připojení</string>
     <string name="no_phone_book_integration_due_to_permissions">Není možné propojit telefonní čísla, protože chybí potřebná oprávnění</string>
+    <string name="notification_all_messages">Všechny zprávy</string>
+    <string name="notification_mention_only">Pouze zmínky ve stylu @jméno</string>
+    <string name="notification_off">Vypnuto</string>
+    <string name="notifications_default">Výchozí</string>
+    <string name="notifications_default_description">Nastavení následování konverzace</string>
     <string name="oneHour">1 hodina</string>
     <string name="online">Online</string>
     <string name="online_status">Stav online</string>
@@ -553,7 +567,6 @@
     <string name="open_thread">Přejít na vlákno</string>
     <string name="play_pause_voice_message">Přehrát/pozastavit hlasovou zprávu</string>
     <string name="playback_speed_control">Ovládání rychlosti přehrávání</string>
-    <string name="please_continue_the_login_process_in_the_browser">Pokračujte v procesu přihlášení ve webovém prohlížeči</string>
     <string name="polls_add_option">Přidat volbu</string>
     <string name="polls_edit_vote">Upravit hlas</string>
     <string name="polls_end_poll">Ukončit anketu</string>
@@ -631,10 +644,9 @@
     <string name="shared_items_voice">Hlas</string>
     <string name="show_ban_reason">Zobrazit důvod vyloučení</string>
     <string name="show_banned_participants">Zobrazit vyloučené účasníky</string>
-    <string name="show_threads_overview">Zobrazit vlákna</string>
     <string name="starred">Oblíbené</string>
     <string name="startCallForbidden">Nemáte oprávnění pro zahájení hovoru</string>
-    <string name="start_thread">Začít vlákno</string>
+    <string name="start_thread">Vytvořit vlákno</string>
     <string name="started_a_call">zahájen hovor</string>
     <string name="status_message">Stavová zpráva</string>
     <string name="status_reverted">Stav vrácen na původní</string>
@@ -653,7 +665,12 @@
     <string name="thisWeek">Tento týden</string>
     <string name="this_is_a_test_message">Toto je zkušební zpráva</string>
     <string name="this_weekend">Tento víkend</string>
-    <string name="thread_replies_amount">%1$d odpovědí</string>
+    <string name="thread_cancel">Zrušit vytváření vlákna</string>
+    <string name="thread_notifications">Notifikace ohledně vlákna</string>
+    <string name="thread_reply">Odpověď</string>
+    <string name="thread_title">Název vlákna</string>
+    <string name="threads">Vláken</string>
+    <string name="threads_list_empty">Nenalezeny žádné hrozby</string>
     <string name="today">Dnes</string>
     <string name="tomorrow">Zítra</string>
     <string name="translate">Překládání</string>
@@ -702,6 +719,12 @@
         <item quantity="few">Tato konverzace bude automaticky smazána pro kohokoli po %1$d dnech bez jakékoli aktivity.</item>
         <item quantity="many">Tato konverzace bude automaticky smazána pro kohokoli po %1$d dnech bez jakékoli aktivity.</item>
         <item quantity="other">Tato konverzace bude automaticky smazána pro kohokoli po %1$d dnech bez jakékoli aktivity.</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d odpověď</item>
+        <item quantity="few">%d odpovědi</item>
+        <item quantity="many">%d odpovědí</item>
+        <item quantity="other">%d odpovědi</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d hlas</item>

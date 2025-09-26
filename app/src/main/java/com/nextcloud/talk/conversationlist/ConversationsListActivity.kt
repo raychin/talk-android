@@ -38,14 +38,12 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 import androidx.core.view.MenuItemCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
@@ -110,12 +108,13 @@ import com.nextcloud.talk.models.json.conversations.RoomsOverall
 import com.nextcloud.talk.models.json.converters.EnumActorTypeConverter
 import com.nextcloud.talk.models.json.participants.Participant
 import com.nextcloud.talk.repositories.unifiedsearch.UnifiedSearchRepository
-import com.nextcloud.talk.serverstatus.ServerStatusRepository
 import com.nextcloud.talk.settings.SettingsActivity
+import com.nextcloud.talk.threadsoverview.ThreadsOverviewActivity
 import com.nextcloud.talk.ui.BackgroundVoiceMessageCard
 import com.nextcloud.talk.ui.dialog.ChooseAccountDialogFragment
 import com.nextcloud.talk.ui.dialog.ChooseAccountShareToDialogFragment
-import com.nextcloud.talk.ui.dialog.ContextChatCompose
+import com.nextcloud.talk.contextchat.ContextChatView
+import com.nextcloud.talk.contextchat.ContextChatViewModel
 import com.nextcloud.talk.ui.dialog.ConversationsListBottomDialog
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment.Companion.ARCHIVE
@@ -156,7 +155,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -165,10 +163,8 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import retrofit2.HttpException
 import java.io.File
-import java.net.ConnectException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 @SuppressLint("StringFormatInvalid")
 @AutoInjector(NextcloudTalkApplication::class)
@@ -207,9 +203,7 @@ class ConversationsListActivity :
     lateinit var contactsViewModel: ContactsViewModel
 
     lateinit var conversationsListViewModel: ConversationsListViewModel
-
-    @Inject
-    lateinit var serverStatusRepository: ServerStatusRepository
+    lateinit var contextChatViewModel: ContextChatViewModel
 
     override val appBarLayoutType: AppBarLayoutType
         get() = AppBarLayoutType.SEARCH_BAR
@@ -262,33 +256,21 @@ class ConversationsListActivity :
         }
     }
 
-    @Suppress("Detekt.TooGenericExceptionCaught")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NextcloudTalkApplication.sharedApplication!!.componentApplication.inject(this)
 
         currentUser = currentUserProvider.currentUser.blockingGet()
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                serverStatusRepository.getServerStatus()
-            } catch (e: Exception) {
-                if (e is CancellationException) {
-                    throw e
-                }
-                Log.e(TAG, "Failed to fetch server status", e)
-            }
-        }
-
         conversationsListViewModel = ViewModelProvider(this, viewModelFactory)[ConversationsListViewModel::class.java]
+        contextChatViewModel = ViewModelProvider(this, viewModelFactory)[ContextChatViewModel::class.java]
 
         binding = ActivityConversationsBinding.inflate(layoutInflater)
         setupActionBar()
         setContentView(binding.root)
         initSystemBars()
-
         viewThemeUtils.material.themeSearchCardView(binding.searchToolbar)
-        viewThemeUtils.material.colorMaterialButtonContent(binding.menuButton, ColorRole.ON_SURFACE)
+        viewThemeUtils.material.colorMaterialButtonContent(binding.menuButton, ColorRole.ON_SURFACE_VARIANT)
         viewThemeUtils.platform.colorTextView(binding.searchText, ColorRole.ON_SURFACE_VARIANT)
 
         forwardMessage = intent.getBooleanExtra(KEY_FORWARD_MSG_FLAG, false)
@@ -362,6 +344,7 @@ class ConversationsListActivity :
         }
 
         showSearchOrToolbar()
+        conversationsListViewModel.checkIfThreadsExist()
     }
 
     override fun onPause() {
@@ -378,7 +361,7 @@ class ConversationsListActivity :
     @Suppress("MagicNumber")
     private fun addEmptyItemForEdgeToEdgeIfNecessary() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            adapter?.addScrollableFooter(SpacerItem(200))
+            adapter?.addScrollableFooter(SpacerItem(100))
         }
     }
 
@@ -444,6 +427,23 @@ class ConversationsListActivity :
                 }
 
                 else -> {}
+            }
+        }
+
+        lifecycleScope.launch {
+            conversationsListViewModel.threadsExistState.collect { state ->
+                when (state) {
+                    is ConversationsListViewModel.ThreadsExistUiState.Success -> {
+                        binding.threadsButton.visibility = if (state.threadsExistence == true) {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+                    }
+                    else -> {
+                        binding.threadsButton.visibility = View.GONE
+                    }
+                }
             }
         }
 
@@ -1014,7 +1014,7 @@ class ConversationsListActivity :
     private fun showSearchBar() {
         val layoutParams = binding.searchToolbar.layoutParams as AppBarLayout.LayoutParams
         binding.searchToolbar.visibility = View.VISIBLE
-        binding.searchText.hint = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+        binding.searchText.text = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
         binding.conversationListToolbar.visibility = View.GONE
         // layoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout
         // .LayoutParams.SCROLL_FLAG_SNAP | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
@@ -1178,9 +1178,8 @@ class ConversationsListActivity :
         binding.chatListConnectionLost.visibility = if (show) View.VISIBLE else View.GONE
     }
 
-    private fun showWarning(show: Boolean, message: String) {
-        binding.chatListWarning.text = message
-        binding.chatListWarning.visibility = if (show) View.VISIBLE else View.GONE
+    private fun showMaintenanceModeWarning(show: Boolean) {
+        binding.chatListMaintenanceWarning.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     private fun handleUI(show: Boolean) {
@@ -1261,8 +1260,6 @@ class ConversationsListActivity :
                     showErrorDialog()
                 }
             }
-        } else if (throwable is ConnectException) {
-            showWarning(true, context.getString(R.string.nc_server_down))
         } else {
             Log.e(TAG, "Exception in ConversationListActivity", throwable)
             showErrorDialog()
@@ -1272,7 +1269,9 @@ class ConversationsListActivity :
     @SuppressLint("ClickableViewAccessibility")
     private fun prepareViews() {
         hideLogoForBrandedClients()
-        showWarning(false, "")
+
+        showMaintenanceModeWarning(false)
+
         layoutManager = SmoothScrollLinearLayoutManager(this)
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.setHasFixedSize(true)
@@ -1296,7 +1295,7 @@ class ConversationsListActivity :
             false
         }
         binding.swipeRefreshLayoutView.setOnRefreshListener {
-            showWarning(false, "")
+            showMaintenanceModeWarning(false)
             fetchRooms()
             fetchPendingInvitations()
         }
@@ -1323,6 +1322,13 @@ class ConversationsListActivity :
         binding.filterConversationsButton.setOnClickListener {
             val newFragment = FilterConversationFragment.newInstance(filterState)
             newFragment.show(supportFragmentManager, FilterConversationFragment.TAG)
+        }
+
+        binding.threadsButton.setOnClickListener {
+            openFollowedThreadsOverview()
+        }
+        binding.threadsButton.let {
+            viewThemeUtils.platform.colorImageView(it, ColorRole.ON_SURFACE_VARIANT)
         }
 
         binding.newMentionPopupBubble.visibility = View.GONE
@@ -1528,15 +1534,16 @@ class ConversationsListActivity :
                         ).model.displayName
 
                     binding.genericComposeView.apply {
-                        val shouldDismiss = mutableStateOf(false)
                         setContent {
-                            val bundle = bundleOf()
-                            bundle.putString(BundleKeys.KEY_CREDENTIALS, credentials!!)
-                            bundle.putString(BundleKeys.KEY_BASE_URL, currentUser!!.baseUrl)
-                            bundle.putString(KEY_ROOM_TOKEN, token)
-                            bundle.putString(BundleKeys.KEY_MESSAGE_ID, item.messageEntry.messageId)
-                            bundle.putString(BundleKeys.KEY_CONVERSATION_NAME, conversationName)
-                            ContextChatCompose(bundle).GetDialogView(shouldDismiss, context)
+                            contextChatViewModel.getContextForChatMessages(
+                                credentials = credentials!!,
+                                baseUrl = currentUser!!.baseUrl!!,
+                                token = token,
+                                threadId = item.messageEntry.threadId,
+                                messageId = item.messageEntry.messageId!!,
+                                title = item.messageEntry.title
+                            )
+                            ContextChatView(context, contextChatViewModel)
                         }
                     }
                 }
@@ -2096,7 +2103,7 @@ class ConversationsListActivity :
 
     private fun showServiceUnavailableDialog(httpException: HttpException) {
         if (httpException.response()?.headers()?.get(MAINTENANCE_MODE_HEADER_KEY) == "1") {
-            showWarning(true, context.getString(R.string.nc_dialog_maintenance_mode_description))
+            showMaintenanceModeWarning(true)
         } else {
             showErrorDialog()
         }
@@ -2226,10 +2233,24 @@ class ConversationsListActivity :
             binding.filterConversationsButton.let {
                 viewThemeUtils.platform.colorImageView(
                     it,
-                    ColorRole.ON_SURFACE
+                    ColorRole.ON_SURFACE_VARIANT
                 )
             }
         }
+    }
+
+    fun openFollowedThreadsOverview() {
+        val threadsUrl = ApiUtils.getUrlForSubscribedThreads(
+            version = 1,
+            baseUrl = currentUser!!.baseUrl
+        )
+
+        val bundle = Bundle()
+        bundle.putString(ThreadsOverviewActivity.KEY_APPBAR_TITLE, getString(R.string.threads))
+        bundle.putString(ThreadsOverviewActivity.KEY_THREADS_SOURCE_URL, threadsUrl)
+        val threadsOverviewIntent = Intent(context, ThreadsOverviewActivity::class.java)
+        threadsOverviewIntent.putExtras(bundle)
+        startActivity(threadsOverviewIntent)
     }
 
     companion object {

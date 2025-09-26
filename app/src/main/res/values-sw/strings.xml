@@ -5,6 +5,7 @@
     <string name="add_to_notes">Ongeza katika kumbukumbu</string>
     <string name="added_to_favorites">Mazungumzo yaliyoongezwa %1$skatika vipendwa</string>
     <string name="appbar_search_in">Tafuta katika %s</string>
+    <string name="appear_offline">Tokea nje ya mtandao</string>
     <string name="archive_conversation">Hifadhi mazungumzo</string>
     <string name="archive_hint">Mara tu mazungumzo yanapowekwa kwenye kumbukumbu, yatafichwa kwa chaguo-msingi. Chagua kichujio \"Kilichohifadhiwa\" ili kutazama mazungumzo yaliyohifadhiwa. Matangazo ya moja kwa moja bado yatapokelewa.</string>
     <string name="archived">Imewekwa katika kumbukumbu</string>
@@ -22,6 +23,7 @@
     <string name="ban">Piga marufuku</string>
     <string name="ban_participant">Mshiriki aliyepigwa marufuku</string>
     <string name="bans_list">Orodha iliyopigwa marufuku</string>
+    <string name="busy">Bize</string>
     <string name="calendar">Kalenda</string>
     <string name="call_more_actions_dialog_headline">Chaguzi za simu za hali ya juu</string>
     <string name="call_running_since_one_hour">Simu imekuwa ikifanya kazi kwa saa moja.</string>
@@ -61,6 +63,7 @@
     <string name="error_loading_chats">Kulikuwa na tatizo kupakia chati zako</string>
     <string name="error_unbanning">Hitilafu ilitokea wakati wa kubatilisha mshiriki</string>
     <string name="failed_to_save">Imeshindwa kuhifadhi %1$s</string>
+    <string name="fifteenMinutes">Dakika 15</string>
     <string name="file_list_folder">folda</string>
     <string name="file_list_loading">Inapakia</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -76,6 +79,10 @@
     <string name="left_conversation">Umeacha mazungumzo %1$s</string>
     <string name="load_more_results">Pakia matokeo zaidi</string>
     <string name="local_time">Muda wa kawaida: %1$s</string>
+    <string name="location_permission_denied">Ruhusa ya eneo imekataliwa</string>
+    <string name="location_permission_denied_msg">Tafadhali iwashe katika mipangilio ya programu</string>
+    <string name="location_services_disabled">Huduma za eneo zimezimwa</string>
+    <string name="location_services_disabled_msg">Tafadhali wezesha huduma za eneo (GPS) ili kutumia kipengele hiki</string>
     <string name="lock_conversation">Funga mazungumzo</string>
     <string name="lock_symbol">Funga ishara</string>
     <string name="lower_hand">Mkono wa chini</string>
@@ -89,6 +96,7 @@
     <string name="menu_item_sort_by_size_biggest_first">Kubwa zaidi kwanza</string>
     <string name="menu_item_sort_by_size_smallest_first">Ndogo zaidi kwanza</string>
     <string name="message_copied">Ujumbe umenakiliwa</string>
+    <string name="message_delete_are_you_sure">Je, una uhakika unataka kufuta ujumbe huu?</string>
     <string name="message_deleted_by_you">Ujumbe umefutwa na wewe</string>
     <string name="message_last_edited_by">Imehaririwa na %1$s</string>
     <string name="message_poll_tap_to_open">Bonyeza kufungua poll</string>
@@ -96,12 +104,12 @@
     <string name="message_search_begin_typing">Anza kuchapa ili kutafuta </string>
     <string name="message_search_hint">Tafuta...</string>
     <string name="messages">Jumbe</string>
+    <string name="mute_all_notifications">Zima arifu zote</string>
     <string name="nc_Server_account_imported">Akaunti iliyochaguliwa sasa imeingizwa na inapatikana</string>
     <string name="nc_about">Kuhusu</string>
     <string name="nc_account_chooser_active_user">Mtumiaji anayetumia</string>
     <string name="nc_account_chooser_add_account">Ongeza akaunti</string>
-    <string name="nc_account_scheduled_for_deletion">Akaunti imeratibiwa kufutwa, na haiwezi kubadilishwa
- </string>
+    <string name="nc_account_scheduled_for_deletion">Akaunti imeratibiwa kufutwa, na haiwezi kubadilishwa</string>
     <string name="nc_action_open_main_menu">Fungua mwongozo mkuu</string>
     <string name="nc_add_attachment">Ongeza kiambatisho</string>
     <string name="nc_add_emojis">Ongeza emoji</string>
@@ -181,7 +189,7 @@
     <string name="nc_delete_all">Futa zote</string>
     <string name="nc_delete_call">Futa mazungumzo</string>
     <string name="nc_delete_conversation_more">Ukifuta mazungumzo, yatafutwa pia kwa washiriki wengine wote.</string>
-    <string name="nc_delete_message">Futa</string>
+    <string name="nc_delete_message">Futa ujumbe</string>
     <string name="nc_delete_message_leaked_to_matterbridge">Ujumbe umefutwa kikamilifu, lakini huenda umevuja kwa huduma zingine</string>
     <string name="nc_delete_now">Futa sasa</string>
     <string name="nc_deleted_user">Mtumiaji %1$s aliondolewa</string>
@@ -190,8 +198,7 @@
     <string name="nc_description_send_message_button">Tuma ujumbe</string>
     <string name="nc_diagnose_account_category_title">Akaunti ya sasa</string>
     <string name="nc_diagnose_account_server">Seva</string>
-    <string name="nc_diagnose_account_server_notification_app">Programu ya arifa ya seva imesakinishwa?
- </string>
+    <string name="nc_diagnose_account_server_notification_app">Programu ya arifa ya seva imesakinishwa?</string>
     <string name="nc_diagnose_account_user_name">Mtumiaji</string>
     <string name="nc_diagnose_account_user_status_enabled">Je, hali ya mtumiaji imewezeshwa?</string>
     <string name="nc_diagnose_android_version_title">Toleo la Android </string>
@@ -548,6 +555,11 @@
     <string name="no_conversations_archived">Hakuna mazungumzo yaliyohifadhiwa kwenye kumbukumbu</string>
     <string name="no_offline_messages_saved">Hakuna jumbe za nje ya mtandao zilizohifadhiwa</string>
     <string name="no_phone_book_integration_due_to_permissions">Hakuna muunganisho wa nambari ya simu kwa sababu ya kukosa ruhusa</string>
+    <string name="notification_all_messages">Jumbe zote</string>
+    <string name="notification_mention_only">\@-mitajo pekee</string>
+    <string name="notification_off">Imezimwa</string>
+    <string name="notifications_default">Chaguo msingi</string>
+    <string name="notifications_default_description">Fuata mipangilio ya mazungumzo</string>
     <string name="oneHour">Saa 1</string>
     <string name="online">Mtandaoni</string>
     <string name="online_status">Hadhi ya mtandaoni</string>
@@ -557,7 +569,6 @@
     <string name="open_thread">Nenda kwenye mjadala</string>
     <string name="play_pause_voice_message">Cheza/simamisha ujumbe wa sauti</string>
     <string name="playback_speed_control">Udhibiti wa kasi ya mshindonyuma</string>
-    <string name="please_continue_the_login_process_in_the_browser">Tafadhali endeleza mchakato wa kuingia katika kivinjari</string>
     <string name="polls_add_option">Ongeza mbadala</string>
     <string name="polls_edit_vote">Hariri kura</string>
     <string name="polls_end_poll">Maliza kura ya maoni</string>
@@ -600,7 +611,7 @@
     <string name="reset_status">Pangilia hali</string>
     <string name="restrict_join_other_room_while_call">Haiwezekani kujiunga na vyumba vingine ukiwa kwenye simu</string>
     <string name="save">Hifadhi</string>
-    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="scan_qr_code">Changanua Msimbo wa QR</string>
     <string name="scope_federated_description">Sawazisha kwa seva zinazoaminika pekee</string>
     <string name="scope_federated_title"> Shirikisho</string>
     <string name="scope_local_description"> Inaonekana kwa watu katika tukio hili na wageni pekee</string>
@@ -635,10 +646,9 @@
     <string name="shared_items_voice">Sauti</string>
     <string name="show_ban_reason">Onesha sababu ya zuio</string>
     <string name="show_banned_participants">Onesha washiriki waliozuiliwa</string>
-    <string name="show_threads_overview">Onesha mijadala</string>
     <string name="starred">Kipendwa</string>
     <string name="startCallForbidden">Huruhusiwi kuanzisha simu</string>
-    <string name="start_thread">Anza mjadala</string>
+    <string name="start_thread">Unda mjadala</string>
     <string name="started_a_call">Umeanzisha simu</string>
     <string name="status_message">Ujumbe wa hadhi</string>
     <string name="status_reverted">Hali Imerejeshwa</string>
@@ -652,13 +662,17 @@
     <string name="take_photo_switch_camera">Badili kamera</string>
     <string name="take_photo_toggle_crop">Dondosha picha</string>
     <string name="take_photo_toggle_lowres">Punguza ukubwa wa picha</string>
-    <string name="take_photo_toggle_torch">Toggle torch</string>
+    <string name="take_photo_toggle_torch">Washa tochi</string>
     <string name="thirtyMinutes">Dakika 30</string>
     <string name="thisWeek">Wiki hii</string>
     <string name="this_is_a_test_message">Huu ni ujumbe wa jaribio</string>
     <string name="this_weekend">Wikendi hii</string>
-    <string name="thread_replies_amount">%1$d majibu </string>
+    <string name="thread_cancel">Ghairi uundaji wa mjadala</string>
+    <string name="thread_notifications">Arifa za mjadala</string>
+    <string name="thread_reply">Jibu</string>
     <string name="thread_title">Kichwa cha mjadala</string>
+    <string name="threads">Mijadala</string>
+    <string name="threads_list_empty">Hakuna nyuzi zilizopatikana</string>
     <string name="today">Leo</string>
     <string name="tomorrow">Kesho</string>
     <string name="translate">Tafsiri</string>
@@ -702,8 +716,11 @@
     </plurals>
     <plurals name="nc_conversation_auto_delete_info">
         <item quantity="one">This conversation will be automatically deleted for everyone in %1$d day of no activity</item>
-        <item quantity="other">Mazungumzo haya yatafutwa kiotomatiki kwa kila mtu baada ya siku %1$d bila shughuli yoyote
- </item>
+        <item quantity="other">Mazungumzo haya yatafutwa kiotomatiki kwa kila mtu baada ya siku %1$d bila shughuli yoyote</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d reply</item>
+        <item quantity="other">%dmajibu</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d vote</item>

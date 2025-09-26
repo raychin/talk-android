@@ -5,6 +5,7 @@
     <string name="add_to_notes">Amestar a Notes</string>
     <string name="added_to_favorites">La conversación «%1$s» metióse en Favoritos</string>
     <string name="appbar_search_in">Buscar en: %s</string>
+    <string name="appear_offline">Apaecer desconectáu</string>
     <string name="archived">Archivóse</string>
     <string name="audio_output_bluetooth">Bluetooth</string>
     <string name="audio_output_dialog_headline">Salida d\'audiu</string>
@@ -14,6 +15,7 @@
     <string name="automatic_status_set">L\'estáu afitóse automáticamente</string>
     <string name="avatar">Avatar</string>
     <string name="away">Ausente</string>
+    <string name="busy">Ocupáu</string>
     <string name="calendar">Calendariu</string>
     <string name="camera_permission_granted">Concedióse\'l permisu de la cámara. Volvi escoyer la cámara.</string>
     <string name="choose_avatar_from_cloud">Escoyer un avatar de la nube</string>
@@ -37,6 +39,7 @@
     <string name="end_call">Finar la llamada</string>
     <string name="error_loading_chats">Hebo un problema al cargar les charres</string>
     <string name="failed_to_save">Nun se pue guardar «%1$s»</string>
+    <string name="fifteenMinutes">15 minutos</string>
     <string name="file_list_folder">carpeta</string>
     <string name="file_list_loading">Cargando…</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -61,6 +64,7 @@
     <string name="message_search_begin_empty">Nun hai nengún resultáu de la busca</string>
     <string name="message_search_hint">Buscar…</string>
     <string name="messages">Mensaxes</string>
+    <string name="mute_all_notifications">Desactivar tolos avisos</string>
     <string name="nc_about">Tocante a</string>
     <string name="nc_account_chooser_active_user">Usuariu activu</string>
     <string name="nc_account_chooser_add_account">Amestar una cuenta</string>
@@ -114,7 +118,7 @@
     <string name="nc_delete_all">Desanciar too</string>
     <string name="nc_delete_call">Desaniciar la conversación</string>
     <string name="nc_delete_conversation_more">Si desanicies la conversación, tamién la desanicies pa los demás participantes.</string>
-    <string name="nc_delete_message">Desaniciar</string>
+    <string name="nc_delete_message">Desaniciar el mensaxe</string>
     <string name="nc_description_send_message_button">Unviar el mensaxe</string>
     <string name="nc_diagnose_account_category_title">Cuenta actual</string>
     <string name="nc_diagnose_account_server">Srividor</string>
@@ -272,6 +276,9 @@
     <string name="nc_webinar">Webinariu</string>
     <string name="nc_yes">Sí</string>
     <string name="next_week">La selmana que vien</string>
+    <string name="notification_all_messages">Tolos mensaxes</string>
+    <string name="notification_off">Non</string>
+    <string name="notifications_default">Por defeutu</string>
     <string name="oneHour">1 hora</string>
     <string name="online">En llinia</string>
     <string name="online_status">Estáu en llinia</string>
@@ -328,6 +335,7 @@
     <string name="thisWeek">Esta selmana</string>
     <string name="this_is_a_test_message">Esto ye un mensaxe de prueba</string>
     <string name="this_weekend">Esta fin de selmana</string>
+    <string name="thread_reply">Responder</string>
     <string name="today">Güei</string>
     <string name="tomorrow">Mañana</string>
     <string name="translate">Traducir</string>

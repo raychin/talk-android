@@ -183,6 +183,14 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
 
         itemView.setTag(R.string.replyable_message_view_tag, message.replyable)
 
+        Thread().showThreadPreview(
+            chatActivity,
+            message,
+            threadBinding = binding.threadTitleWrapper,
+            reactionsBinding = binding.reactions,
+            openThread = { openThread(message) }
+        )
+
         Reaction().showReactions(
             message,
             ::clickOnReaction,
@@ -305,6 +313,10 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
         commonMessageInterface.onClickReaction(chatMessage, emoji)
     }
 
+    private fun openThread(chatMessage: ChatMessage) {
+        commonMessageInterface.openThread(chatMessage)
+    }
+
     private fun setAvatarAndAuthorOnMessageItem(message: ChatMessage) {
         val actorName = message.actorDisplayName
         if (!actorName.isNullOrBlank()) {
@@ -383,7 +395,7 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
                     viewThemeUtils.talk.themeParentMessage(
                         parentChatMessage,
                         message,
-                        binding.messageQuote.quoteColoredView,
+                        binding.messageQuote.quotedChatMessageView,
                         R.color.high_emphasis_text
                     )
 

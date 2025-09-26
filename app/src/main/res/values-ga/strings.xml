@@ -5,6 +5,7 @@
     <string name="add_to_notes">Cuir le Nótaí</string>
     <string name="added_to_favorites">Cuireadh comhrá %1$s le ceanáin</string>
     <string name="appbar_search_in">Cuardaigh i %s</string>
+    <string name="appear_offline">Le feiceáil as líne</string>
     <string name="archive_conversation">Comhrá cartlainne</string>
     <string name="archive_hint">Nuair a bheidh comhrá curtha i gcartlann, cuirfear i bhfolach é de réir réamhshocraithe. Roghnaigh an scagaire \"Cartlannaithe\" chun féachaint ar chomhráite cartlainne. Gheofar tagairtí díreacha fós.</string>
     <string name="archived">Cartlannaithe</string>
@@ -22,6 +23,7 @@
     <string name="ban">Bac</string>
     <string name="ban_participant">Cosc ar rannpháirtí</string>
     <string name="bans_list">Liosta toirmisc</string>
+    <string name="busy">Gnóthach</string>
     <string name="calendar">Féilire</string>
     <string name="call_more_actions_dialog_headline">Ardroghanna glaonna</string>
     <string name="call_running_since_one_hour">Tá an glao ar siúl ar feadh uair an chloig.</string>
@@ -61,6 +63,7 @@
     <string name="error_loading_chats">Tharla fadhb agus do chomhráite á lódáil</string>
     <string name="error_unbanning">Tharla earráid agus rannpháirtí á bhaint de</string>
     <string name="failed_to_save">Theip ar shábháil %1$s</string>
+    <string name="fifteenMinutes">15 nóiméad</string>
     <string name="file_list_folder">fillteán</string>
     <string name="file_list_loading">Á lódáil…</string>
     <string name="filename_progress">%1$s (%2$d)</string>
@@ -76,6 +79,10 @@
     <string name="left_conversation">D\'fhág tú an comhrá %1$s</string>
     <string name="load_more_results">Íoslódáil níos mó torthaí</string>
     <string name="local_time">Am áitiúil: %1$s</string>
+    <string name="location_permission_denied">Cead suímh diúltaithe</string>
+    <string name="location_permission_denied_msg">Cumasaigh é i socruithe an aip le do thoil</string>
+    <string name="location_services_disabled">Seirbhísí suímh díchumasaithe</string>
+    <string name="location_services_disabled_msg">Cumasaigh seirbhísí suímh (GPS) le go mbeidh tú in ann an ghné seo a úsáid</string>
     <string name="lock_conversation">Cuir glas ar an gcomhrá</string>
     <string name="lock_symbol">Siombail ghlais</string>
     <string name="lower_hand">Lámh íochtair</string>
@@ -89,6 +96,7 @@
     <string name="menu_item_sort_by_size_biggest_first">An ceann is mó ar dtús</string>
     <string name="menu_item_sort_by_size_smallest_first">Is lú ar dtús</string>
     <string name="message_copied">Teachtaireacht cóipeáilte</string>
+    <string name="message_delete_are_you_sure">An bhfuil tú cinnte gur mian leat an teachtaireacht seo a scriosadh?</string>
     <string name="message_deleted_by_you">Scrios tú an teachtaireacht</string>
     <string name="message_last_edited_by">Curtha in eagar ag %1$s</string>
     <string name="message_poll_tap_to_open">Tapáil chun vótaíocht a oscailt</string>
@@ -96,6 +104,7 @@
     <string name="message_search_begin_typing">Tosaigh ag clóscríobh chun cuardach a dhéanamh…</string>
     <string name="message_search_hint">Cuardaigh…</string>
     <string name="messages">Teachtaireachtaí</string>
+    <string name="mute_all_notifications">Balbhaigh gach fógra</string>
     <string name="nc_Server_account_imported">Tá cuntas roghnaithe iompórtáilte anois agus ar fáil</string>
     <string name="nc_about">Faoi</string>
     <string name="nc_account_chooser_active_user">Úsáideoir gníomhach</string>
@@ -180,7 +189,7 @@
     <string name="nc_delete_all">Scrios go léir</string>
     <string name="nc_delete_call">Scrios an comhrá</string>
     <string name="nc_delete_conversation_more">Má scriosann tú an comhrá, scriosfar é do gach rannpháirtí eile freisin.</string>
-    <string name="nc_delete_message">Scrios</string>
+    <string name="nc_delete_message">Scrios teachtaireacht</string>
     <string name="nc_delete_message_leaked_to_matterbridge">D\'éirigh leis an teachtaireacht a scriosadh, ach seans gur sceitheadh ​​chuig seirbhísí eile í</string>
     <string name="nc_delete_now">Scrios anois</string>
     <string name="nc_deleted_user">Baineadh úsáideoir %1$s</string>
@@ -544,6 +553,11 @@
     <string name="no_conversations_archived">Níl aon chomhráite sa chartlann</string>
     <string name="no_offline_messages_saved">Níor sábháladh aon teachtaireacht as líne</string>
     <string name="no_phone_book_integration_due_to_permissions">Níl aon chomhtháthú uimhir theileafóin mar gheall ar cheadanna in easnamh</string>
+    <string name="notification_all_messages">Gach teachtaireacht</string>
+    <string name="notification_mention_only">\@-luaite amháin</string>
+    <string name="notification_off">as</string>
+    <string name="notifications_default">Réamhshocrú</string>
+    <string name="notifications_default_description">Lean socruithe comhrá</string>
     <string name="oneHour">1 uair</string>
     <string name="online">Ar líne</string>
     <string name="online_status">Stádas ar líne</string>
@@ -553,7 +567,6 @@
     <string name="open_thread">Téigh go dtí an snáithe</string>
     <string name="play_pause_voice_message">Seinn/cuir teachtaireacht gutha ar sos</string>
     <string name="playback_speed_control">Rialú luas athsheinm</string>
-    <string name="please_continue_the_login_process_in_the_browser">Lean ar aghaidh leis an bpróiseas logála isteach sa bhrabhsálaí le do thoil.</string>
     <string name="polls_add_option">Cuir rogha leis</string>
     <string name="polls_edit_vote">Cuir vóta in eagar</string>
     <string name="polls_end_poll">Deireadh vótaíocht</string>
@@ -631,10 +644,9 @@
     <string name="shared_items_voice">Guth</string>
     <string name="show_ban_reason">Taispeáin Cúis Toirmeasc</string>
     <string name="show_banned_participants">Taispeáin rannpháirtithe toirmiscthe</string>
-    <string name="show_threads_overview">Taispeáin snáitheanna</string>
     <string name="starred">is fearr leat</string>
     <string name="startCallForbidden">Níl cead agat glao a thosú</string>
-    <string name="start_thread">Tosaigh snáithe</string>
+    <string name="start_thread">Cruthaigh snáithe</string>
     <string name="started_a_call">thosaigh glao</string>
     <string name="status_message">Teachtaireacht stádais</string>
     <string name="status_reverted">Stádas ar ais</string>
@@ -653,8 +665,12 @@
     <string name="thisWeek">An tseachtain seo</string>
     <string name="this_is_a_test_message">Is teachtaireacht tástála é seo</string>
     <string name="this_weekend">An deireadh seachtaine seo</string>
-    <string name="thread_replies_amount">%1$d freagraí</string>
+    <string name="thread_cancel">Cealaigh cruthú snáithe</string>
+    <string name="thread_notifications">Fógraí snáithe</string>
+    <string name="thread_reply">Freagra</string>
     <string name="thread_title">Teideal an snáithe</string>
+    <string name="threads">Snáitheanna</string>
+    <string name="threads_list_empty">Níor aimsíodh aon snáitheanna</string>
     <string name="today">Inniu</string>
     <string name="tomorrow">Amárach</string>
     <string name="translate">Aistrigh</string>
@@ -705,6 +721,13 @@
         <item quantity="few">Scriosfar an comhrá seo go huathoibríoch do gach duine i %1$d lá gan aon ghníomhaíocht</item>
         <item quantity="many">Scriosfar an comhrá seo go huathoibríoch do gach duine i %1$d lá gan aon ghníomhaíocht</item>
         <item quantity="other">Scriosfar an comhrá seo go huathoibríoch do gach duine i %1$d lá gan aon ghníomhaíocht</item>
+    </plurals>
+    <plurals name="thread_replies">
+        <item quantity="one">%d freagra</item>
+        <item quantity="two">%d freagraí</item>
+        <item quantity="few">%d freagraí</item>
+        <item quantity="many">%d freagraí</item>
+        <item quantity="other">%d freagraí</item>
     </plurals>
     <plurals name="polls_amount_voters">
         <item quantity="one">%d vóta</item>

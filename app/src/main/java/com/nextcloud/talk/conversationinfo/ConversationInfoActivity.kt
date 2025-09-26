@@ -82,6 +82,7 @@ import com.nextcloud.talk.models.json.participants.Participant.ActorType.USERS
 import com.nextcloud.talk.models.json.participants.ParticipantsOverall
 import com.nextcloud.talk.repositories.conversations.ConversationsRepository
 import com.nextcloud.talk.shareditems.activities.SharedItemsActivity
+import com.nextcloud.talk.threadsoverview.ThreadsOverviewActivity
 import com.nextcloud.talk.ui.dialog.DialogBanListFragment
 import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.CapabilitiesUtil
@@ -601,6 +602,22 @@ class ConversationInfoActivity :
         startActivity(intent)
     }
 
+    fun openThreadsOverview() {
+        val threadsUrl = ApiUtils.getUrlForRecentThreads(
+            version = 1,
+            baseUrl = conversationUser.baseUrl,
+            token = conversationToken
+        )
+
+        val bundle = Bundle()
+        bundle.putString(KEY_ROOM_TOKEN, conversationToken)
+        bundle.putString(ThreadsOverviewActivity.KEY_APPBAR_TITLE, getString(R.string.recent_threads))
+        bundle.putString(ThreadsOverviewActivity.KEY_THREADS_SOURCE_URL, threadsUrl)
+        val threadsOverviewIntent = Intent(context, ThreadsOverviewActivity::class.java)
+        threadsOverviewIntent.putExtras(bundle)
+        startActivity(threadsOverviewIntent)
+    }
+
     private fun setupWebinaryView() {
         if (hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.WEBINARY_LOBBY) &&
             webinaryRoomType(conversation!!) &&
@@ -1057,7 +1074,15 @@ class ConversationInfoActivity :
         ) {
             binding.sharedItemsButton.setOnClickListener { showSharedItems() }
         } else {
+            binding.sharedItemsButton.visibility = GONE
             binding.sharedItems.visibility = GONE
+        }
+
+        if (hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.THREADS)) {
+            binding.sharedItems.visibility = VISIBLE
+            binding.showThreadsButton.setOnClickListener { openThreadsOverview() }
+        } else {
+            binding.showThreadsButton.visibility = GONE
         }
 
         if (conversation!!.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL &&
