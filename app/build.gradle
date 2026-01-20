@@ -65,8 +65,13 @@ android {
             clps {
                 applicationId "com.nextcloud.talk2.clps"
                 dimension "default"
+//                res.srcDirs = ["src/main/res", "src/clps/res"]
 //                versionCode 1
 //                versionName "1"
+                manifestPlaceholders = [
+                    JPUSH_APPKEY : "your_jpush_app_key",
+                    JPUSH_CHANNEL: "developer-default"
+                ]
             }
         }
 
@@ -368,6 +373,11 @@ dependencies {
     testImplementation("com.squareup.okhttp3:mockwebserver:$okhttpVersion")
     testImplementation("com.google.dagger:hilt-android-testing:2.57.1")
     testImplementation("org.robolectric:robolectric:4.16")
+
+//    // 最新版本
+//    implementation 'cn.jiguang.sdk:jpush:4.6.0'
+//    // jcore 包
+//    implementation 'cn.jiguang.sdk:jcore:2.8.0'
 }
 
 tasks.register('installGitHooks', Copy) {
