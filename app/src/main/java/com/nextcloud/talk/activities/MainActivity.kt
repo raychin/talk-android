@@ -21,6 +21,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import autodagger.AutoInjector
+import cn.jpush.android.api.JPushInterface
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.talk.R
 import com.nextcloud.talk.account.ServerSelectionActivity
@@ -70,6 +71,8 @@ class MainActivity :
         Log.d(TAG, "onCreate: Activity: " + System.identityHashCode(this).toString())
 
         super.onCreate(savedInstanceState)
+
+        Log.d(TAG, "onStart: getRegistrationID: " + JPushInterface.getRegistrationID(applicationContext))
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {

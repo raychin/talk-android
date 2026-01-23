@@ -142,6 +142,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         sharedApplication!!.componentApplication.inject(this)
         context = applicationContext
 
+        // TODO RAY 此方法subject和signature异常数据会报错
         initDecryptedData(inputData)
         initNcApiAndCredentials()
 

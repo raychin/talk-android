@@ -69,7 +69,8 @@ android {
 //                versionCode 1
 //                versionName "1"
                 manifestPlaceholders = [
-                    JPUSH_APPKEY : "your_jpush_app_key",
+                    JPUSH_PKGNAME: applicationId,
+                    JPUSH_APPKEY : '37674722073737cd729faf02',
                     JPUSH_CHANNEL: "developer-default"
                 ]
             }

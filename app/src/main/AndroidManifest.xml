@@ -80,6 +80,13 @@
         android:protectionLevel="signature" />
     <uses-permission android:name="${applicationId}.${broadcastPermission}" />
 
+    <!-- 前台位置权限（必须） -->
+<!--    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />-->
+    <!-- 后台位置权限（如需） -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- 前台服务权限（Android 9+） -->
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />-->
+
     <application
         android:name=".application.NextcloudTalkApplication"
         android:allowBackup="true"
@@ -98,6 +105,28 @@
         <meta-data
             android:name="android.max_aspect"
             android:value="10" />
+
+        <!-- 新的 tag/alias 接口结果返回需要开发者配置一个自定的广播 -->
+        <!-- 该广播需要继承 JPush 提供的 JPushMessageReceiver 类, 并如下新增一个 Intent-Filter -->
+        <receiver
+            android:name="com.nextcloud.talk.jpush.CJPushMessageReceiver"
+            android:enabled="true"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="cn.jpush.android.intent.RECEIVE_MESSAGE" />
+                <category android:name="${applicationId}" />
+            </intent-filter>
+        </receiver>
+        <!-- 可配置android:process参数将Service放在其他进程中；android:enabled属性不能是false -->
+        <!-- 这个是自定义Service，要继承极光JCommonService，可以在更多手机平台上使得推送通道保持的更稳定 -->
+        <service android:name="com.nextcloud.talk.jpush.CJCommonService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":pushcore">
+            <intent-filter>
+                <action android:name="cn.jiguang.user.service.action" />
+            </intent-filter>
+        </service>
 
         <activity
             android:name=".activities.MainActivity"

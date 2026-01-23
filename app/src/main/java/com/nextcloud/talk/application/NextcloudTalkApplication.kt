@@ -25,6 +25,7 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import autodagger.AutoComponent
 import autodagger.AutoInjector
+import cn.jpush.android.api.JPushInterface
 import coil.Coil
 import coil.ImageLoader
 import coil.decode.GifDecoder
@@ -120,6 +121,11 @@ class NextcloudTalkApplication :
         Log.d(TAG, "onCreate")
         sharedApplication = this
 
+        Thread.setDefaultUncaughtExceptionHandler { thread, exception ->
+            Log.e("UncaughtException", "Thread: ${thread.name}, Error: ${exception.message}")
+            // TODO RAY 保存或上报异常详情
+        }
+
         val securityKeyManager = SecurityKeyManager.getInstance()
         val securityKeyConfig = SecurityKeyManagerConfig.Builder()
             .setEnableDebugLogging(BuildConfig.DEBUG)
@@ -141,6 +147,8 @@ class NextcloudTalkApplication :
         ClosedInterfaceImpl().providerInstallerInstallIfNeededAsync()
         DeviceUtils.ignoreSpecialBatteryFeatures()
 
+        initPush()
+
         initWorkers()
 
         val config = BundledEmojiCompatConfig(this)
@@ -150,6 +158,13 @@ class NextcloudTalkApplication :
         EmojiManager.install(GoogleEmojiProvider())
 
         NotificationUtils.registerNotificationChannels(applicationContext, appPreferences)
+    }
+
+    private fun initPush() {
+        JPushInterface.setDebugMode(true)
+        JPushInterface.init(this)
+
+        // TODO RAY NotificationUtils类中是否支持判断通知是否打开，未打开跳转通知设置页面
     }
 
     private fun initWorkers() {
