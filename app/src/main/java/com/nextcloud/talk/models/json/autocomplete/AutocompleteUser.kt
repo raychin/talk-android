@@ -10,6 +10,7 @@ package com.nextcloud.talk.models.json.autocomplete
 import android.os.Parcelable
 import com.bluelinelabs.logansquare.annotation.JsonField
 import com.bluelinelabs.logansquare.annotation.JsonObject
+import com.nextcloud.talk.models.json.clps.portal.PortalItemJson
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -20,7 +21,9 @@ data class AutocompleteUser(
     @JsonField(name = ["label"])
     var label: String?,
     @JsonField(name = ["source"])
-    var source: String?
+    var source: String?,
+    // 门户数据体 add by ray on 2026/01/30
+    var portalItemJson: PortalItemJson? = null
 ) : Parcelable {
     // This constructor is added to work with the 'com.bluelinelabs.logansquare.annotation.JsonObject'
     constructor() : this(null, null, null)

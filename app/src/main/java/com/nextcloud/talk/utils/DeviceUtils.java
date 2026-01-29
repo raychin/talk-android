@@ -76,4 +76,8 @@ public class DeviceUtils {
             }
         }
     }
+
+    public static String getDeviceLanguage() {
+        return android.os.LocaleList.getDefault().get(0).getLanguage();
+    }
 }

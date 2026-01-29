@@ -46,8 +46,8 @@ android {
 
         // mayor.minor.hotfix.increment (for increment: 01-50=Alpha / 51-89=RC / 90-99=stable)
         // xx   .xxx  .xx    .xx
-        versionCode 230000007
-        versionName "23.0.0 Alpha 07"
+        versionCode 230000009
+        versionName "30.4.1-Alpha01"
 
         flavorDimensions "default"
         renderscriptTargetApi = 19
@@ -70,9 +70,9 @@ android {
             MEIZU_APPKEY : "MZ-魅族的APPKEY",
             MEIZU_APPID : "MZ-魅族的APPID",
             //JPush5.5.3开始，可以不添加MI-前缀.
-            XIAOMI_APPID : "小米的APPID",
+            XIAOMI_APPID : "2882303761520495219",
             //JPush5.5.3开始，可以不添加MI-前缀.
-            XIAOMI_APPKEY : "小米的APPKEY",
+            XIAOMI_APPKEY : "5182049519219",
             OPPO_APPKEY : "OP-oppo的APPKEY",
             OPPO_APPID : "OP-oppo的APPID",
             OPPO_APPSECRET : "OP-oppo的APPSECRET",
@@ -250,6 +250,7 @@ ext {
     media3_version = "1.8.0"
     coroutines_version = "1.10.2"
     mockitoKotlinVersion = "6.0.0"
+    jPushVersion = "6.0.1"
 }
 
 configurations.configureEach {
@@ -444,21 +445,29 @@ dependencies {
 //    implementation 'cn.jiguang.sdk:jcore:2.8.0'
 
     // 此处以JPush 5.5.3 版本为例, 基础库JCore SDK将自动引用最新
-    implementation 'cn.jiguang.sdk:jpush:5.9.0'
+    implementation "cn.jiguang.sdk:jpush:$jPushVersion"
     // 接入华为厂商
-    implementation 'com.huawei.hms:push:6.12.0.300'
-    implementation 'cn.jiguang.sdk.plugin:huawei:5.5.3'// 极光厂商插件版本与接入 JPush 版本保持一致，下同
+    implementation "com.huawei.hms:push:6.13.0.301"
+    // 极光厂商插件版本与接入 JPush 版本保持一致，下同
+    implementation "cn.jiguang.sdk.plugin:huawei:$jPushVersion"
 //    // 接入 FCM 厂商
 //    implementation 'com.google.firebase:firebase-messaging:23.2.0'
-//    implementation 'cn.jiguang.sdk.plugin:fcm:5.5.3'
+//    implementation "cn.jiguang.sdk.plugin:fcm:$jPushVersion"
     // 接入魅族厂商
-    implementation 'cn.jiguang.sdk.plugin:meizu:5.5.3'
+    implementation "cn.jiguang.sdk.plugin:meizu:$jPushVersion"
     // 接入 VIVO 厂商
-    implementation 'cn.jiguang.sdk.plugin:vivo:5.5.3.a'
+    implementation "cn.jiguang.sdk.plugin:vivo:$jPushVersion"
     // 接入 OPPO 厂商
-    implementation 'cn.jiguang.sdk.plugin:oppo:5.5.3'
+    implementation "cn.jiguang.sdk.plugin:oppo:$jPushVersion"
     // 接入小米厂商
-    implementation 'cn.jiguang.sdk.plugin:xiaomi:5.5.3'
+    implementation "cn.jiguang.sdk.plugin:xiaomi:$jPushVersion"
+
+    // Glide核心库
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    // Glide Compose扩展（必须添加）
+    implementation 'com.github.bumptech.glide:compose:1.0.0-beta01'
+    // 注解处理器（可选，用于生成API）
+    kapt 'com.github.bumptech.glide:compiler:4.16.0'
 }
 
 tasks.register('installGitHooks', Copy) {

@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.nextcloud.talk.R
 import com.nextcloud.talk.contacts.CompanionClass
 import com.nextcloud.talk.contacts.ContactsViewModel
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteUser
@@ -30,17 +31,21 @@ import com.nextcloud.talk.models.json.autocomplete.AutocompleteUser
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ContactsItem(contacts: List<AutocompleteUser>, contactsViewModel: ContactsViewModel, context: Context) {
+    // 添加华钦门户分组，修改数据分组及排序 modify by ray on 2026/01/30
+    val portalTitle = context.getString(R.string.clps_portal)
     val groupedContacts: Map<String, List<AutocompleteUser>> = contacts.groupBy { contact ->
-        (
-            if (contact.source == "users") {
-                contact.label?.first()?.uppercase()
-            } else {
-                contact.source?.replaceFirstChar { actorType ->
-                    actorType.uppercase()
-                }
+        when (contact.source) {
+            // portal 显示全称并排在最前面
+            "portal" -> portalTitle
+            "users" -> contact.label?.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+            else -> contact.source?.replaceFirstChar { actorType ->
+                actorType.uppercase()
             }
-            ).toString()
-    }
+        }
+    }.toSortedMap(compareBy {
+        // 将 "Portal" 排在最前面
+        if (it == portalTitle) "0" else it
+    })
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth(),

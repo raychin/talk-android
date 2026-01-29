@@ -12,6 +12,7 @@ import com.nextcloud.talk.api.NcApiCoroutines
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.models.RetrofitBucket
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteOverall
+import com.nextcloud.talk.models.json.clps.portal.PortalOCS
 import com.nextcloud.talk.models.json.conversations.RoomOverall
 import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.ContactUtils
@@ -44,6 +45,11 @@ class ContactsRepositoryImpl @Inject constructor(
             modifiedQueryMap
         )
         return response
+    }
+
+    override suspend fun getPortals(lang: String?): PortalOCS {
+        val url = ApiUtils.getUrlForPortals(currentUser.baseUrl!!,)
+        return ncApiCoroutines.getPortals(credentials, url, lang)
     }
 
     override suspend fun createRoom(

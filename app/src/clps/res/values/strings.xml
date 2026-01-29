@@ -1,0 +1,23 @@
+<!--
+How to work with translations as a developer:
+- Only add new translations to values/stings.xml, don't do this for other languages (it will be done via transifex).
+- Never change the key of a translation. If it really has to be changed, delete it and create a new entry instead.
+- Values in values/strings.xml are allowed to be modified. For bigger changes consider to add a new key-value pair.
+- Linebreaks inside values/strings.xml itself are not allowed (this will break the transifex sync)
+- Only the first letter of a sentence should be uppercase, all following words should be lowercase.
+- Translations are synced every night (or when manually triggered):
+   - New entries are added to transifex.com
+   - Updated translations from transifex are added via Nextcloud bot to this repo.
+
+How to translate with transifex:
+- Join as a team member for your language: https://app.transifex.com/nextcloud/nextcloud/languages/
+- Go to https://app.transifex.com/nextcloud/nextcloud/translate/#resource/android-talk and choose your language in the
+ dropdown menu to start translating.
+- To find a key via search, enter "key:" and it's name, e.g. "key:nc_about"
+-->
+
+<resources>
+
+    <!-- CLPS -->
+    <string name="clps_portal">CLPS Portal</string>
+</resources>

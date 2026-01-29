@@ -7,10 +7,16 @@
 
 package com.nextcloud.talk.contacts
 
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteUser
+import com.nextcloud.talk.models.json.clps.portal.PortalOCS
 import com.nextcloud.talk.models.json.conversations.Conversation
+import com.nextcloud.talk.utils.DeviceUtils
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,6 +50,9 @@ class ContactsViewModel @Inject constructor(private val repository: ContactsRepo
     private val _clickAddButton = MutableStateFlow(false)
 
     private var hideAlreadyAddedParticipants: Boolean = false
+
+    private val _portals = MutableLiveData<PortalOCS>()
+    private var portals: LiveData<PortalOCS> = _portals
 
     init {
         getContactsFromSearchParams()
@@ -114,6 +123,28 @@ class ContactsViewModel @Inject constructor(private val repository: ContactsRepo
                     contactsList?.removeAll(selectedParticipants.value)
                     contactsList?.addAll(_selectedContacts.value)
                 }
+
+                if (_portals.value == null) {
+                    val lang = DeviceUtils.getDeviceLanguage()
+                    Log.e("Ray", lang)
+                    _portals.value = repository.getPortals(
+                        lang
+                    )
+                }
+                portals = _portals
+
+                portals.value?.ocs?.data?.forEach { it ->
+                    run {
+                        val testPortal = AutocompleteUser(
+                            it.sa_id.toString(),
+                            it.sa_mob_name,
+                            "portal",
+                            it
+                        )
+                        contactsList?.add(testPortal)
+                    }
+                }
+
                 _contactsViewState.value = ContactsUiState.Success(contactsList)
             } catch (exception: Exception) {
                 _contactsViewState.value = ContactsUiState.Error(exception.message ?: "")

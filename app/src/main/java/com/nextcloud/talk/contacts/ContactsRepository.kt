@@ -8,6 +8,7 @@
 package com.nextcloud.talk.contacts
 
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteOverall
+import com.nextcloud.talk.models.json.clps.portal.PortalOCS
 import com.nextcloud.talk.models.json.conversations.RoomOverall
 
 interface ContactsRepository {
@@ -19,4 +20,5 @@ interface ContactsRepository {
         conversationName: String?
     ): RoomOverall
     fun getImageUri(avatarId: String, requestBigSize: Boolean): String
+    suspend fun getPortals(lang: String?): PortalOCS
 }

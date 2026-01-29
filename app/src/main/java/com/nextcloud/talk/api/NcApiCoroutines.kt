@@ -12,6 +12,7 @@ import com.nextcloud.talk.conversationinfo.CreateRoomRequest
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteOverall
 import com.nextcloud.talk.models.json.chat.ChatOverall
 import com.nextcloud.talk.models.json.chat.ChatOverallSingleMessage
+import com.nextcloud.talk.models.json.clps.portal.PortalOCS
 import com.nextcloud.talk.models.json.conversations.RoomOverall
 import com.nextcloud.talk.models.json.generic.GenericOverall
 import com.nextcloud.talk.models.json.participants.AddParticipantOverall
@@ -280,6 +281,13 @@ interface NcApiCoroutines {
         @Query("limit") limit: Int,
         @Query("threadId") threadId: Int?
     ): ChatOverall
+
+    @GET
+    suspend fun getPortals(
+        @Header("Authorization") authorization: String?,
+        @Url url: String,
+        @Query("lang") lang: String?
+    ): PortalOCS
 
     @GET
     suspend fun getNoteToSelfRoom(@Header("Authorization") authorization: String, @Url url: String): RoomOverall

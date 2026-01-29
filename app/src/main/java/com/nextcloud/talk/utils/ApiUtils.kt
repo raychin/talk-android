@@ -539,4 +539,7 @@ object ApiUtils {
 
     fun getUrlForThreadNotificationLevel(version: Int, baseUrl: String?, token: String, threadId: Int): String =
         getUrlForChat(version, baseUrl, token) + "/threads" + "/$threadId" + "/notify"
+
+    fun getUrlForPortals(baseUrl: String): String =
+        "$baseUrl$OCS_API_VERSION/apps/spreed/api/v4/clps-rooms"
 }
