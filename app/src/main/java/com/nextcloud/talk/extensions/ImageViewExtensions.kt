@@ -191,8 +191,10 @@ private fun ImageView.loadAvatarInternal(
         diskCacheKey?.let { diskCache?.remove(it) }
     }
 
+    val urlNew = generateImageUrl(url)
+
     return DisposableWrapper(
-        load(url) {
+        load(urlNew) {
             user?.let {
                 addHeader(
                     "Authorization",
@@ -383,6 +385,13 @@ fun ImageView.loadGuestAvatar(baseUrl: String, name: String, big: Boolean): io.r
             })
         }
     )
+}
+
+fun generateImageUrl(url: String): String {
+    if (url.endsWith(".png") || url.endsWith(".jpg") || url.endsWith(".jpeg")) {
+        return url
+    }
+    return "${url}.png"
 }
 
 @Suppress("MagicNumber")

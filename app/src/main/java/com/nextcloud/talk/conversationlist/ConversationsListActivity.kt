@@ -115,6 +115,7 @@ import com.nextcloud.talk.ui.dialog.ChooseAccountDialogFragment
 import com.nextcloud.talk.ui.dialog.ChooseAccountShareToDialogFragment
 import com.nextcloud.talk.contextchat.ContextChatView
 import com.nextcloud.talk.contextchat.ContextChatViewModel
+import com.nextcloud.talk.extensions.generateImageUrl
 import com.nextcloud.talk.ui.dialog.ConversationsListBottomDialog
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment.Companion.ARCHIVE
@@ -784,9 +785,10 @@ class ConversationsListActivity :
 
             val credentials = ApiUtils.getCredentials(currentUser!!.username, currentUser!!.token)
 
+            val urlNew = generateImageUrl(url)
             context.imageLoader.enqueue(
                 ImageRequest.Builder(context)
-                    .data(url)
+                    .data(urlNew)
                     .addHeader("Authorization", credentials!!)
                     .placeholder(R.drawable.ic_user)
                     .transformations(CircleCropTransformation())
