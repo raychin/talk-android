@@ -74,6 +74,15 @@ fun ContactsItem(contacts: List<AutocompleteUser>, contactsViewModel: ContactsVi
                 )
                 Log.d(CompanionClass.TAG, "Contacts:$contact")
             }
+            if (initial == portalTitle) {
+                item {
+                    HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 1.dp,
+                        color = Color(context.resources.getColor(R.color.bg_message_own_reaction, context.theme))
+                    )
+                }
+            }
         }
     }
 }
