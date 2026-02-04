@@ -8,12 +8,13 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/empty_list_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:layout_margin="@dimen/standard_margin"
-    android:gravity="center_vertical|center_horizontal"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:paddingBottom="@dimen/standard_double_margin">
 
@@ -30,13 +31,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="68dp"
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="2"
         android:paddingTop="@dimen/standard_padding"
         android:paddingBottom="@dimen/standard_half_padding"
         android:text="@string/file_list_loading"
-        android:textSize="26sp" />
+        android:textColor="@color/grey_600"
+        android:textSize="16sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/message_search_filter_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="3"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:listitem="@layout/rv_item_search_message_filter" />
 
     <TextView
         android:id="@+id/empty_list_view_text"
@@ -50,5 +62,6 @@
         android:text=""
         tools:visibility="visible"
         tools:text="Empty list view text"
+        android:textColor="@color/grey_600"
         android:visibility="gone" />
 </LinearLayout>

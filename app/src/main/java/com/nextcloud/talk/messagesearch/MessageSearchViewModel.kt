@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.nextcloud.talk.data.message.model.MessageFilterType
 import com.nextcloud.talk.models.domain.SearchMessageEntry
 import com.nextcloud.talk.repositories.unifiedsearch.UnifiedSearchRepository
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -56,7 +57,7 @@ class MessageSearchViewModel @Inject constructor(private val unifiedSearchReposi
 
     @SuppressLint("CheckResult") // handled by helper
     fun onQueryTextChange(newText: String) {
-        if (newText.length >= MIN_CHARS_FOR_SEARCH) {
+        if (newText.length >= MIN_CHARS_FOR_SEARCH || newText.contains(MessageFilterType.IMAGE.value)) {
             _state.value = LoadingState
             messageSearchHelper.cancelSearch()
             messageSearchHelper.startMessageSearch(newText)

@@ -16,6 +16,8 @@
     <dimen name="bottom_sheet_text_size">16sp</dimen>
     <dimen name="small_item_height">48dp</dimen>
 
+    <dimen name="small_avatar_item_height">32dp</dimen>
+
     <dimen name="min_size_clickable_area">48dp</dimen>
 
     <!-- Custom transition dimensions -->

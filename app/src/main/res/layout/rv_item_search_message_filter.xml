@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Nextcloud Talk - Android Client
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/message_search_filter_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/double_margin_between_elements"
+    android:layout_margin="@dimen/double_margin_between_elements">
+
+<!--    <androidx.emoji2.widget.EmojiTextView-->
+<!--        android:id="@+id/message_search_filter_title"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:gravity="center"-->
+<!--        android:ellipsize="end"-->
+<!--        android:includeFontPadding="false"-->
+<!--        android:maxLines="1"-->
+<!--        android:textColor="@color/colorPrimary"-->
+<!--        android:textSize="@dimen/two_line_primary_text_size"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        tools:text="Message title goes here" />-->
+    <TextView
+        android:id="@+id/message_search_filter_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/two_line_primary_text_size"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Message title goes here" />
+</androidx.constraintlayout.widget.ConstraintLayout>

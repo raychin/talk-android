@@ -68,6 +68,10 @@ class UnifiedSearchRepositoryImpl(private val api: NcApi, private val userProvid
         private const val ATTRIBUTE_MESSAGE_ID = "messageId"
         private const val ATTRIBUTE_THREAD_ID = "threadId"
 
+        private const val ATTRIBUTE_THUMBNAIL = "thumbnail"
+        private const val ATTRIBUTE_THUMBNAIL_SIZE = "size"
+        private const val ATTRIBUTE_TIMESTAMP = "timestamp"
+
         private fun mapToMessageResults(
             data: UnifiedSearchResponseData,
             searchTerm: String,
@@ -83,6 +87,9 @@ class UnifiedSearchRepositoryImpl(private val api: NcApi, private val userProvid
             val conversation = unifiedSearchEntry.attributes?.get(ATTRIBUTE_CONVERSATION)!!
             val messageId = unifiedSearchEntry.attributes?.get(ATTRIBUTE_MESSAGE_ID)
             val threadId = unifiedSearchEntry.attributes?.get(ATTRIBUTE_THREAD_ID)
+            val thumbnail = unifiedSearchEntry.attributes?.get(ATTRIBUTE_THUMBNAIL)
+            val thumbnailSize = unifiedSearchEntry.attributes?.get(ATTRIBUTE_THUMBNAIL_SIZE)?.toInt()
+            val timestamp = unifiedSearchEntry.attributes?.get(ATTRIBUTE_TIMESTAMP)?.toLong()
             return SearchMessageEntry(
                 searchTerm = searchTerm,
                 thumbnailURL = unifiedSearchEntry.thumbnailUrl,
@@ -90,7 +97,10 @@ class UnifiedSearchRepositoryImpl(private val api: NcApi, private val userProvid
                 messageExcerpt = unifiedSearchEntry.subline!!,
                 conversationToken = conversation,
                 threadId = threadId,
-                messageId = messageId
+                messageId = messageId,
+                thumbnail = thumbnail,
+                thumbnailSize = thumbnailSize,
+                timestamp = timestamp
             )
         }
     }

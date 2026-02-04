@@ -14,5 +14,8 @@ data class SearchMessageEntry(
     val messageExcerpt: String,
     val conversationToken: String,
     val threadId: String?,
-    val messageId: String?
+    val messageId: String?,
+    val thumbnail: String?,
+    val thumbnailSize: Int?,
+    val timestamp: Long?
 )

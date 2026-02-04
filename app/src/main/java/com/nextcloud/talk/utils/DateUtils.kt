@@ -13,8 +13,10 @@ import android.icu.text.RelativeDateTimeFormatter.Direction
 import android.icu.text.RelativeDateTimeFormatter.RelativeUnit
 import com.nextcloud.talk.R
 import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -103,4 +105,46 @@ class DateUtils(val context: Context) {
             }
         }
     }
+
+    fun getShowTimeString(timestamp: Long): String {
+        val now = System.currentTimeMillis()
+        val diff = now - timestamp
+        val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        return when {
+            timestamp >= today.timeInMillis -> {
+                // 当天消息
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
+            }
+            timestamp >= today.timeInMillis - 86400000L -> {
+                // 昨天消息
+                "昨天 ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))}"
+            }
+            diff < 604800000L -> {
+                // 近7天内消息
+                val dayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
+                    Calendar.MONDAY -> "周一"
+                    Calendar.TUESDAY -> "周二"
+                    Calendar.WEDNESDAY -> "周三"
+                    Calendar.THURSDAY -> "周四"
+                    Calendar.FRIDAY -> "周五"
+                    Calendar.SATURDAY -> "周六"
+                    Calendar.SUNDAY -> "周日"
+                    else -> ""
+                }
+                "$dayOfWeek ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))}"
+            }
+            else -> {
+                // 超过7天的消息
+                SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(timestamp))
+            }
+        }
+    }
+
 }

@@ -8,14 +8,19 @@
  */
 package com.nextcloud.talk.messagesearch
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextUtils
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.widget.AppCompatAutoCompleteTextView
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
 import autodagger.AutoInjector
@@ -23,9 +28,14 @@ import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.talk.R
 import com.nextcloud.talk.activities.BaseActivity
 import com.nextcloud.talk.adapters.items.LoadMoreResultsItem
+import com.nextcloud.talk.adapters.items.MessageFilterItem
+import com.nextcloud.talk.adapters.items.MessageFilterItemListener
 import com.nextcloud.talk.adapters.items.MessageResultItem
 import com.nextcloud.talk.application.NextcloudTalkApplication
+import com.nextcloud.talk.components.RoundedBackgroundSpan
 import com.nextcloud.talk.conversationlist.ConversationsListActivity
+import com.nextcloud.talk.data.message.model.MessageFilter
+import com.nextcloud.talk.data.message.model.MessageFilterType
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ActivityMessageSearchBinding
 import com.nextcloud.talk.utils.bundle.BundleKeys
@@ -38,6 +48,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 import javax.inject.Inject
 
 @AutoInjector(NextcloudTalkApplication::class)
@@ -48,6 +59,7 @@ class MessageSearchActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMessageSearchBinding
     private lateinit var searchView: SearchView
+    private lateinit var editInput: AppCompatAutoCompleteTextView
 
     private lateinit var user: User
 
@@ -55,6 +67,13 @@ class MessageSearchActivity : BaseActivity() {
 
     private var searchViewDisposable: Disposable? = null
     private var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>? = null
+
+    private var filterAdapter: FlexibleAdapter<AbstractFlexibleItem<*>>? = null
+    private val filters: List<MessageFilter> = listOf(
+        MessageFilter(10001,  "文件", MessageFilterType.FILE),
+        MessageFilter(10002,  "图片", MessageFilterType.IMAGE)
+    )
+    private var filterItemChoose: MessageFilter = MessageFilter(-10000, "", MessageFilterType.TEXT)
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -72,6 +91,8 @@ class MessageSearchActivity : BaseActivity() {
         setContentView(binding.root)
         initSystemBars()
 
+        initFilter()
+
         viewModel = ViewModelProvider(this, viewModelFactory)[MessageSearchViewModel::class.java]
         user = currentUserProvider.currentUser.blockingGet()
         val roomToken = intent.getStringExtra(BundleKeys.KEY_ROOM_TOKEN)!!
@@ -79,10 +100,25 @@ class MessageSearchActivity : BaseActivity() {
         setupStateObserver()
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.refresh(searchView.query?.toString())
+            val newText = searchView.query.toString()
+            viewModel.refresh("${processedSearchText(newText)}${filterItemChoose.filterType.value}")
         }
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
+    }
+
+    /**
+     * 搜索关键字去除筛选类型
+     * add by ray on 2026/02/04
+     */
+    private fun processedSearchText(newText: String): String {
+        val processedText = if (TextUtils.isEmpty(filterItemChoose.filterText)) {
+            newText
+        } else {
+            removeFirstMatchCharacter(newText, filterItemChoose.filterText.toString())
+        }
+
+        return processedText
     }
 
     private fun setupActionBar() {
@@ -119,6 +155,35 @@ class MessageSearchActivity : BaseActivity() {
         binding.swipeRefreshLayout.isRefreshing = loading
     }
 
+    private fun initFilter() {
+        val filterItems = filters.map {
+            MessageFilterItem(
+                this,
+                it,
+                object : MessageFilterItemListener {
+
+                    override fun onMessageFilterItemClicked(
+                        view: View,
+                        position: Int,
+                        messageFilter: MessageFilter
+                    ) {
+                        Log.e("Ray", "onClick")
+                    }
+                }
+            )
+        }
+        filterAdapter = FlexibleAdapter(filterItems)
+        binding.emptyContainer.messageSearchFilterRecycler.adapter = filterAdapter
+        filterAdapter!!.addListener(object : FlexibleAdapter.OnItemClickListener {
+            override fun onItemClick(view: View?, position: Int): Boolean {
+                // val item = filterAdapter!!.getItem(position)
+                filterItemChoose = filters[position]
+                Log.e("Ray", filterItemChoose.toString())
+                highlightText(editInput, filterItemChoose.filterText)
+                return false
+            }
+        })
+    }
     private fun showLoaded(state: MessageSearchViewModel.LoadedState) {
         displayLoading(false)
         binding.emptyContainer.emptyListView.visibility = View.GONE
@@ -211,14 +276,55 @@ class MessageSearchActivity : BaseActivity() {
         return true
     }
 
+    private fun highlightText(editText: AppCompatAutoCompleteTextView, text: String?) {
+        if (TextUtils.isEmpty(filterItemChoose.filterText)) {
+            return
+        }
+        val ss = SpannableString(text)
+        // 替换关键字模式或正则表达式
+        val pattern = Pattern.compile(filterItemChoose.filterText)
+        val matcher = pattern.matcher(text)
+
+        // 将 while (matcher.find()) 改为 if (matcher.find())
+        if (matcher.find()) {
+            // ss.setSpan(
+            //     ForegroundColorSpan(getColor(R.color.colorPrimary)),
+            //     matcher.start(),
+            //     matcher.end(),
+            //     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            // )
+            ss.setSpan(
+                RoundedBackgroundSpan(
+                    getColor(R.color.transparent),
+                    getColor(R.color.colorPrimary),
+                    // 圆角半径
+                    cornerRadius = 4f,
+                    // 四周边距
+                    padding = 20f
+                ),
+                matcher.start(),
+                matcher.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        } else {
+            filterItemChoose = MessageFilter(-10000, "", MessageFilterType.TEXT)
+            return
+        }
+        editText.setText(ss)
+        // 将光标移动到文本末尾
+        editText.setSelection(ss.length)
+    }
+    @SuppressLint("RestrictedApi")
     private fun setupSearchView() {
         searchView.queryHint = getString(R.string.message_search_hint)
+        editInput = searchView.findViewById(androidx.appcompat.R.id.search_src_text)
         searchViewDisposable = observeSearchView(searchView)
             .debounce { query ->
                 when {
                     TextUtils.isEmpty(query) -> Observable.empty()
                     else -> Observable.timer(
-                        ConversationsListActivity.SEARCH_DEBOUNCE_INTERVAL_MS.toLong(),
+                        // 搜索延迟执行时间
+                        ConversationsListActivity.SEARCH_DEBOUNCE_INTERVAL_MS * 2.toLong(),
                         TimeUnit.MILLISECONDS
                     )
                 }
@@ -226,7 +332,29 @@ class MessageSearchActivity : BaseActivity() {
             .distinctUntilChanged()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { newText -> viewModel.onQueryTextChange(newText) }
+            .subscribe { newText ->
+                // 以下逻辑使用防抖功能实现
+                highlightText(editInput, newText)
+
+                // newText和筛选项都为空则显示binding.emptyContainer
+                if (TextUtils.isEmpty(newText) && TextUtils.isEmpty(filterItemChoose.filterType.value)) {
+                    showInitial()
+                    return@subscribe
+                }
+
+                // viewModel.onQueryTextChange(newText)
+                val processedText = processedSearchText(newText)
+                viewModel.onQueryTextChange("$processedText${filterItemChoose.filterType.value}")
+            }
+    }
+
+    private fun removeFirstMatchCharacter(newText: String, charToRemove: String): String {
+        val index = newText.indexOf(charToRemove)
+        return if (index != -1) {
+            newText.substring(index + charToRemove.length, newText.length)
+        } else {
+            newText // 如果未找到匹配字符，返回原字符串
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean =

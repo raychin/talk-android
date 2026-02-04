@@ -10,21 +10,25 @@
 package com.nextcloud.talk.adapters.items
 
 import android.content.Context
+import android.text.TextUtils
+import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.nextcloud.talk.R
+import com.nextcloud.talk.data.message.model.MessageFilterType
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.RvItemSearchMessageBinding
+import com.nextcloud.talk.extensions.loadImage
 import com.nextcloud.talk.extensions.loadThumbnail
 import com.nextcloud.talk.models.domain.SearchMessageEntry
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
+import com.nextcloud.talk.utils.DateUtils
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import eu.davidea.flexibleadapter.items.IFilterable
 import eu.davidea.flexibleadapter.items.IFlexible
 import eu.davidea.flexibleadapter.items.ISectionable
 import eu.davidea.viewholders.FlexibleViewHolder
-
 data class MessageResultItem(
     private val context: Context,
     private val currentUser: User,
@@ -59,13 +63,50 @@ data class MessageResultItem(
         holder.binding.conversationTitle.text = messageEntry.title
         bindMessageExcerpt(holder)
         messageEntry.thumbnailURL?.let { holder.binding.thumbnail.loadThumbnail(it, currentUser) }
+
+        // val thumbnailURL = if (TextUtils.isEmpty(messageEntry.thumbnailURL)) {
+        //     null
+        // } else {
+        //     generateImageUrl(messageEntry.thumbnailURL!!)
+        // }
+        // thumbnailURL?.let { holder.binding.thumbnail.loadThumbnail(it, currentUser) }
+
+        // 时间戳有问题，暂时不显示
+        holder.binding.conversationTime.visibility = View.GONE
+        holder.binding.conversationTime.text = DateUtils(context).getShowTimeString(messageEntry.timestamp!!)
+        if (TextUtils.isEmpty(messageEntry.thumbnail)) {
+            holder.binding.thumbnailImg.visibility = View.GONE
+            holder.binding.thumbnailSize.visibility = View.GONE
+        } else {
+            holder.binding.thumbnailImg.visibility = View.VISIBLE
+            holder.binding.thumbnailImg.loadImage(messageEntry.thumbnail!!, currentUser, null)
+            holder.binding.thumbnailSize.visibility = View.VISIBLE
+            holder.binding.thumbnailSize.text = formatFileSize(messageEntry.thumbnailSize!!)
+        }
     }
 
+    private fun formatFileSize(sizeInKB: Int): String {
+        Log.e("Ray", "formatFileSize: $sizeInKB")
+        return when {
+            sizeInKB < 1024 -> "${sizeInKB}B"
+            sizeInKB < 1024 * 1024 -> "${String.format("%.1f", (sizeInKB / 1024).toDouble())}KB"
+            sizeInKB < 1024 * 1024 * 1024 -> "${String.format("%.1f", (sizeInKB / (1024 * 1024)).toDouble())}MB"
+            else -> "${String.format("%.1f", (sizeInKB / (1024 * 1024 * 1024)).toDouble())}GB"
+        }
+    }
+
+
     private fun bindMessageExcerpt(holder: ViewHolder) {
+        // TODO RAY 这里优化成遍历枚举
+        val highText = messageEntry.searchTerm
+            .replace(MessageFilterType.TEXT.value, "")
+            .replace(MessageFilterType.IMAGE.value, "")
+            .replace(MessageFilterType.FILE.value, "")
+
         viewThemeUtils.platform.highlightText(
             holder.binding.messageExcerpt,
             messageEntry.messageExcerpt,
-            messageEntry.searchTerm
+            highText
         )
     }
 
@@ -80,7 +121,8 @@ data class MessageResultItem(
     override fun getHeader(): GenericTextHeaderItem =
         MessagesTextHeaderItem(context, viewThemeUtils)
             .apply {
-                isHidden = showHeader // FlexibleAdapter needs this hack for some reason
+                // FlexibleAdapter needs this hack for some reason
+                isHidden = showHeader
             }
 
     override fun setHeader(header: GenericTextHeaderItem?) {
