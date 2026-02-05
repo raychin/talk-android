@@ -79,7 +79,7 @@ fun ContactsItem(contacts: List<AutocompleteUser>, contactsViewModel: ContactsVi
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         thickness = 1.dp,
-                        color = Color(context.resources.getColor(R.color.bg_message_own_reaction, context.theme))
+                        color = Color(context.resources.getColor(R.color.border_color, context.theme))
                     )
                 }
             }
