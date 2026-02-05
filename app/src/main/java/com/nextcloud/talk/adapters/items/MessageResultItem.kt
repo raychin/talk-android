@@ -97,11 +97,10 @@ data class MessageResultItem(
 
 
     private fun bindMessageExcerpt(holder: ViewHolder) {
-        // TODO RAY 这里优化成遍历枚举
-        val highText = messageEntry.searchTerm
-            .replace(MessageFilterType.TEXT.value, "")
-            .replace(MessageFilterType.IMAGE.value, "")
-            .replace(MessageFilterType.FILE.value, "")
+        // 遍历枚举替换筛选类型值
+        val highText = MessageFilterType.entries.fold(messageEntry.searchTerm) { acc, filterType ->
+            acc.replace(filterType.value, "")
+        }
 
         viewThemeUtils.platform.highlightText(
             holder.binding.messageExcerpt,
