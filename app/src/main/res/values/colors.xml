@@ -96,4 +96,7 @@
     <color name="badge_color">#EF3B02</color>
     <color name="secondary_button_background">#DBE2E9</color>
 
+    <color name="border_color">#EDEDED</color>
+    <color name="black_common">#2B2B2B</color>
+
 </resources>

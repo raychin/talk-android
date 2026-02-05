@@ -1,0 +1,66 @@
+<!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2026 Your Name <your@email.com>
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+  <group android:scaleX="0.58"
+      android:scaleY="0.58"
+      android:translateX="215.04"
+      android:translateY="215.04">
+    <group android:scaleX="2.44"
+        android:scaleY="2.44"
+        android:translateX="-737.28"
+        android:translateY="-737.28">
+      <group android:scaleX="0.64"
+          android:scaleY="0.64"
+          android:translateX="184.32"
+          android:translateY="184.32">
+        <group android:scaleX="0.64"
+            android:scaleY="0.64"
+            android:translateX="184.32"
+            android:translateY="184.32">
+            <group>
+                <clip-path
+                    android:pathData="M100,0L924,0A100,100 0,0 1,1024 100L1024,924A100,100 0,0 1,924 1024L100,1024A100,100 0,0 1,0 924L0,100A100,100 0,0 1,100 0z"/>
+                <path
+                    android:pathData="M100,0L924,0A100,100 0,0 1,1024 100L1024,924A100,100 0,0 1,924 1024L100,1024A100,100 0,0 1,0 924L0,100A100,100 0,0 1,100 0z"
+                    android:fillColor="#ffffff"/>
+                <path
+                    android:pathData="M72.2,278.6h879.6v276.9h-879.6z"
+                    android:fillColor="#ffffff"/>
+                <path
+                    android:pathData="M-23,935a599.5,191 0,1 0,1199 0a599.5,191 0,1 0,-1199 0z"
+                    android:fillColor="#F8C700"/>
+                <path
+                    android:pathData="M1211.5,936.5C1211.5,1042 858.1,1230 527,1230C195.9,1230 -73,1022.5 -73,917C-73,811.5 199,714.5 542,723.5C567.6,723.5 599.5,685 612.6,667.7C614.7,664.8 619.6,665.9 620.2,669.5C624,689.5 633.6,732.8 645.5,731.9C838.5,717.5 1211.5,847.4 1211.5,936.5Z"
+                    android:fillColor="#F8C700"/>
+                <path
+                    android:pathData="M1201.5,964.5C1201.5,1070 848.1,1258 517,1258C185.9,1258 -83,1050.5 -83,945C-83,839.5 189,742.5 532,751.5C557.6,751.5 589.5,713 602.6,695.7C604.7,692.8 609.6,693.9 610.2,697.5C614,717.5 623.6,760.8 635.5,759.9C828.5,745.5 1201.5,875.4 1201.5,964.5Z"
+                    android:fillColor="#00499E"/>
+                <path
+                    android:pathData="M398.1,848.6V946H379.8V848.6H398.1ZM428.4,848.6V863.1H349.9V848.6H428.4ZM472.5,863.4L444.7,946H425.3L461.7,848.6H474.1L472.5,863.4ZM495.7,946L467.8,863.4L466.2,848.6H478.7L515.3,946H495.7ZM494.5,909.8V924.3H442.2V909.8H494.5ZM587.1,931.5V946H538.1V931.5H587.1ZM543.7,848.6V946H525.3V848.6H543.7ZM617.8,848.6V946H599.4V848.6H617.8ZM676.3,848.6L637.2,896.1L614.9,920L611.6,902.1L627.1,882L653.8,848.6H676.3ZM655.8,946L625.5,900.4L638.7,888.5L677.7,946H655.8Z">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:startX="512"
+                            android:startY="819"
+                            android:endX="512"
+                            android:endY="980"
+                            android:type="linear">
+                            <item android:offset="0" android:color="#FFFFFFFF"/>
+                            <item android:offset="1" android:color="#FFC2DEFF"/>
+                        </gradient>
+                    </aapt:attr>
+                </path>
+            </group>
+        </group>
+      </group>
+    </group>
+  </group>
+</vector>

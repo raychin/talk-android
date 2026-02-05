@@ -13,7 +13,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
-    android:background="@color/colorPrimary"
+    android:background="@drawable/bg_login"
     android:fillViewport="true"
     android:orientation="vertical">
 
@@ -27,16 +27,17 @@
         <ImageView
             android:id="@+id/image_logo"
             android:layout_width="match_parent"
-            android:layout_height="96dp"
+            android:layout_height="36dp"
             android:layout_marginBottom="@dimen/standard_margin"
             android:contentDescription="@string/nc_app_product_name"
             android:scaleType="centerInside"
-            app:srcCompat="@drawable/ic_logo" />
+            app:srcCompat="@mipmap/icon_clps" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:layout_marginTop="32dp"
             android:maxWidth="@dimen/default_login_width"
             android:minWidth="@dimen/default_login_width"
             android:orientation="vertical"
@@ -44,15 +45,15 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/serverEntryTextInputLayout"
-                style="@style/Widget.App.Login.TextInputLayout"
+                style="@style/Widget.App.Login.TextInputLayoutCLPS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/nc_server_url"
-                android:theme="@style/TextInputLayoutLogin"
+                android:theme="@style/TextInputLayoutLoginCLPS"
                 app:endIconContentDescription="@string/nc_server_connect"
                 app:endIconDrawable="@drawable/ic_arrow_forward_white_24px"
                 app:endIconMode="custom"
-                app:endIconTint="@color/white">
+                app:endIconTint="@color/black_common">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/serverEntryTextInputEditText"
@@ -66,8 +67,8 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="55dp"
                     android:scrollbars="vertical"
-                    android:textColor="@color/white"
-                    android:textColorHint="#80FFFFFF">
+                    android:textColor="@color/black_common"
+                    android:textColorHint="@color/fontAppbar">
 
                     <requestFocus />
 
@@ -86,7 +87,7 @@
                 android:paddingBottom="2dp"
                 android:text="@string/nc_server_helper_text"
                 android:textAlignment="viewStart"
-                android:textColor="@color/nc_login_text_color" />
+                android:textColor="@color/disabled_text" />
 
             <LinearLayout
                 android:id="@+id/serverEntryProgressBar"
@@ -102,7 +103,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_gravity="end|center_vertical"
-                    android:indeterminateTint="@color/white" />
+                    android:indeterminateTint="@color/colorAccent" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -115,7 +116,7 @@
                     android:paddingEnd="8dp"
                     android:text="@string/nc_server_testing_connection"
                     android:textAlignment="viewStart"
-                    android:textColor="@color/white" />
+                    android:textColor="@color/colorAccent" />
 
             </LinearLayout>
 
@@ -134,7 +135,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
-                    android:src="@android:drawable/stat_sys_warning" />
+                    android:src="@android:drawable/stat_sys_warning"
+                    app:tint="@color/favorite_icon_tint" />
 
                 <TextView
                     android:id="@+id/error_text"
@@ -148,7 +150,7 @@
                     android:paddingStart="5dp"
                     android:paddingEnd="8dp"
                     android:textAlignment="viewStart"
-                    android:textColor="@color/white"
+                    android:textColor="@color/favorite_icon_tint"
                     tools:text="@string/nc_server_unsupported" />
             </LinearLayout>
 
@@ -160,7 +162,7 @@
                 android:background="@color/transparent"
                 android:contentDescription="@string/scan_qr_code"
                 android:src="@drawable/outline_qr_code_24"
-                app:tint="@color/white" />
+                app:tint="@color/colorPrimaryDark" />
 
             <TextView
                 android:id="@+id/import_or_choose_provider_text"
@@ -173,7 +175,7 @@
                 android:padding="@dimen/standard_padding"
                 android:text="@string/nc_get_from_provider"
                 android:textAlignment="center"
-                android:textColor="@color/nc_login_text_color" />
+                android:textColor="@color/colorPrimaryDark" />
 
             <TextView
                 android:id="@+id/cert_text_view"
@@ -186,7 +188,7 @@
                 android:padding="@dimen/standard_padding"
                 android:text="@string/nc_configure_cert_auth"
                 android:textAlignment="center"
-                android:textColor="@color/nc_login_text_color" />
+                android:textColor="@color/grey_600" />
 
         </LinearLayout>
 

@@ -13,7 +13,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:panelFullBackground">@color/colorPrimary</item>
+<!--        <item name="android:panelFullBackground">@color/colorPrimary</item>-->
+        <item name="android:panelFullBackground">@drawable/bg_main</item>
         <item name="android:itemBackground">@color/nc_outcoming_text_default</item>
         <item name="android:textColor">@color/conversation_item_header</item>
         <item name="android:textColorPrimary">@color/high_emphasis_text</item>
@@ -28,7 +29,8 @@
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
         <item name="popupMenuStyle">@style/ChatSendButtonMenu</item>
         <item name="dialogCornerRadius">@dimen/dialogBorderRadius</item>
-        <item name="android:windowBackground">@color/bg_default</item>
+<!--        <item name="android:windowBackground">@color/bg_default</item>-->
+        <item name="android:windowBackground">@drawable/bg_main</item>
 <!--        <item name="android:windowTranslucentStatus">false</item>-->
 <!--        <item name="android:windowDrawsSystemBarBackgrounds">true</item>-->
 <!--        <item name="android:statusBarColor">@android:color/transparent</item>-->
@@ -179,6 +181,14 @@
         <item name="hintTextColor">@color/white</item>
         <item name="helperTextTextColor">@color/white</item>
     </style>
+    <style name="Widget.App.Login.TextInputLayoutCLPS" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="colorControlActivated">@color/border_color</item>
+        <item name="colorControlHighlight">@color/border_color</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Login.TextInputLayout</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.MaterialComponents.SmallComponent</item>
+        <item name="hintTextColor">@color/grey_600</item>
+        <item name="helperTextTextColor">@color/grey_600</item>
+    </style>
 
     <style name="ThemeOverlay.App.Login.TextInputLayout" parent="">
         <item name="colorPrimary">@color/white</item>
@@ -200,9 +210,23 @@
         <item name="colorControlNormal">@color/white</item>
         <item name="colorControlActivated">@color/white</item>
     </style>
+    <style name="TextInputLayoutLoginCLPS" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/border_color</item>
+        <item name="boxStrokeErrorColor">@color/border_color</item>
+        <item name="hintTextAppearance">@style/HintTextLoginCLPS</item>
+        <item name="errorTextAppearance">@style/HintTextLoginCLPS</item>
+        <item name="android:colorPrimary">@color/black_common</item>
+        <!-- Theme attributes -->
+        <item name="android:textColorHint">#80FFFFFF</item>
+        <item name="colorControlNormal">@color/black_common</item>
+        <item name="colorControlActivated">@color/black_common</item>
+    </style>
 
     <style name="HintTextLogin" parent="TextAppearance.AppCompat">
         <item name="android:textColor">@color/white</item>
+    </style>
+    <style name="HintTextLoginCLPS" parent="TextAppearance.AppCompat">
+        <item name="android:textColor">@color/grey_600</item>
     </style>
 
     <style name="FullScreenImageTheme" parent="Theme.AppCompat.Light.NoActionBar">
