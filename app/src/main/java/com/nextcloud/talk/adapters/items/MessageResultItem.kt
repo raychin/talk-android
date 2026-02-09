@@ -20,6 +20,7 @@ import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.RvItemSearchMessageBinding
 import com.nextcloud.talk.extensions.loadImage
 import com.nextcloud.talk.extensions.loadThumbnail
+import com.nextcloud.talk.messagesearch.MessageSearchActivity
 import com.nextcloud.talk.models.domain.SearchMessageEntry
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.utils.DateUtils
@@ -29,6 +30,7 @@ import eu.davidea.flexibleadapter.items.IFilterable
 import eu.davidea.flexibleadapter.items.IFlexible
 import eu.davidea.flexibleadapter.items.ISectionable
 import eu.davidea.viewholders.FlexibleViewHolder
+
 data class MessageResultItem(
     private val context: Context,
     private val currentUser: User,
@@ -73,7 +75,8 @@ data class MessageResultItem(
 
         // 时间戳有问题，暂时不显示
         holder.binding.conversationTime.visibility = View.GONE
-        holder.binding.conversationTime.text = DateUtils(context).getShowTimeString(messageEntry.timestamp!!)
+        // holder.binding.conversationTime.text = DateUtils(context).getShowTimeString(messageEntry.timestamp!!)
+        holder.binding.conversationTime.text = DateUtils(context).getLocalTimeStringFromTimestamp(messageEntry.timestamp!!)
         if (TextUtils.isEmpty(messageEntry.thumbnail)) {
             holder.binding.thumbnailImg.visibility = View.GONE
             holder.binding.thumbnailSize.visibility = View.GONE
@@ -121,7 +124,13 @@ data class MessageResultItem(
         MessagesTextHeaderItem(context, viewThemeUtils)
             .apply {
                 // FlexibleAdapter needs this hack for some reason
-                isHidden = showHeader
+                isHidden  = if (context is MessageSearchActivity) {
+                    // 如果是 MessageSearchActivity，不显示头部
+                    true
+                } else {
+                    // 否则使用 showHeader 的值
+                    showHeader
+                }
             }
 
     override fun setHeader(header: GenericTextHeaderItem?) {

@@ -46,8 +46,8 @@ android {
 
         // mayor.minor.hotfix.increment (for increment: 01-50=Alpha / 51-89=RC / 90-99=stable)
         // xx   .xxx  .xx    .xx
-        versionCode 230000010
-        versionName "30.4.2-Alpha01"
+        versionCode 230000011
+        versionName "30.4.2-Alpha03"
 
         flavorDimensions "default"
         renderscriptTargetApi = 19
@@ -102,9 +102,9 @@ android {
                 //outputFileName = "app_v${defaultConfig.versionName}(${defaultConfig.versionCode})_${variant.productFlavors[0].name}.apk"
 
                 if(variant.buildType.name == ('release')) {
-                    outputFileName = "${variant.productFlavors[0].name}_app${defaultConfig.versionName}_${defaultConfig.versionCode}_${releaseTime()}.apk"
+                    outputFileName = "Talk_${variant.productFlavors[0].name}_${defaultConfig.versionName}_${defaultConfig.versionCode}_${releaseTime()}.apk"
                 } else if(variant.buildType.name == ('debug')) {
-                    outputFileName = "${variant.productFlavors[0].name}_app${defaultConfig.versionName}_${defaultConfig.versionCode}_debug.apk"
+                    outputFileName = "Talk_${variant.productFlavors[0].name}_${defaultConfig.versionName}_${defaultConfig.versionCode}_debug.apk"
                 }
             }
         }

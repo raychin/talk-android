@@ -19,26 +19,29 @@
     android:layout_margin="@dimen/double_margin_between_elements"
     tools:background="@color/white">
 
-    <Space
-        android:id="@+id/load_more_spacer"
-        android:layout_width="@dimen/small_item_height"
-        android:layout_height="@dimen/small_item_height"
-        android:importantForAccessibility="no"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+<!--    <Space-->
+<!--        android:id="@+id/load_more_spacer"-->
+<!--        android:layout_width="@dimen/small_item_height"-->
+<!--        android:layout_height="@dimen/small_item_height"-->
+<!--        android:importantForAccessibility="no"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />
+
+        app:layout_constraintStart_toEndOf="@+id/load_more_spacer"-->
 
     <TextView
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/double_margin_between_elements"
         android:includeFontPadding="false"
         android:maxLines="1"
         android:textColor="@color/textColorMaxContrast"
+        android:padding="16dp"
         android:textSize="@dimen/two_line_primary_text_size"
         android:text="@string/load_more_results"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/load_more_spacer"
         app:layout_constraintTop_toTopOf="parent" />
 
 
