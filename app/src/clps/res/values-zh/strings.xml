@@ -20,4 +20,6 @@ How to translate with transifex:
 
     <!-- CLPS -->
     <string name="clps_portal">华钦门户</string>
+
+    <string name="clps_check_server">登录</string>
 </resources>

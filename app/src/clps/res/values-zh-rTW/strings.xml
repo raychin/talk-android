@@ -20,4 +20,7 @@ How to translate with transifex:
 
     <!-- CLPS -->
     <string name="clps_portal">華欽門戶</string>
+
+    <string name="clps_check_server">登錄</string>
+
 </resources>

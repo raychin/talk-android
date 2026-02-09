@@ -3,7 +3,7 @@
   ~ Nextcloud Talk - Android Client
 -->
 <resources>
-    <string name="nc_app_name">Talk CLPS</string>
+    <string name="nc_app_name">CLPS Talk</string>
     <string name="nc_app_product_name">Nextcloud Talk CLPS</string>
     <string name="nc_server_product_name">NextcloudCLPS</string>
 </resources>

@@ -95,9 +95,12 @@ class ServerSelectionActivity : BaseActivity() {
 
         binding.hostUrlInputHelperText.text = String.format(
             resources!!.getString(R.string.nc_server_helper_text),
-            resources!!.getString(R.string.nc_server_product_name)
+            // resources!!.getString(R.string.nc_server_product_name)
+            resources!!.getString(R.string.nc_app_name)
         )
-        binding.serverEntryTextInputLayout.setEndIconOnClickListener { checkServerAndProceed() }
+        // 输入框右边按钮点击事件
+        // binding.serverEntryTextInputLayout.setEndIconOnClickListener { checkServerAndProceed() }
+        binding.checkServerAndProceed.setOnClickListener { checkServerAndProceed() }
 
         if (resources!!.getBoolean(R.bool.hide_auth_cert)) {
             binding.certTextView.visibility = View.GONE
@@ -379,12 +382,12 @@ class ServerSelectionActivity : BaseActivity() {
     }
 
     private fun showserverEntryProgressBar() {
-        binding.errorWrapper.visibility = View.INVISIBLE
+        binding.errorWrapper.visibility = View.GONE
         binding.serverEntryProgressBar.visibility = View.VISIBLE
     }
 
     private fun hideserverEntryProgressBar() {
-        binding.serverEntryProgressBar.visibility = View.INVISIBLE
+        binding.serverEntryProgressBar.visibility = View.GONE
     }
 
     @SuppressLint("LongLogTag")

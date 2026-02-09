@@ -27,7 +27,7 @@
         <ImageView
             android:id="@+id/image_logo"
             android:layout_width="match_parent"
-            android:layout_height="36dp"
+            android:layout_height="48dp"
             android:layout_marginBottom="@dimen/standard_margin"
             android:contentDescription="@string/nc_app_product_name"
             android:scaleType="centerInside"
@@ -43,34 +43,34 @@
             android:orientation="vertical"
             android:padding="@dimen/standard_half_padding">
 
+            <!-- app:endIconDrawable="@drawable/ic_arrow_forward_white_24px"
+                app:endIconContentDescription="@string/nc_server_connect"
+                app:endIconMode="custom"
+                app:endIconTint="@color/black_common" -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/serverEntryTextInputLayout"
                 style="@style/Widget.App.Login.TextInputLayoutCLPS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/nc_server_url"
-                android:theme="@style/TextInputLayoutLoginCLPS"
-                app:endIconContentDescription="@string/nc_server_connect"
-                app:endIconDrawable="@drawable/ic_arrow_forward_white_24px"
-                app:endIconMode="custom"
-                app:endIconTint="@color/black_common">
+                android:theme="@style/TextInputLayoutLoginCLPS">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/serverEntryTextInputEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="top"
+                    android:gravity="start|center_vertical"
                     android:importantForAutofill="no"
                     android:inputType="textUri|textNoSuggestions"
                     android:lines="1"
                     android:minLines="1"
                     android:paddingStart="16dp"
-                    android:paddingEnd="55dp"
+                    android:paddingEnd="16dp"
                     android:scrollbars="vertical"
                     android:textColor="@color/black_common"
                     android:textColorHint="@color/fontAppbar">
 
-                    <requestFocus />
+<!--                    <requestFocus />-->
 
                 </com.google.android.material.textfield.TextInputEditText>
 
@@ -96,7 +96,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="2dp"
-                android:visibility="invisible"
+                android:visibility="gone"
                 tools:visibility="visible">
 
                 <ProgressBar
@@ -127,7 +127,7 @@
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="2dp"
-                android:visibility="invisible"
+                android:visibility="gone"
                 tools:ignore="UseCompoundDrawables"
                 tools:visibility="visible">
 
@@ -154,15 +154,27 @@
                     tools:text="@string/nc_server_unsupported" />
             </LinearLayout>
 
+            <Button
+                android:id="@+id/check_server_and_proceed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:text="@string/clps_check_server"
+                android:layout_marginTop="@dimen/header_main_padding_vertical_top"
+                android:padding="8dp"
+                style="@style/CustomMaterialButton"
+                android:background="@drawable/custom_button_background"/>
             <ImageButton
                 android:id="@+id/scan_Qr"
                 android:layout_width="@dimen/avatar_size"
                 android:layout_height="@dimen/avatar_size"
+                android:layout_marginTop="@dimen/header_main_padding_vertical_top"
                 android:scaleType="fitXY"
                 android:background="@color/transparent"
                 android:contentDescription="@string/scan_qr_code"
                 android:src="@drawable/outline_qr_code_24"
-                app:tint="@color/colorPrimaryDark" />
+                app:tint="@color/colorPrimaryDark"
+                android:visibility="gone"/>
 
             <TextView
                 android:id="@+id/import_or_choose_provider_text"
@@ -188,7 +200,8 @@
                 android:padding="@dimen/standard_padding"
                 android:text="@string/nc_configure_cert_auth"
                 android:textAlignment="center"
-                android:textColor="@color/grey_600" />
+                android:textColor="@color/grey_600"
+                android:visibility="gone" />
 
         </LinearLayout>
 

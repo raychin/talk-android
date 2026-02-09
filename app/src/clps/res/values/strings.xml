@@ -21,4 +21,7 @@ How to translate with transifex:
     <!-- CLPS -->
     <string name="clps_portal">CLPS Portal</string>
     <string name="clps">CLPS</string>
+
+    <string name="clps_check_server">Login</string>
+
 </resources>
