@@ -190,7 +190,8 @@ class CallNotificationActivity : CallBaseActivity() {
     }
 
     private fun proceedToCall() {
-        val callIntent = Intent(this, CallActivity::class.java)
+        // 修复锁屏、其他应用及app内部接听崩溃问题
+        val callIntent = Intent(sharedApplication, CallActivity::class.java)
         intent.putExtra(KEY_ROOM_ONE_TO_ONE, isOneToOneCall)
         callIntent.putExtras(intent.extras!!)
         startActivity(callIntent)
