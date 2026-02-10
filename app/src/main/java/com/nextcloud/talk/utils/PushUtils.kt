@@ -204,7 +204,9 @@ class PushUtils {
                         nextcloudRegisterPushMap["format"] = "json"
                         nextcloudRegisterPushMap["pushTokenHash"] = pushTokenHash
                         nextcloudRegisterPushMap["devicePublicKey"] = devicePublicKeyBase64
-                        nextcloudRegisterPushMap["proxyServer"] = proxyServer
+                        // TODO RAY 推送网关配置 优化判断谷歌服务是否可用
+                        // nextcloudRegisterPushMap["proxyServer"] = proxyServer
+                        nextcloudRegisterPushMap["proxyServer"] = "${user.baseUrl}/nctalk-push"
                         registerDeviceWithNextcloud(ncApi, nextcloudRegisterPushMap, pushToken, user)
                     }
                 }
@@ -260,7 +262,9 @@ class PushUtils {
     }
 
     private fun registerDeviceWithPushProxy(ncApi: NcApi, proxyMap: Map<String, String?>, user: User) {
-        ncApi.registerDeviceForNotificationsWithPushProxy(ApiUtils.getUrlPushProxy(), proxyMap)
+        // TODO RAY 设备绑定 优化判断谷歌服务是否可用
+        // ncApi.registerDeviceForNotificationsWithPushProxy(ApiUtils.getUrlPushProxy(), proxyMap)
+        ncApi.registerDeviceForNotificationsWithPushProxy(ApiUtils.getUrlPushProxy(user.baseUrl!!), proxyMap)
             .subscribeOn(Schedulers.io())
             .subscribe(object : Observer<Unit> {
                 override fun onSubscribe(d: Disposable) {

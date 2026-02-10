@@ -20,48 +20,77 @@ import org.json.JSONObject
 
 class CJPushMessageReceiver : JPushMessageReceiver() {
 
-    override fun onMessage(context: Context, p1: CustomMessage) {
-        super.onMessage(context, p1)
-        Log.d("Ray", "Received custom message: $p1}")
+    override fun onMessage(context: Context, customMessage: CustomMessage) {
+        super.onMessage(context, customMessage)
+        Log.d("Ray", "Received custom message: $customMessage}")
 
         // 此方法接收自定义消息，不会有Notification
         /**
          * {messageId='18102837983815159', extra='{"signature":"123131231231231","subject":"324334234234234234"}', message='Ray自定义消息15:39', contentType='', title='', senderId='37674722073737cd729faf02', appId='com.nextcloud.talk2.clps', platform='0'}}
          */
         // 处理推送消息
-        handlePushMessage(context, p1)
+        handlePushMessage(context, customMessage)
     }
 
-    override fun onNotifyMessageArrived(context: Context, p1: NotificationMessage) {
-        super.onNotifyMessageArrived(context, p1)
+    override fun onNotifyMessageArrived(context: Context, notificationMessage: NotificationMessage) {
+        super.onNotifyMessageArrived(context, notificationMessage)
         // 此方法接收通知消息，会有Notification
         /**
          * {notificationId=525271935, msgId='18102837965808291', appkey='37674722073737cd729faf02', notificationContent='新的消息15:34', notificationAlertType=7, notificationTitle='RayExtra', notificationSmallIcon='', notificationLargeIcon='', notificationExtras='{"signature":"signature23424234","subject":"subject121431313213"}', notificationStyle=0, notificationBuilderId=0, notificationBigText='', notificationBigPicPath='', notificationInbox='', notificationPriority=0, notificationImportance=-1, notificationCategory='', developerArg0='', platform=0, notificationChannelId='', displayForeground='', notificationType=0', inAppMsgType=1', inAppMsgShowType=2', inAppMsgShowPos=0', inAppMsgTitle=, inAppMsgContentBody=, inAppType=0, inAppShowTarget=, inAppClickAction=, inAppExtras=, customButtons=null}}
          */
-        Log.d("Ray", "Received notification message: $p1}")
+        Log.d("Ray", "Received notification message: $notificationMessage}")
 
         // notificationExtras
         val msgObject = CustomMessage ()
-        msgObject.extra = p1.notificationExtras
+        msgObject.extra = notificationMessage.notificationExtras
         handlePushMessage(context, msgObject)
     }
 
-    override fun onCommandResult(p0: Context?, p1: CmdMessage?) {
-        super.onCommandResult(p0, p1)
+    override fun onConnected(context: Context, isConnected: Boolean) {
+        super.onConnected(context, isConnected)
+        Log.d("Ray", "onConnected isConnected: $isConnected")
+    }
+
+    override fun onAliasOperatorResult(context: Context?, jPushMessage: JPushMessage?) {
+        super.onAliasOperatorResult(context, jPushMessage)
+        Log.d("Ray", "onConnected isConnected: ${jPushMessage.toString()}")
+    }
+
+    override fun onCommandResult(context: Context?, cmdMessage: CmdMessage?) {
+        super.onCommandResult(context, cmdMessage)
         /**
          * cmd: 2003
          * errorCode: 0 表示未停止，1 表示已停止，其他code 表示其他异常
          * msg: "not stop" 表示未停止，"stopped" 表示已停止
          */
-        Log.d("Ray", "onCommandResult message: $p1}")
+        // // if (0 == cmdMessage?.errorCode) {
+        // //     // JPushInterface.resumePush(context)
+        // //     Log.e("Ray", "PushStopped2= ${JPushInterface.isPushStopped(context)}")
+        // // }
+        // val pushStopped = JPushInterface.isPushStopped(context)
+        // Log.d("Ray", "onCommandResult pushStopped = $pushStopped")
+        // if (pushStopped) {
+        //     JPushInterface.resumePush(context)
+        //     Log.e("Ray", "onCommandResult pushStopped2 = ${JPushInterface.isPushStopped(context)}")
+        // }
+        // // Log.d("Ray", "onCommandResult message: $cmdMessage}")
     }
 
-    override fun onNotifyMessageOpened(context: Context, p1: NotificationMessage) {
-        super.onNotifyMessageOpened(context, p1)
-        Log.d("Ray", "Notification clicked, extras: ${p1.toString()}")
+    override fun onNotifyMessageOpened(context: Context, notificationMessage: NotificationMessage) {
+        super.onNotifyMessageOpened(context, notificationMessage)
+        Log.d("Ray", "Notification clicked, extras: ${notificationMessage.toString()}")
 
         // 处理通知点击事件
-        handleNotificationClick(context, p1)
+        handleNotificationClick(context, notificationMessage)
+    }
+
+    private fun jsonToMap(jsonString: String): Map<String, Any> {
+        val jsonObject = JSONObject(jsonString)
+        val map = mutableMapOf<String, Any>()
+        jsonObject.keys().forEach { key ->
+            map[key] = jsonObject.get(key)
+        }
+        return map
     }
 
     private fun handlePushMessage(context: Context, message: CustomMessage) {
@@ -73,16 +102,20 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
         // 这里需要根据 Nextcloud Talk 的推送格式处理消息
         Log.d("Ray", "Received custom message: $message}")
 
-        // TODO RAY 同服务端确定subject和signature从哪里取值
+        // 同服务端确定subject和signature从哪里取值
         var dataJson = message.extra
         if (dataJson.isNullOrEmpty()) {
             dataJson = "{}"
         }
-        val data = JSONObject(dataJson)
-        val subject = data[KEY_NOTIFICATION_SUBJECT] as? String
-        val signature = data[KEY_NOTIFICATION_SIGNATURE] as? String
+        val extraData = jsonToMap(dataJson)
+        Log.d("Ray", "data: $extraData")
+        val subject = extraData[KEY_NOTIFICATION_SUBJECT] as? String
+        val signature = extraData[KEY_NOTIFICATION_SIGNATURE] as? String
 
+        Log.e("Ray", "subject: $subject")
+        Log.e("Ray", "signature: $signature")
         if (!subject.isNullOrEmpty() && !signature.isNullOrEmpty()) {
+            Log.d("Ray", "-------------------------------")
             val messageData = Data.Builder()
                 .putString(BundleKeys.KEY_NOTIFICATION_SUBJECT, subject)
                 .putString(BundleKeys.KEY_NOTIFICATION_SIGNATURE, signature)

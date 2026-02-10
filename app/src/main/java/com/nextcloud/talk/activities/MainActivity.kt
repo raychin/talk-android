@@ -73,6 +73,7 @@ class MainActivity :
         super.onCreate(savedInstanceState)
 
         Log.d(TAG, "onStart: getRegistrationID: " + JPushInterface.getRegistrationID(applicationContext))
+        Log.d(TAG, "onStart: getRegistrationID isGooglePlayServicesAvailable: " + ClosedInterfaceImpl().isGooglePlayServicesAvailable)
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {

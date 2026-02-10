@@ -277,6 +277,23 @@
         <item name="android:navigationBarColor">@color/grey950</item>
     </style>
 
+    <style name="AppTheme.CallLauncherNotificationDialog" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <!-- 允许内容延伸到状态栏 -->
+        <item name="android:fitsSystemWindows">true</item>
+        <!-- 设置窗口背景透明 -->
+        <item name="android:windowBackground">@null</item>
+        <item name="android:windowFrame">@null</item>
+        <!-- 禁止全屏模式 -->
+        <item name="android:windowFullscreen">false</item>
+        <!-- 设置为浮动窗口 -->
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- 点击外部不关闭对话框 -->
+        <item name="android:windowCloseOnTouchOutside">false</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
     <style name="Nextcloud.Material.TextButton" parent="Widget.Material3.Button.TextButton.Icon">
         <item name="android:typeface">sans</item>
         <item name="android:textStyle">bold</item>

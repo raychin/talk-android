@@ -19,7 +19,9 @@ import androidx.emoji2.text.EmojiCompat
 import androidx.lifecycle.LifecycleObserver
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
+import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
@@ -47,6 +49,7 @@ import com.nextcloud.talk.filebrowser.webdav.DavUtils
 import com.nextcloud.talk.jobs.AccountRemovalWorker
 import com.nextcloud.talk.jobs.CapabilitiesWorker
 import com.nextcloud.talk.jobs.SignalingSettingsWorker
+import com.nextcloud.talk.jobs.clps.TalkBackgroundWorker
 import com.nextcloud.talk.jobs.WebsocketConnectionsWorker
 import com.nextcloud.talk.ui.theme.ThemeModule
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
@@ -87,7 +90,8 @@ import javax.inject.Singleton
 @AutoInjector(NextcloudTalkApplication::class)
 class NextcloudTalkApplication :
     MultiDexApplication(),
-    LifecycleObserver {
+    LifecycleObserver,
+    Configuration.Provider {
     //region Fields (components)
     lateinit var componentApplication: NextcloudTalkApplicationComponent
         private set
@@ -114,7 +118,10 @@ class NextcloudTalkApplication :
         }
     }
 
-    //endregion
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setMinimumLoggingLevel(Log.DEBUG) // 可选：设置日志级别
+            .build()
 
     //region Overridden methods
     override fun onCreate() {
@@ -163,8 +170,6 @@ class NextcloudTalkApplication :
     private fun initPush() {
         JPushInterface.setDebugMode(true)
         JPushInterface.init(this)
-
-        // TODO RAY NotificationUtils类中是否支持判断通知是否打开，未打开跳转通知设置页面
     }
 
     private fun initWorkers() {
@@ -190,6 +195,32 @@ class NextcloudTalkApplication :
             ExistingPeriodicWorkPolicy.REPLACE,
             periodicCapabilitiesUpdateWork
         )
+
+        // val talkBackgroundWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java).build()
+        // WorkManager.getInstance(applicationContext).enqueue(talkBackgroundWorker)
+        val delayedWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java)
+            .setInitialDelay(TALK_WORK_DELAY, TimeUnit.SECONDS)
+            .build()
+        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+            TALK_WORK_ID,
+            // 如果已存在则不再执行
+            ExistingWorkPolicy.REPLACE,
+            delayedWorker
+        )
+        // val constraints = Constraints.Builder()
+        //     .setRequiredNetworkType(NetworkType.CONNECTED)
+        //     .setRequiresCharging(false) // 根据需要调整
+        //     .build()
+        // // 周期时间太短，无法重复执行，一般15分钟
+        // val talkBackgroundWorker = PeriodicWorkRequest.Builder(TalkBackgroundWorker::class.java, 45, TimeUnit.SECONDS)
+        //     .setConstraints(constraints)
+        //     .build()
+        // // WorkManager.getInstance(applicationContext).getWorkInfoById(talkBackgroundWorker.id)
+        // // WorkManager.getInstance(applicationContext)
+        // //     .getWorkInfoByIdLiveData(talkBackgroundWorker.id)
+        // //     .observe(this, Observer {
+        // //         workInfo -> Log.d("WorkManager", "WorkInfo: $workInfo")
+        // //     })
     }
 
     override fun onTerminate() {
@@ -262,6 +293,9 @@ class NextcloudTalkApplication :
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }
         }
+
+        const val TALK_WORK_ID = "talk_work_id_by_ray"
+        const val TALK_WORK_DELAY: Long = 45
     }
     //endregion
 }

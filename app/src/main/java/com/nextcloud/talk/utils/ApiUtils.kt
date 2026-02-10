@@ -393,6 +393,11 @@ object ApiUtils {
     fun getUrlPushProxy(): String =
         sharedApplication!!.applicationContext.resources.getString(R.string.nc_push_server_url) + "/devices"
 
+    @JvmStatic
+    fun getUrlPushProxy(baseUrl: String): String =
+        "$baseUrl/nctalk-push/devices"
+
+
     // see https://github.com/nextcloud/notifications/blob/master/docs/ocs-endpoint-v2.md
     fun getUrlForNcNotificationWithId(baseUrl: String, notificationId: String): String =
         "$baseUrl$OCS_API_VERSION/apps/notifications/api/v2/notifications/$notificationId"
