@@ -48,12 +48,15 @@ class TalkBackgroundWorker(context: Context, workerParams: WorkerParameters) : W
         Log.e("Ray", "TalkBackgroundWorker 任务 - ${
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
 
-        val pushStopped = JPushInterface.isPushStopped(applicationContext)
-        Log.e("Ray", "TalkBackgroundWorker PushStopped = $pushStopped")
-        if (pushStopped) {
-            JPushInterface.resumePush(applicationContext)
-            Log.e("Ray", "TalkBackgroundWorker PushStopped2= ${JPushInterface.isPushStopped(applicationContext)}")
-        }
+        // isPushStopped已废弃
+        // val pushStopped = JPushInterface.isPushStopped(applicationContext)
+        // Log.e("Ray", "TalkBackgroundWorker PushStopped = $pushStopped")
+        // if (pushStopped) {
+        //     JPushInterface.resumePush(applicationContext)
+        //     Log.e("Ray", "TalkBackgroundWorker PushStopped2= ${JPushInterface.isPushStopped(applicationContext)}")
+        // }
+        // 调用获取推送状态，在 JPushMessageReceiver 中接收回调 public void onCommandResult
+        JPushInterface.getPushStatus(context);
 
         // makeGetRequest()
 

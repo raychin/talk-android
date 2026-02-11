@@ -168,7 +168,7 @@ class NextcloudTalkApplication :
     }
 
     private fun initPush() {
-        JPushInterface.setDebugMode(true)
+        JPushInterface.setDebugMode(BuildConfig.DEBUG)
         JPushInterface.init(this)
     }
 

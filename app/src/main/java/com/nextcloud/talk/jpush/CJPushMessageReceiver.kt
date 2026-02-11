@@ -17,6 +17,9 @@ import cn.jpush.android.service.JPushMessageReceiver
 import com.nextcloud.talk.jobs.NotificationWorker
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class CJPushMessageReceiver : JPushMessageReceiver() {
 
@@ -53,7 +56,7 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
 
     override fun onAliasOperatorResult(context: Context?, jPushMessage: JPushMessage?) {
         super.onAliasOperatorResult(context, jPushMessage)
-        Log.d("Ray", "onConnected isConnected: ${jPushMessage.toString()}")
+        Log.d("Ray", "onAliasOperatorResult jPushMessage: ${jPushMessage.toString()}")
     }
 
     override fun onCommandResult(context: Context?, cmdMessage: CmdMessage?) {
@@ -63,17 +66,12 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
          * errorCode: 0 表示未停止，1 表示已停止，其他code 表示其他异常
          * msg: "not stop" 表示未停止，"stopped" 表示已停止
          */
-        // // if (0 == cmdMessage?.errorCode) {
-        // //     // JPushInterface.resumePush(context)
-        // //     Log.e("Ray", "PushStopped2= ${JPushInterface.isPushStopped(context)}")
-        // // }
-        // val pushStopped = JPushInterface.isPushStopped(context)
-        // Log.d("Ray", "onCommandResult pushStopped = $pushStopped")
-        // if (pushStopped) {
-        //     JPushInterface.resumePush(context)
-        //     Log.e("Ray", "onCommandResult pushStopped2 = ${JPushInterface.isPushStopped(context)}")
-        // }
-        // // Log.d("Ray", "onCommandResult message: $cmdMessage}")
+        Log.d("Ray", "onCommandResult errorCode = ${cmdMessage?.errorCode}, ${
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        }")
+        if (0 != cmdMessage?.errorCode) {
+            JPushInterface.resumePush(context)
+        }
     }
 
     override fun onNotifyMessageOpened(context: Context, notificationMessage: NotificationMessage) {
@@ -100,7 +98,7 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
         // val extras = bundle.getString(JPushInterface.EXTRA_EXTRA)
 
         // 这里需要根据 Nextcloud Talk 的推送格式处理消息
-        Log.d("Ray", "Received custom message: $message}")
+        Log.d("Ray", "handlePushMessage custom message: $message}")
 
         // 同服务端确定subject和signature从哪里取值
         var dataJson = message.extra
