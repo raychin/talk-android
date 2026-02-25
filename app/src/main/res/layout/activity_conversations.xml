@@ -17,7 +17,7 @@
         android:id="@+id/conversation_list_appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/bg_default"
+        android:background="@color/transparent"
         android:elevation="0dp"
         android:clipChildren="true"
         android:clipToPadding="false"
