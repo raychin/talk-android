@@ -331,7 +331,10 @@ class MessageInputFragment : Fragment() {
                 }
 
                 if (draft.messageText != "") {
-                    binding.fragmentMessageInputView.messageInput.requestFocus()
+                    // fix: ANR问题，使用post延迟执行，避免在Fragment创建过程中请求焦点 fix by ray on 2026/02/25
+                    binding.root.post {
+                        binding.fragmentMessageInputView.messageInput.requestFocus()
+                    }
                 }
 
                 if (isInReplyState()) {

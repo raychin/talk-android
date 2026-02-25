@@ -712,7 +712,10 @@ class ChatActivity :
                             replace(R.id.fragment_container_activity_chat, messageInputFragment)
                             runOnCommit {
                                 if (focusInput) {
-                                    messageInputFragment.binding.fragmentMessageInputView.requestFocus()
+                                    // fix: ANR问题，将焦点请求移到下一个消息循环，避免阻塞当前操作 fix by ray on 2026/02/25
+                                    binding.root.post {
+                                        messageInputFragment.binding.fragmentMessageInputView.requestFocus()
+                                    }
                                 }
                             }
                         }
@@ -3894,6 +3897,12 @@ class ChatActivity :
         val intent = Intent(this, ConversationsListActivity::class.java)
         intent.putExtras(bundle)
         startActivity(intent)
+    }
+
+    fun selectMessages(message: IMessage?) {
+        // TODO RAY adapter顯示多選按鈕
+
+        // TODO RAY 多選完成後，參照forwardMessage跳轉到分享頁面
     }
 
     fun remindMeLater(message: ChatMessage?) {
