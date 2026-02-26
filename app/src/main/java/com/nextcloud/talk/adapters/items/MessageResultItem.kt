@@ -23,7 +23,6 @@ import com.nextcloud.talk.extensions.loadThumbnail
 import com.nextcloud.talk.messagesearch.MessageSearchActivity
 import com.nextcloud.talk.models.domain.SearchMessageEntry
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
-import com.nextcloud.talk.utils.DateUtils
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import eu.davidea.flexibleadapter.items.IFilterable
@@ -73,10 +72,13 @@ data class MessageResultItem(
         // }
         // thumbnailURL?.let { holder.binding.thumbnail.loadThumbnail(it, currentUser) }
 
-        // 时间戳有问题，暂时不显示
-        holder.binding.conversationTime.visibility = View.GONE
-        // holder.binding.conversationTime.text = DateUtils(context).getShowTimeString(messageEntry.timestamp!!)
-        holder.binding.conversationTime.text = DateUtils(context).getLocalTimeStringFromTimestamp(messageEntry.timestamp!!)
+        // fix: 时间显示问题
+        holder.binding.conversationTime.text = android.text.format.DateUtils.getRelativeTimeSpanString(
+            messageEntry.timestamp!! * MILLIES,
+            System.currentTimeMillis(),
+            0,
+            android.text.format.DateUtils.FORMAT_ABBREV_RELATIVE
+        )
         if (TextUtils.isEmpty(messageEntry.thumbnail)) {
             holder.binding.thumbnailImg.visibility = View.GONE
             holder.binding.thumbnailSize.visibility = View.GONE
@@ -118,6 +120,7 @@ data class MessageResultItem(
 
     companion object {
         const val VIEW_TYPE = FlexibleItemViewType.MESSAGE_RESULT_ITEM
+        private const val MILLIES = 1000L
     }
 
     override fun getHeader(): GenericTextHeaderItem =
