@@ -132,4 +132,13 @@
         android:textSize="@dimen/two_line_primary_text_size"
         tools:text="Best conversation" />
 
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/relativeLayout"
+        android:layout_alignStart="@id/dialogName"
+        android:layout_alignEnd="@id/relativeLayout"
+        android:layout_marginTop="8dp"
+        android:background="@color/border_color" />
 </RelativeLayout>
