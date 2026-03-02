@@ -64,4 +64,6 @@
 
     <color name="icon_on_bg_default">#99FFFFFF</color>
 
+    <color name="border_color">#2B2B2B</color>
+
 </resources>
