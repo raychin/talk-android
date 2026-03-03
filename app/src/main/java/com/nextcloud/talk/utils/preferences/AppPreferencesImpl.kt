@@ -8,6 +8,7 @@
 package com.nextcloud.talk.utils.preferences
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -602,6 +603,51 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
             preferences[longPreferencesKey(key)] ?: defaultValue
         }
 
+    override fun getNotificationCountAsync(): Int {
+        return runBlocking {
+            async { readString(NOTIFICATION_COUNT, "0").first() }.await().toInt()
+        }
+    }
+
+    override fun setNotificationCountAsync(count: Int) {
+        runBlocking<Unit> {
+            async {
+                writeString(NOTIFICATION_COUNT, count.toString())
+            }
+        }
+    }
+
+    override fun clearNotificationCountAsync() {
+        setNotificationCountAsync(0)
+    }
+
+    // 在类开头添加 SharedPreferences 属性
+    private val sharedPreferences: SharedPreferences by lazy {
+        context.getSharedPreferences(NOTIFICATION_COUNT, Context.MODE_PRIVATE)
+    }
+
+    private val notificationPrefs: SharedPreferences by lazy {
+        context.getSharedPreferences(NOTIFICATION_COUNT, Context.MODE_PRIVATE)
+    }
+
+    // 修改通知计数相关方法
+    override fun getNotificationCount(): Int {
+        return notificationPrefs.getInt(NOTIFICATION_COUNT, 0)
+    }
+
+    override fun setNotificationCount(count: Int) {
+        notificationPrefs.edit()
+            .putInt(NOTIFICATION_COUNT, count)
+            // .apply() // 异步提交，性能更好
+            .commit()
+    }
+
+    override fun clearNotificationCount() {
+        notificationPrefs.edit()
+            .remove(NOTIFICATION_COUNT)
+            .apply()
+    }
+
     companion object {
         @Suppress("UnusedPrivateProperty")
         private val TAG = AppPreferencesImpl::class.simpleName
@@ -637,6 +683,9 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         const val SHOW_REGULAR_NOTIFICATION_WARNING = "show_regular_notification_warning"
         const val LAST_NOTIFICATION_WARNING = "last_notification_warning"
         const val CONVERSATION_LIST_POSITION_OFFSET = "CONVERSATION_LIST_POSITION_OFFSET"
+
+        const val NOTIFICATION_COUNT = "notification_count"
+
         private fun String.convertStringToArray(): Array<Float> {
             var varString = this
             val floatList = mutableListOf<Float>()

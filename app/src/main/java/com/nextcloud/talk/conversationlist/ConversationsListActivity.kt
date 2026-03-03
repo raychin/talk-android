@@ -263,6 +263,8 @@ class ConversationsListActivity :
 
         currentUser = currentUserProvider.currentUser.blockingGet()
 
+        NotificationUtils.cancelAllNotificationsForAccount(this, currentUser!!)
+
         conversationsListViewModel = ViewModelProvider(this, viewModelFactory)[ConversationsListViewModel::class.java]
         contextChatViewModel = ViewModelProvider(this, viewModelFactory)[ContextChatViewModel::class.java]
 
@@ -604,12 +606,15 @@ class ConversationsListActivity :
         conversationItemsWithHeader.clear()
         nearFutureEventConversationItems.clear()
 
+        var count = 0
         for (conversation in list) {
             if (!isFutureEvent(conversation) && !conversation.hasArchived) {
                 addToNearFutureEventConversationItems(conversation)
             }
             addToConversationItems(conversation)
+            count += conversation.unreadMessages
         }
+        appPreferences.setNotificationCount(count)
 
         getFilterStates()
         val noFiltersActive = !(
@@ -1922,6 +1927,10 @@ class ConversationsListActivity :
             selectedMessageId = null
         }
 
+        // 减去角标数量
+        val count = appPreferences.getNotificationCount() - selectedConversation!!.unreadMessages
+        appPreferences.setNotificationCount(count)
+        Log.e("Ray", "openConversation count = $count")
         val intent = Intent(context, ChatActivity::class.java)
         intent.putExtras(bundle)
         startActivity(intent)

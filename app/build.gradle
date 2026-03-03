@@ -251,6 +251,7 @@ ext {
     coroutines_version = "1.10.2"
     mockitoKotlinVersion = "6.0.0"
     jPushVersion = "6.0.1"
+    shortcutBadger = "1.1.22"
 }
 
 configurations.configureEach {
@@ -468,6 +469,8 @@ dependencies {
     implementation 'com.github.bumptech.glide:compose:1.0.0-beta01'
     // 注解处理器（可选，用于生成API）
     kapt 'com.github.bumptech.glide:compiler:4.16.0'
+
+//    implementation "me.leolin:ShortcutBadger:${shortcutBadger}@aar"
 }
 
 tasks.register('installGitHooks', Copy) {

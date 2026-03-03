@@ -93,6 +93,7 @@ import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+// import kotlinx.coroutines.runBlocking
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -495,6 +496,17 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             else -> Log.e(TAG, "unknown pushMessage.type")
         }
 
+        // if (TYPE_CALL != pushMessage.type) {
+            // 在 showNotification 方法开始处添加计数
+            // runBlocking {
+                val currentCount = appPreferences.getNotificationCount()
+                Log.e("Ray", "showNotification currentCount = $currentCount")
+                val newCount = currentCount + 1
+                appPreferences.setNotificationCount(newCount)
+                Log.e("Ray", "showNotification set = ${appPreferences.getNotificationCount()}")
+            // }
+        // }
+
         val pendingIntent = createUniquePendingIntent(intent)
         val uri = signatureVerification.user!!.baseUrl!!.toUri()
         val baseUrl = uri.host
@@ -547,7 +559,10 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         pendingIntent: PendingIntent?,
         autoCancelOnClick: Boolean
     ): NotificationCompat.Builder {
+        val count = appPreferences.getNotificationCount()
+        Log.e("Ray", "createNotificationBuilder count = $count")
         val notificationBuilder = NotificationCompat.Builder(context!!, "1")
+            .setNumber(count)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(category)
             .setLargeIcon(getLargeIcon())
@@ -961,7 +976,12 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                     )
                 )
                 .setSmallIcon(R.drawable.ic_baseline_phone_missed_24)
-                .setOngoing(false)
+                /**
+                 * 无法被用户手动滑动清除‌
+                 * ‌不会被“清除所有通知”操作移除‌
+                 * ‌通常用于表示正在进行的后台任务‌，如音乐播放、文件下载、导航或通话等
+                 */
+                .setOngoing(true)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setContentIntent(createUniquePendingIntent(intent))

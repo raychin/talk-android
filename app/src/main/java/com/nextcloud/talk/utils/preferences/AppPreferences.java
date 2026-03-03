@@ -188,4 +188,19 @@ public interface AppPreferences {
     Pair<Integer, Integer> getConversationListPositionAndOffset();
 
     void clear();
+
+    // 异步消息通知计数
+    int getNotificationCountAsync();
+
+    void setNotificationCountAsync(int count);
+
+    void clearNotificationCountAsync();
+
+    // 消息通知计数
+    int getNotificationCount();
+
+    void setNotificationCount(int count);
+
+    void clearNotificationCount();
+
 }
