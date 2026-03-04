@@ -2205,6 +2205,34 @@ class CallActivity : CallBaseActivity() {
         if (hasMCU) {
             currentSessionId = webSocketClient!!.sessionId
         }
+        else {
+            /**
+             * fix: 修复独立通讯信用服务器接通通话自动退出通话问题问题
+             * TODO RAY 待优化加上信令服务器判断逻辑
+             * add by ray on 2026/03/03
+             */
+            joined.forEach {
+                Log.d("Ray", "   joined: ${it.userId}")
+                if (it.userId == conversationUser.userId) {
+                    it.sessionId = currentSessionId
+                    Log.d("Ray", "   joined: ${it.sessionId}")
+                }
+            }
+            updated.forEach {
+                Log.d("Ray", "   updated: ${it.userId}")
+                if (it.userId == conversationUser.userId) {
+                    it.sessionId = currentSessionId
+                    Log.d("Ray", "   updated: ${it.sessionId}")
+                }
+            }
+            unchanged.forEach {
+                Log.d("Ray", "   unchanged: ${it.userId}")
+                if (it.userId == conversationUser.userId) {
+                    it.sessionId = currentSessionId
+                    Log.d("Ray", "   unchanged: ${it.sessionId}")
+                }
+            }
+        }
         Log.d(TAG, "   currentSessionId is $currentSessionId")
 
         val participantsInCall: MutableList<Participant> = ArrayList()
@@ -2217,6 +2245,14 @@ class CallActivity : CallBaseActivity() {
 
         for (participant in participantsInCall) {
             val inCallFlag = participant.inCall
+            Log.e("Ray", "currentSessionId = $currentSessionId")
+            Log.e("Ray", "participant.sessionId = ${participant.sessionId}")
+            Log.e("Ray", "participant.sessionId != currentSessionId = ${participant.sessionId != currentSessionId}")
+            Log.e("Ray", "inCallFlag = $inCallFlag")
+
+            Log.e("Ray", "conversationUser = ${conversationUser.userId}")
+            Log.e("Ray", "participant.userId = ${participant.userId}")
+
             if (participant.sessionId != currentSessionId) {
                 Log.d(
                     TAG,
@@ -2228,6 +2264,7 @@ class CallActivity : CallBaseActivity() {
             } else {
                 Log.d(TAG, "   inCallFlag of currentSessionId: $inCallFlag")
                 isSelfInCall = inCallFlag != 0L
+                Log.e("Ray", "isSelfInCall = $isSelfInCall")
                 selfParticipant = participant
             }
         }
