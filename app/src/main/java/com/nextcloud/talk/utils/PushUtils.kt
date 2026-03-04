@@ -49,6 +49,7 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.Locale
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 @AutoInjector(NextcloudTalkApplication::class)
 class PushUtils {
@@ -206,7 +207,7 @@ class PushUtils {
                         nextcloudRegisterPushMap["devicePublicKey"] = devicePublicKeyBase64
                         // TODO RAY 推送网关配置 优化判断谷歌服务是否可用
                         // nextcloudRegisterPushMap["proxyServer"] = proxyServer
-                        nextcloudRegisterPushMap["proxyServer"] = "${user.baseUrl}/nctalk-push"
+                        nextcloudRegisterPushMap["proxyServer"] = "${getPushProxyUrl(user.baseUrl)}/nctalk-push"
                         registerDeviceWithNextcloud(ncApi, nextcloudRegisterPushMap, pushToken, user)
                     }
                 }
@@ -222,6 +223,7 @@ class PushUtils {
         token: String,
         user: User
     ) {
+        Log.d("Ray", "registerDeviceWithNextcloud: ${user.baseUrl}")
         val credentials = ApiUtils.getCredentials(user.username, user.token)
         ncApi.registerDeviceForNotificationsWithNextcloud(
             credentials,
@@ -251,7 +253,8 @@ class PushUtils {
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.e(TAG, "Failed to register device with nextcloud", e)
+                    Log.e("RAY", "Failed to register device with nextcloud " +
+                        "${nextcloudRegisterPushMap["proxyServer"]}", e)
                     eventBus!!.post(EventStatus(user.id!!, EventStatus.EventType.PUSH_REGISTRATION, false))
                 }
 
@@ -264,7 +267,13 @@ class PushUtils {
     private fun registerDeviceWithPushProxy(ncApi: NcApi, proxyMap: Map<String, String?>, user: User) {
         // TODO RAY 设备绑定 优化判断谷歌服务是否可用
         // ncApi.registerDeviceForNotificationsWithPushProxy(ApiUtils.getUrlPushProxy(), proxyMap)
-        ncApi.registerDeviceForNotificationsWithPushProxy(ApiUtils.getUrlPushProxy(user.baseUrl!!), proxyMap)
+        Log.d("Ray", "------------------------------")
+        Log.d("Ray", user.baseUrl!!)
+        Log.d("Ray", ApiUtils.getUrlPushProxy(
+            getPushProxyUrl(user.baseUrl!!)))
+        ncApi.registerDeviceForNotificationsWithPushProxy(
+            ApiUtils.getUrlPushProxy(getPushProxyUrl(user.baseUrl!!)), proxyMap
+            )
             .subscribeOn(Schedulers.io())
             .subscribe(object : Observer<Unit> {
                 override fun onSubscribe(d: Disposable) {
@@ -288,7 +297,7 @@ class PushUtils {
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.e(TAG, "Failed to register device with pushproxy", e)
+                    Log.e("Ray", "Failed to register device with pushproxy ${proxyMap["proxyServer"]}", e)
                     eventBus!!.post(EventStatus(user.id!!, EventStatus.EventType.PUSH_REGISTRATION, false))
                 }
 
@@ -306,6 +315,7 @@ class PushUtils {
         pushConfigurationState.deviceIdentifierSignature = proxyMap["deviceIdentifierSignature"]
         pushConfigurationState.userPublicKey = proxyMap["userPublicKey"]
         pushConfigurationState.usesRegularPass = java.lang.Boolean.FALSE
+        // TODO RAY 新增存储账户和环境逻辑，避免切换账户后推送消息接收
         if (user.id != null) {
             userManager!!.updatePushState(user.id!!, pushConfigurationState).subscribe(object : SingleObserver<Int?> {
                 override fun onSubscribe(d: Disposable) {
@@ -401,6 +411,15 @@ class PushUtils {
         return null
     }
 
+    /**
+     * 推送网关注册服务和推送设备绑定proxyServer映射
+     */
+    fun getPushProxyUrl(baseUrl: String?): String {
+        if (baseUrl == null) return baseUrl!!
+        val host = baseUrl.toUri().host
+        return PUSH_PROXY_MAP[host] ?: baseUrl
+    }
+
     companion object {
         private const val TAG = "PushUtils"
         private const val RSA_KEY_SIZE: Int = 2048
@@ -412,5 +431,11 @@ class PushUtils {
         private const val BYTES_TO_HEX_SUFFIX_SUFFIX = 0x100
         const val LATEST_PUSH_REGISTRATION_AT_SERVER: String = "LATEST_PUSH_REGISTRATION_AT_SERVER"
         const val LATEST_PUSH_REGISTRATION_AT_PUSH_PROXY: String = "LATEST_PUSH_REGISTRATION_AT_PUSH_PROXY"
+
+        private val PUSH_PROXY_MAP: HashMap<String, String> = mapOf(
+            "talk.clpsgroup.com.cn" to "https://talk.clpsgroup.com.cn",
+            "conference.clpsgroup.com.cn" to "https://conference.clpsgroup.com.cn",
+            "nextcloud.nctalk-test.clps.com.cn" to "https://nextcloud.nctalk-test.clps.com.cn",
+        ) as HashMap<String, String>
     }
 }
