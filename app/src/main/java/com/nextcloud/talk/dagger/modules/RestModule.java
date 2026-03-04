@@ -262,6 +262,12 @@ public class RestModule {
                 .method(original.method(), original.body())
                 .build();
 
+//            // 添加apps/notifications/api/v2/push接口断点，查看返回数据
+//            Response response = chain.proceed(request);
+//            if (original.url().toString().contains("apps/notifications/api/v2/push")) {
+//                Log.d("HttpAuthenticator", "response.body().string() = " + response.body().string());
+//            }
+//            return response;
             return chain.proceed(request);
         }
     }
