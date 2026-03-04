@@ -47,7 +47,7 @@ android {
         // mayor.minor.hotfix.increment (for increment: 01-50=Alpha / 51-89=RC / 90-99=stable)
         // xx   .xxx  .xx    .xx
         versionCode 230000012
-        versionName "30.4.2-Alpha05"
+        versionName "30.4.2-Alpha06"
 
         flavorDimensions "default"
         renderscriptTargetApi = 19
@@ -250,7 +250,7 @@ ext {
     media3_version = "1.8.0"
     coroutines_version = "1.10.2"
     mockitoKotlinVersion = "6.0.0"
-    jPushVersion = "6.0.1"
+    jPushVersion = "6.0.2"
     shortcutBadger = "1.1.22"
 }
 
@@ -524,4 +524,137 @@ detekt {
 
 ksp {
     arg('room.schemaLocation', "$projectDir/schemas")
+}
+
+
+// ============================================================
+// 自定义渠道打包 Tasks - Release 版本
+// ============================================================
+
+// Generic Flavor Release
+tasks.register('buildGenericRelease') {
+    group = 'build'
+    description = 'Build and output Generic flavor release APK'
+    dependsOn 'assembleGenericRelease'
+
+    doLast {
+        def outputDir = file("${layout.buildDirectory.get().asFile}/outputs/apk/generic/release")
+        if (outputDir.exists()) {
+            def apks = outputDir.listFiles().findAll { it.name.endsWith('.apk') }
+            apks.each { apk ->
+                println "✅ Generic Release APK: ${apk.name}"
+            }
+        }
+    }
+}
+
+// Gplay Flavor Release
+tasks.register('buildGplayRelease') {
+    group = 'build'
+    description = 'Build and output Gplay flavor release APK'
+    dependsOn 'assembleGplayRelease'
+
+    doLast {
+        def outputDir = file("${layout.buildDirectory.get().asFile}/outputs/apk/gplay/release")
+        if (outputDir.exists()) {
+            def apks = outputDir.listFiles().findAll { it.name.endsWith('.apk') }
+            apks.each { apk ->
+                println "✅ Gplay Release APK: ${apk.name}"
+            }
+        }
+    }
+}
+
+// QA Flavor Release
+tasks.register('buildQaRelease') {
+    group = 'build'
+    description = 'Build and output QA flavor release APK'
+    dependsOn 'assembleQaRelease'
+
+    doLast {
+        def outputDir = file("${layout.buildDirectory.get().asFile}/outputs/apk/qa/release")
+        if (outputDir.exists()) {
+            def apks = outputDir.listFiles().findAll { it.name.endsWith('.apk') }
+            apks.each { apk ->
+                println "✅ QA Release APK: ${apk.name}"
+            }
+        }
+    }
+}
+
+// CLPS Flavor Release
+tasks.register('buildClpsRelease') {
+    group = 'build'
+    description = 'Build and output CLPS flavor release APK'
+    dependsOn 'assembleClpsRelease'
+
+    doLast {
+        def outputDir = file("${layout.buildDirectory.get().asFile}/outputs/apk/clps/release")
+        if (outputDir.exists()) {
+            def apks = outputDir.listFiles().findAll { it.name.endsWith('.apk') }
+            apks.each { apk ->
+                println "✅ CLPS Release APK: ${apk.name}"
+            }
+        }
+    }
+}
+
+// ============================================================
+// 自定义渠道打包 Tasks - Debug 版本
+// ============================================================
+
+tasks.register('buildGenericDebug') {
+    group = 'build'
+    description = 'Build Generic flavor debug APK'
+    dependsOn 'assembleGenericDebug'
+}
+
+tasks.register('buildGplayDebug') {
+    group = 'build'
+    description = 'Build Gplay flavor debug APK'
+    dependsOn 'assembleGplayDebug'
+}
+
+tasks.register('buildQaDebug') {
+    group = 'build'
+    description = 'Build QA flavor debug APK'
+    dependsOn 'assembleQaDebug'
+}
+
+tasks.register('buildClpsDebug') {
+    group = 'build'
+    description = 'Build CLPS flavor debug APK'
+    dependsOn 'assembleClpsDebug'
+}
+
+// ============================================================
+// 批量打包 Tasks
+// ============================================================
+
+// 打包所有渠道的 Release 版本
+tasks.register('buildAllRelease') {
+    group = 'build'
+    description = 'Build all flavors release APKs'
+    dependsOn 'assembleRelease'
+
+    doLast {
+        println ""
+        println "========================================"
+        println "🎉 All Release APKs built successfully!"
+        println "========================================"
+    }
+}
+
+// 打包所有渠道的 Debug 版本
+tasks.register('buildAllDebug') {
+    group = 'build'
+    description = 'Build all flavors debug APKs'
+    dependsOn 'assembleDebug'
+}
+
+// 打包所有渠道（Release + Debug）
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Build all flavors (Release + Debug)'
+    dependsOn 'assemble'
 }
