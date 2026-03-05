@@ -295,7 +295,8 @@ class NextcloudTalkApplication :
         }
 
         const val TALK_WORK_ID = "talk_work_id_by_ray"
-        const val TALK_WORK_DELAY: Long = 45
+        // 原来45S -> 60S
+        const val TALK_WORK_DELAY: Long = 60
     }
     //endregion
 }
