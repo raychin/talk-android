@@ -11,4 +11,9 @@
     <cache-path
         name="cache"
         path="/" />
+    <!-- 添加这一行：支持外部文件目录 -->
+    <external-files-path
+        name="external_files"
+        path="." />
+<!--    <external-cache-path name="name" path="." />-->
 </paths>
