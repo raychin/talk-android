@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="PSPictureLongScaleImageView">
+        <attr name="ps_src" format="reference" />
+        <attr name="ps_assetName" format="string" />
+        <attr name="ps_panEnabled" format="boolean" />
+        <attr name="ps_zoomEnabled" format="boolean" />
+        <attr name="ps_quickScaleEnabled" format="boolean" />
+        <attr name="ps_tileBackgroundColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="PSPictureMediumBoldTextView">
+        <attr name="ps_stroke_Width" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="PSPictureRoundCornerRelativeLayout">
+        <attr name="ps_corners" format="dimension" />
+        <attr name="ps_topNormal" format="boolean" />
+        <attr name="ps_bottomNormal" format="boolean" />
+    </declare-styleable>
+
+</resources>
