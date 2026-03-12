@@ -1,723 +1,905 @@
-<?xml version="1.0" encoding="utf-8"?>
-  <resources>
-    <string name= "nc_edit">編輯</string>
-    <string name="add_participants">添加</string>
-    <string name="add_to_notes">添加到筆記</string>
-    <string name="added_to_favorites">添加了對話 %1$s 至最愛</string>
-    <string name="appbar_search_in">%s內搜尋</string>
-    <string name="appear_offline">顯示為離線</string>
-    <string name="archive_conversation">封存對話</string>
-    <string name="archive_hint">對話封存後，預設會隱藏。選取篩選條件「已封存」可檢視已封存的對話。仍會收到直接提及。</string>
-    <string name="archived">已封存</string>
-    <string name="archived_conversation">已封存 %1$s</string>
-    <string name="audio_call">音頻通話</string>
-    <string name="audio_output_bluetooth">藍牙</string>
-    <string name="audio_output_dialog_headline">音頻輸出</string>
-    <string name="audio_output_phone">電話</string>
-    <string name="audio_output_speaker">喇叭</string>
-    <string name="audio_output_wired_headset">有線耳機</string>
-    <string name="automatic_status_set">您的狀態是自動設置的</string>
-    <string name="avatar">虛擬化身大頭照</string>
-    <string name="away">不在</string>
-    <string name="back_button">返回按鈕</string>
-    <string name="ban">封禁</string>
-    <string name="ban_participant">封禁參與者</string>
-    <string name="bans_list">封禁清單</string>
-    <string name="busy">忙碌</string>
-    <string name="calendar">日曆</string>
-    <string name="call_more_actions_dialog_headline">進階通話選項</string>
-    <string name="call_running_since_one_hour">請注意，通話已經持續一個小時了。</string>
-    <string name="call_without_notification">通話而不通知</string>
-    <string name="camera_permission_granted">已授予相機權限。請重新選擇相機。</string>
-    <string name="cancel_login">取消登入</string>
-    <string name="choose_avatar_from_cloud">從雲中選擇虛擬化身大頭照</string>
-    <string name="clear_status_message">清除狀態訊息</string>
-    <string name="clear_status_message_after">繼此之後清空狀態訊息</string>
-    <string name="close">關閉</string>
-    <string name="close_icon">關閉圖示</string>
-    <string name="connection_established">連線已建立</string>
-    <string name="connection_lost">無法連接到伺服器</string>
-    <string name="connection_lost_sent_messages_are_queued">連線已中斷 - 已發送的訊息已排隊等待傳送</string>
-    <string name="continuous_voice_message_recording">鎖定錄音以連續錄製音頻訊息</string>
-    <string name="conversation_archived">對話已封存</string>
-    <string name="conversation_is_read_only">對話是唯讀</string>
-    <string name="conversation_read_only_failed">設定對話唯讀失敗</string>
-    <string name="conversations">對話</string>
-    <string name="create_conversation">建立對話</string>
-    <string name="create_issue">創建問題</string>
-    <string name="custom">自訂</string>
-    <string name="danger_zone">危險地帶</string>
-    <string name="deck_card_description">%2$s 中的 %1$s</string>
-    <string name="delete_avatar">刪除虛擬化身大頭照</string>
-    <string name="delete_voice_recording">刪除語音錄音</string>
-    <string name="deleted_conversation">已刪除對話 %1$s</string>
-    <string name="dnd">請勿打擾</string>
-    <string name="dontClear">不要清除</string>
-    <string name="edit">編輯</string>
-    <string name="edit_error_24_hours_old_message">無法編輯超過24小時的訊息</string>
-    <string name="edit_message_icon_description">編輯訊息</string>
-    <string name="emoji_category_recent">最新</string>
-    <string name="encrypted">已加密</string>
-    <string name="end_call">結束通話</string>
-    <string name="end_call_for_everyone">為所有人結束通話</string>
-    <string name="error_loading_chats">載入您的聊天記錄時時發生問題</string>
-    <string name="error_unbanning">取消封禁參與者時發生錯誤</string>
-    <string name="failed_to_save">儲存 %1$s 失敗</string>
-    <string name="fifteenMinutes">15 分鐘</string>
-    <string name="file_list_folder">資料夾</string>
-    <string name="file_list_loading">加載中 …</string>
-    <string name="filename_progress">%1$s（%2$d）</string>
-    <string name="fourHours">4 小時</string>
-    <string name="get_invitations_error">無法擷取待定的邀請</string>
-    <string name="hint_edited_message">（已編輯）</string>
-    <string name="internal_note">內部備註</string>
-    <string name="invisible">隱藏</string>
-    <string name="languages_error_message">無法擷取語言</string>
-    <string name="languages_error_title">擷取失敗</string>
-    <string name="later_today">今日稍後</string>
-    <string name="leave_call">離開通話</string>
-    <string name="left_conversation">你離開了對話 %1$s</string>
-    <string name="load_more_results">正在載入更多結果</string>
-    <string name="local_time">本地時間︰%1$s</string>
-    <string name="location_permission_denied">位置權限被拒絕</string>
-    <string name="location_permission_denied_msg">請在「應用程式設定」中啟用</string>
-    <string name="location_services_disabled">已停用位置服務</string>
-    <string name="location_services_disabled_msg">您必須啟用位置服務 (GPS) 以使用此功能</string>
-    <string name="lock_conversation">鎖定對話</string>
-    <string name="lock_symbol">鎖符號</string>
-    <string name="lower_hand">放下手</string>
-    <string name="marked_as_read">將對話 %1$s 標記為已讀</string>
-    <string name="marked_as_unread">將對話 %1$s 標記為未讀</string>
-    <string name="mentioned">已提及</string>
-    <string name="menu_item_sort_by_date_newest_first">最新先</string>
-    <string name="menu_item_sort_by_date_oldest_first">最舊先</string>
-    <string name="menu_item_sort_by_name_a_z">A - Z</string>
-    <string name="menu_item_sort_by_name_z_a">Z - A</string>
-    <string name="menu_item_sort_by_size_biggest_first">最大先</string>
-    <string name="menu_item_sort_by_size_smallest_first">最小先</string>
-    <string name="message_copied">已複製訊息</string>
-    <string name="message_delete_are_you_sure">您確定要刪除此訊息？</string>
-    <string name="message_deleted_by_you">訊息被您刪除</string>
-    <string name="message_last_edited_by">由 %1$s 編輯</string>
-    <string name="message_poll_tap_to_open">點按即可打開民意調查</string>
-    <string name="message_search_begin_empty">無搜尋結果</string>
-    <string name="message_search_begin_typing">輸入文字以搜尋 …</string>
-    <string name="message_search_hint">搜尋 …</string>
-    <string name="messages">訊息</string>
-    <string name="mute_all_notifications">所有通知靜音</string>
-    <string name="nc_Server_account_imported">所選帳戶現已匯入並可用</string>
-    <string name="nc_about">關於</string>
-    <string name="nc_account_chooser_active_user">活躍用戶</string>
-    <string name="nc_account_chooser_add_account">新增帳戶</string>
-    <string name="nc_account_scheduled_for_deletion">此賬號已經被排定要刪除，也不能被修改。</string>
-    <string name="nc_action_open_main_menu">打開主選項單</string>
-    <string name="nc_add_attachment">添加附件</string>
-    <string name="nc_add_emojis">添加 emoji</string>
-    <string name="nc_add_file">添加到對話</string>
-    <string name="nc_add_participants">添加參與者</string>
-    <string name="nc_add_to_favorites">加到我的最愛</string>
-    <string name="nc_all_ok_operation">完成</string>
-    <string name="nc_attendee_pin">密碼：%1$s</string>
-    <string name="nc_biometric_unlock">解鎖 %1$s</string>
-    <string name="nc_bluetooth_permission_hint">要啟用藍牙喇叭，請授予「鄰近裝置」權限。</string>
-    <string name="nc_call_button_content_description_answer_video_call">以視像通話方式接聽</string>
-    <string name="nc_call_button_content_description_answer_voice_only">僅以音頻通話方式接聽</string>
-    <string name="nc_call_button_content_description_audio_output">更改音頻輸出</string>
-    <string name="nc_call_button_content_description_camera">切換相機</string>
-    <string name="nc_call_button_content_description_hangup">掛斷</string>
-    <string name="nc_call_button_content_description_microphone">切換米高風</string>
-    <string name="nc_call_button_content_description_pip">打開畫中畫模式</string>
-    <string name="nc_call_button_content_description_switch_to_self_vide">切換到自己的視頻</string>
-    <string name="nc_call_incoming">來電</string>
-    <string name="nc_call_name">對話名稱</string>
-    <string name="nc_call_notifications">通話通告</string>
-    <string name="nc_call_raised_hand">%1$s 舉手</string>
-    <string name="nc_call_reconnecting">正在重新連線 …</string>
-    <string name="nc_call_ringing">鈴聲響</string>
-    <string name="nc_call_state_in_call">%1$s 通話中</string>
-    <string name="nc_call_state_with_phone">%1$s 電話對話中</string>
-    <string name="nc_call_state_with_video">%1$s 視像對話中</string>
-    <string name="nc_call_timeout">在45秒內無回應，請點按以重試</string>
-    <string name="nc_call_unknown">%s 通話</string>
-    <string name="nc_call_video">%s 視像通話</string>
-    <string name="nc_call_voice">%s 音頻通話</string>
-    <string name="nc_camera_permission_hint">要啟用影像通訊，請授予「相機」權限。</string>
-    <string name="nc_cancel">取消</string>
-    <string name="nc_capabilities_failed">無法獲取功能，正在中止</string>
-    <string name="nc_caption">說明</string>
-    <string name="nc_certificate_dialog_text">您是否信任 %1$s 為 %2$s 發行的，有效期從 %3$s 到 %4$s，迄今不詳的SSL證書？</string>
-    <string name="nc_certificate_dialog_title">請檢查憑證</string>
-    <string name="nc_certificate_error">您的SSL設定阻擋這連線。</string>
-    <string name="nc_change_cert_auth">更改驗證證書</string>
-    <string name="nc_change_password">變更密碼</string>
-    <string name="nc_clear_edit_button">取消編輯</string>
-    <string name="nc_clear_edit_message">取消編輯</string>
-    <string name="nc_clear_history">刪除所有訊息</string>
-    <string name="nc_clear_history_success">已刪除所有訊息</string>
-    <string name="nc_clear_history_warning">您確定要刪除對話內所有的訊息嗎？</string>
-    <string name="nc_client_cert_change">更改客戶端證書</string>
-    <string name="nc_client_cert_setup">設置客戶端證書</string>
-    <string name="nc_common_and">及</string>
-    <string name="nc_common_copy">複製</string>
-    <string name="nc_common_copy_success">已複製到剪貼板</string>
-    <string name="nc_common_create">創建</string>
-    <string name="nc_common_disabled">停用</string>
-    <string name="nc_common_dismiss">撤銷</string>
-    <string name="nc_common_error_sorry">發生錯誤了：（</string>
-    <string name="nc_common_more_options">更多選項</string>
+<!--
+How to work with translations as a developer:
+- Only add new translations to values/stings.xml, don't do this for other languages (it will be done via transifex).
+- Never change the key of a translation. If it really has to be changed, delete it and create a new entry instead.
+- Values in values/strings.xml are allowed to be modified. For bigger changes consider to add a new key-value pair.
+- Linebreaks inside values/strings.xml itself are not allowed (this will break the transifex sync)
+- Only the first letter of a sentence should be uppercase, all following words should be lowercase.
+- Translations are synced every night (or when manually triggered):
+   - New entries are added to transifex.com
+   - Updated translations from transifex are added via Nextcloud bot to this repo.
+
+How to translate with transifex:
+- Join as a team member for your language: https://app.transifex.com/nextcloud/nextcloud/languages/
+- Go to https://app.transifex.com/nextcloud/nextcloud/translate/#resource/android-talk and choose your language in the
+ dropdown menu to start translating.
+- To find a key via search, enter "key:" and it's name, e.g. "key:nc_about"
+-->
+
+<resources>
+    <!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2017-2024 Nextcloud GmbH and Nextcloud contributors
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
+    <!-- Common -->
+    <string name="nc_yes">是</string>
+    <string name="nc_no">否</string>
+    <string name="nc_common_and">同</string>
+    <string name="nc_common_skip">跳過</string>
     <string name="nc_common_set">設定</string>
-    <string name="nc_common_skip">略過</string>
-    <string name="nc_common_unknown">不詳</string>
-    <string name="nc_configure_cert_auth">選擇驗證證書</string>
-    <string name="nc_connecting_call">連線中 …</string>
-    <string name="nc_contacts_done">完成</string>
-    <string name="nc_conversation_description">對話描述</string>
-    <string name="nc_conversation_menu_conversation_info">對話資訊</string>
-    <string name="nc_conversation_menu_video_call">視訊通話</string>
-    <string name="nc_conversation_menu_voice_call">音頻通話</string>
-    <string name="nc_conversation_not_found">未找到對話</string>
-    <string name="nc_conversation_settings">對話設定</string>
-    <string name="nc_conversations_empty">加入或者開一個新的對話</string>
-    <string name="nc_conversations_empty_details">跟大家打招呼</string>
-    <string name="nc_copy_message">複製</string>
-    <string name="nc_create_new_conversation">創建新對話</string>
-    <string name="nc_create_poll">創建民意調查</string>
-    <string name="nc_current_user">您：</string>
-    <string name="nc_date_header_today">今日</string>
-    <string name="nc_date_header_yesterday">昨日</string>
-    <string name="nc_delete">刪除</string>
-    <string name="nc_delete_all">全部刪除</string>
-    <string name="nc_delete_call">刪除對話</string>
-    <string name="nc_delete_conversation_more">如果您刪除了此對話，它也將會從所有其他參與者處刪除。</string>
-    <string name="nc_delete_message">刪除訊息</string>
-    <string name="nc_delete_message_leaked_to_matterbridge">消息已成功刪除，但可能已分發到其他服務</string>
-    <string name="nc_delete_now">立刻刪除</string>
-    <string name="nc_deleted_user">用户 %1$s 已被移除</string>
-    <string name="nc_demote">從主持人降級</string>
-    <string name="nc_description_record_voice">錄製話音短訊</string>
-    <string name="nc_description_send_message_button">傳送訊息</string>
-    <string name="nc_diagnose_account_category_title">目前帳戶</string>
-    <string name="nc_diagnose_account_server">伺服器</string>
-    <string name="nc_diagnose_account_server_notification_app">是否已安裝伺服器通知應用程式？</string>
-    <string name="nc_diagnose_account_user_name">用戶</string>
-    <string name="nc_diagnose_account_user_status_enabled">是否已啟用用戶狀態？</string>
+    <string name="nc_common_dismiss">忽略</string>
+    <string name="nc_common_error_sorry">抱歉，出錯喇！</string>
+    <string name="nc_common_create">建立</string>
+    <string name="nc_common_unknown">未知</string>
+    <string name="nc_common_disabled">已停用</string>
+    <string name="nc_common_copy">複製</string>
+    <string name="nc_common_copy_success">已複製到剪貼簿</string>
+    <string name="nc_common_more_options">更多選項</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nc_settings">設定</string>
+    <string name="add_participants">新增</string>
+
+    <!-- Server selection -->
+    <string name="nc_server_connect">測試伺服器連線</string>
+    <string name="nc_server_helper_text">喺瀏覽器開啟 %1$s 網頁介面時嘅連結。</string>
+    <string name="nc_server_testing_connection">測試連線中</string>
+    <string name="nc_server_unsupported">伺服器未安裝受支援嘅 Talk 應用程式</string>
+
+    <string name="nc_server_url">伺服器地址 https://…</string>
+    <string name="nc_server_not_installed">請完成您嘅 %1$s 安裝</string>
+    <string name="nc_server_db_upgrade_needed">請升級您嘅 %1$s 資料庫</string>
+    <string name="nc_server_maintenance">請將您嘅 %1$s 退出維護模式</string>
+    <string name="nc_server_version">%1$s 只適用於 %2$s 13 或以上版本</string>
+    <string name="nc_server_import_account_plain">匯入帳戶</string>
+    <string name="nc_server_import_accounts_plain">匯入帳戶</string>
+    <string name="nc_server_import_account">從 %1$s 應用程式匯入帳戶</string>
+    <string name="nc_server_import_accounts">從 %1$s 應用程式匯入帳戶</string>
+    <string name="nc_server_failed_to_import_account">匯入所選帳戶失敗</string>
+    <string name="nc_Server_account_imported">所選帳戶已匯入並可使用</string>
+    <string name="nc_get_from_provider">仲未有你嘅伺服器？\n㩒呢度向供應商取得</string>
+
+    <!-- Account verification -->
+    <string name="nc_push_disabled">推送通知已停用</string>
+    <string name="nc_capabilities_failed">獲取功能失敗，中止</string>
+    <string name="nc_external_server_failed">獲取信令設定失敗</string>
+    <string name="nc_display_name_not_fetched">無法獲取顯示名稱，中止</string>
+    <string name="nc_nextcloud_talk_app_not_installed">%1$s 不可用（未安裝或被管理員限制）</string>
+    <string name="nc_display_name_not_stored">無法儲存顯示名稱，中止</string>
+    <string name="nc_push_notification_error">抱歉出錯喇，錯誤係 %1$s</string>
+    <string name="nc_push_notification_fetch_error">抱歉出錯喇，無法獲取測試推送訊息</string>
+
+    <string name="nc_search">搜尋</string>
+    <string name="nc_search_clear">清除搜尋</string>
+
+    <string name="nc_certificate_dialog_title">檢查憑證</string>
+    <string name="nc_certificate_dialog_text">您信任呢個之前未知嘅 SSL 憑證嗎？由 %1$s 為 %2$s 發出，有效期由 %3$s 至 %4$s。</string>
+    <string name="nc_certificate_error">您嘅 SSL 設定阻止咗連線</string>
+
+    <!-- Settings -->
+    <string name="nc_settings_advanced_title">進階</string>
+    <string name="nc_settings_proxy_type_key" translatable="false">proxy_type</string>
+    <string name="nc_settings_proxy_type_title">代理類型</string>
+    <string name="nc_settings_proxy_host_key" translatable="false">proxy_host</string>
+    <string name="nc_settings_proxy_host_title">代理主機</string>
+    <string name="nc_settings_proxy_port_key" translatable="false">proxy_port</string>
+    <string name="nc_settings_proxy_port_title">代理連接埠</string>
+    <string name="nc_settings_proxy_username_title">代理使用者名稱</string>
+    <string name="nc_settings_proxy_username_key" translatable="false">proxy_username</string>
+    <string name="nc_settings_proxy_password_title">代理密碼</string>
+    <string name="nc_settings_proxy_password_key" translatable="false">proxy_password</string>
+    <string name="nc_settings_use_credentials_title">代理需要憑證</string>
+    <string name="nc_settings_use_credentials_key" translatable="false">proxy_credentials</string>
+    <string name="nc_settings_reauthorize">重新授權帳戶</string>
+    <string name="nc_client_cert_setup">設定用戶端憑證</string>
+    <string name="nc_client_cert_change">更改用戶端憑證</string>
+    <string name="nc_settings_remove">移除</string>
+    <string name="nc_settings_remove_confirmation">請確認您想移除而家嘅帳戶。</string>
+    <string name="nc_settings_remove_account">移除帳戶</string>
+    <string name="nc_settings_server_eol_title">唔支援嘅伺服器</string>
+    <string name="nc_settings_server_eol">伺服器版本太舊，呢個 Android 應用程式版本唔支援</string>
+    <string name="nc_settings_server_almost_eol">伺服器版本好舊，下一個版本將唔再支援！</string>
+    <string name="nc_settings_warning">警告</string>
+    <string name="nc_settings_wrong_account">只可以重新授權而家嘅帳戶</string>
+    <string name="nc_settings_no_talk_installed">您嘗試驗證嘅伺服器上未安裝 Talk 應用程式</string>
+    <string name="nc_settings_account_updated">您現有嘅帳戶已更新，而唔係新增帳戶</string>
+    <string name="nc_account_scheduled_for_deletion">該帳戶計劃刪除，無法更改</string>
+    <string name="nc_settings_notification_sounds_post_oreo">通知</string>
+    <string name="nc_settings_call_ringtone">通話</string>
+    <string name="nc_settings_call_ringtone_key" translatable="false">call_ringtone</string>
+    <string name="nc_settings_other_notifications_ringtone">訊息</string>
+    <string name="nc_settings_message_ringtone_key" translatable="false">message_ringtone</string>
+    <string name="nc_settings_default_ringtone" translatable="false">Librem by feandesign</string>
+    <string name="nc_settings_no_ringtone">冇聲音</string>
+    <string name="nc_settings_server_notification_app_not_installed_title">伺服器通知應用程式未安裝</string>
+    <string name="nc_settings_contact_admin_of">請聯絡管理員：</string>
+
+    <string name="nc_settings_appearance">外觀</string>
+    <string name="nc_settings_theme_title">主題</string>
+    <string name="nc_settings_theme_key">theme</string>
+    <string name="nc_settings_theme_battery_saver_key" translatable="false">battery_saver</string>
+    <string name="nc_settings_theme_follow_system_key" translatable="false">follow_system</string>
+    <string name="nc_settings_theme_light_key" translatable="false">night_no</string>
+    <string name="nc_settings_theme_follow_system">使用系統預設</string>
+    <string name="nc_settings_theme_battery_saver">由省電模式設定</string>
+    <string name="nc_settings_theme_light">淺色</string>
+    <string name="nc_settings_theme_dark">深色</string>
+    <string name="nc_settings_privacy">私隱</string>
+    <string name="nc_settings_screen_lock_title">螢幕鎖定</string>
+    <string name="nc_settings_screen_lock_desc">用 Android 螢幕鎖定或支援嘅生物認證方法鎖定 %1$s</string>
+    <string name="nc_settings_screen_lock_key" translatable="false">screen_lock</string>
+    <string name="nc_settings_screen_lock_timeout_title">螢幕鎖定閒置逾時</string>
+    <string name="nc_settings_screen_lock_timeout_key" translatable="false">screen_lock_timeout</string>
+    <string name="nc_settings_screen_security_title">螢幕安全</string>
+    <string name="nc_settings_screen_security_desc">防止喺最近使用清單同應用程式內截圖</string>
+    <string name="nc_settings_screen_security_key" translatable="false">screen_security</string>
+    <string name="nc_settings_incognito_keyboard_title">無痕鍵盤</string>
+    <string name="nc_settings_incognito_keyboard_desc">指示鍵盤停用個人化學習（唔保證）</string>
+    <string name="nc_settings_read_privacy_key" translatable="false">read_privacy</string>
+    <string name="nc_locked_tap_to_unlock">㩒吓解鎖</string>
+    <string name="nc_locked">已鎖定</string>
+    <string name="nc_settings_read_privacy_desc">分享我嘅已讀狀態同顯示其他人嘅已讀狀態</string>
+    <string name="nc_settings_read_privacy_title">已讀狀態</string>
+    <string name="nc_settings_typing_status_desc">分享我嘅輸入狀態同顯示其他人嘅輸入狀態</string>
+    <string name="nc_settings_typing_status_title">輸入狀態</string>
+    <string name="nc_settings_typing_status_hpb_description">輸入狀態只喺使用高效能後端 (HPB) 時可用</string>
+
+    <string name="nc_screen_lock_timeout_30">30 秒</string>
+    <string name="nc_screen_lock_timeout_60">1 分鐘</string>
+    <string name="nc_screen_lock_timeout_300">5 分鐘</string>
+    <string name="nc_screen_lock_timeout_600">10 分鐘</string>
+    <string name="nc_screen_lock_timeout_thirty">30</string>
+    <string name="nc_screen_lock_timeout_immediate">立即</string>
+    <string name="nc_screen_lock_timeout_sixty">60</string>
+    <string name="nc_screen_lock_timeout_three_hundred">300</string>
+    <string name="nc_screen_lock_timeout_six_hundred">600</string>
+
+    <string name="nc_biometric_unlock">解鎖 %1$s</string>
+    <string name="nc_cancel">取消</string>
+
+    <string name="nc_no_proxy">冇代理</string>
+    <string name="nc_about">關於</string>
+    <string name="nc_privacy">私隱</string>
+    <string name="nc_get_source_code">攞原始碼</string>
+    <string name="nc_license_title">授權</string>
+    <string name="nc_license_summary">GNU General Public License, Version 3</string>
+
+    <string name="nc_select_an_account">揀一個帳戶</string>
+    <string name="nc_account_chooser_add_account">新增帳戶</string>
+    <string name="nc_account_chooser_active_user">活躍使用者</string>
+
+    <string name="nc_profile_personal_info_title">個人資訊</string>
+
+    <string name="nc_settings_diagnose_title">診斷</string>
+    <string name="nc_settings_diagnose_subtitle">開啟診斷畫面檢查設定或建立錯誤報告</string>
+
+    <string name="nc_settings_notifications_granted">通知已授予權限</string>
+    <string name="nc_settings_notifications_declined">通知被拒絕</string>
+
+    <!-- Diagnose -->
+    <string name="nc_notifications_troubleshooting_dialog_title">通知疑難排解</string>
+    <string name="nc_notifications_troubleshooting_dialog_text">通知權限同電池設定已經正確配置嚟接收通知。如果您仍然收唔到通知，請檢查通話同訊息嘅通知渠道係咪已啟用。更多協助請去 DontKillMyApp.com 或者睇疑難排解清單。如果都係唔得，請去診斷畫面傳送錯誤報告。</string>
+    <string name="nc_diagnose_dialog_open_checklist">開啟疑難排解清單</string>
+    <string name="nc_diagnose_dialog_open_dontkillmyapp_website">Open dontkillmyapp.com</string>
+    <string name="nc_diagnose_dialog_open_diagnose">開啟診斷畫面</string>
+
+    <string name="nc_ignore_battery_optimization_dialog_title">忽略電池最佳化</string>
+    <string name="nc_ignore_battery_optimization_dialog_text">電池最佳化未被忽略。應該改呢項嚟確保通知喺背景正常運作！請㩒確定然後揀「所有應用程式」-> %1$s -> 「不要最佳化」。</string>
+    <string name="nc_show_notification_warning_title">顯示定期通知警告</string>
+    <string name="nc_show_notification_warning_description">當通知未正確設定時，顯示定期警告</string>
+    <string name="nc_notification_warning">通知未正確設定</string>
+    <string name="nc_not_now">稍後</string>
+
+    <string name="nc_diagnose_meta_category_title">元資訊</string>
+    <string name="nc_diagnose_meta_system_report_date">系統報告產生時間</string>
+    <string name="nc_diagnose_phone_category_title">手機</string>
+    <string name="nc_diagnose_device_name_title">裝置</string>
     <string name="nc_diagnose_android_version_title">Android 版本</string>
     <string name="nc_diagnose_app_category_title">應用程式</string>
     <string name="nc_diagnose_app_name_title">應用程式名稱</string>
-    <string name="nc_diagnose_app_users_amount">已註冊用戶</string>
     <string name="nc_diagnose_app_version_title">應用程式版本</string>
-    <string name="nc_diagnose_battery_optimization_ignored">略過電池優化，所有都好</string>
-    <string name="nc_diagnose_battery_optimization_not_ignored">電池最佳化已啟用，這可能會造成問題。您應該停用電池最佳化！</string>
-    <string name="nc_diagnose_battery_optimization_title">電池設定</string>
-    <string name="nc_diagnose_device_name_title">裝置</string>
-    <string name="nc_diagnose_dialog_open_checklist">打開排憂解難清單：</string>
-    <string name="nc_diagnose_dialog_open_diagnose">打開診斷螢幕</string>
-    <string name="nc_diagnose_dialog_open_dontkillmyapp_website">打開 dontkillmyapp.com</string>
-    <string name="nc_diagnose_firebase_push_token_latest_fetch">最新的 firebase 推送權杖擷取</string>
-    <string name="nc_diagnose_firebase_push_token_latest_generated">最新的 firebase 推送權杖産生</string>
-    <string name="nc_diagnose_firebase_push_token_missing">沒有設置 Firebase 推送權杖。請創建一個錯誤報告。</string>
-    <string name="nc_diagnose_firebase_push_token_title">Firebase 推送權杖</string>
-    <string name="nc_diagnose_gplay_available_no">Google Play 服務不可用。不支援通知功能。</string>
+    <string name="nc_diagnose_app_users_amount">註冊使用者數</string>
     <string name="nc_diagnose_gplay_available_title">Google Play 服務</string>
     <string name="nc_diagnose_gplay_available_yes">Google Play 服務可用</string>
-    <string name="nc_diagnose_latest_push_registration_at_push_proxy">在推送代理伺服器上的最新推送註冊</string>
-    <string name="nc_diagnose_latest_push_registration_at_push_proxy_fail">尚未在推送代理伺服器上進行註冊</string>
-    <string name="nc_diagnose_latest_push_registration_at_server">在伺服器上的最新推送註冊</string>
-    <string name="nc_diagnose_latest_push_registration_at_server_fail">尚未在伺服器上進行註冊</string>
-    <string name="nc_diagnose_meta_category_title">元資訊</string>
-    <string name="nc_diagnose_meta_system_report_date">生成系統報告</string>
-    <string name="nc_diagnose_notification_calls_channel_permission">來電通知頻道已啟用?？</string>
-    <string name="nc_diagnose_notification_messages_channel_permission">訊息通知頻道已啟用？</string>
+    <string name="nc_diagnose_gplay_available_no">Google Play 服務唔可用。唔支援通知</string>
+    <string name="nc_diagnose_battery_optimization_title">電池設定</string>
+    <string name="nc_diagnose_battery_optimization_not_ignored">電池最佳化已啟用，可能會導致問題。您應該停用電池最佳化！</string>
+    <string name="nc_diagnose_battery_optimization_ignored">電池最佳化被忽略，一切正常</string>
     <string name="nc_diagnose_notification_permission">通知權限</string>
-    <string name="nc_diagnose_phone_category_title">電話</string>
-    <string name="nc_diagnose_server_talk_version">伺服器 Talk 版本</string>
+    <string name="nc_diagnose_notification_calls_channel_permission">通話通知渠道已啟用？</string>
+    <string name="nc_diagnose_notification_messages_channel_permission">訊息通知渠道已啟用？</string>
+    <string name="nc_diagnose_firebase_push_token_title">Firebase 推送令牌</string>
+    <string name="nc_diagnose_firebase_push_token_latest_generated">最新 Firebase 推送令牌產生時間</string>
+    <string name="nc_diagnose_firebase_push_token_latest_fetch">最新 Firebase 推送令牌獲取時間</string>
+    <string name="nc_diagnose_firebase_push_token_missing">未設定 Firebase 推送令牌。請建立錯誤報告。</string>
+    <string name="nc_diagnose_account_category_title">目前帳戶</string>
+    <string name="nc_diagnose_account_server">伺服器</string>
+    <string name="nc_diagnose_account_user_name">使用者</string>
+    <string name="nc_diagnose_account_server_notification_app">伺服器通知應用程式已安裝？</string>
+    <string name="nc_diagnose_account_user_status_enabled">使用者狀態已啟用？</string>
+    <string name="nc_diagnose_latest_push_registration_at_server">最新喺伺服器上嘅推送註冊時間</string>
+    <string name="nc_diagnose_latest_push_registration_at_server_fail">尚未喺伺服器註冊</string>
+    <string name="nc_diagnose_latest_push_registration_at_push_proxy">最新喺推送代理上嘅註冊時間</string>
+    <string name="nc_diagnose_latest_push_registration_at_push_proxy_fail">尚未喺推送代理註冊</string>
     <string name="nc_diagnose_server_version">伺服器版本</string>
-    <string name="nc_diagnose_signaling_mode_extern">外部</string>
+    <string name="nc_diagnose_server_talk_version">伺服器 Talk 版本</string>
+    <string name="nc_diagnose_signaling_mode_title">信令模式</string>
     <string name="nc_diagnose_signaling_mode_intern">內部</string>
-    <string name="nc_diagnose_signaling_mode_title">Signaling 模式</string>
-    <string name="nc_dialog_invalid_password">無效的密碼</string>
-    <string name="nc_dialog_maintenance_mode_description">伺服器現正處於維護模式。</string>
-    <string name="nc_dialog_outdated_client">應用程式已過時</string>
-    <string name="nc_dialog_outdated_client_description">該應用程式太舊，不再受此伺服器支持。請更新。</string>
-    <string name="nc_dialog_outdated_client_option_update">更新</string>
-    <string name="nc_dialog_reauth_or_delete">您要重新授權或刪除此帳戶嗎？</string>
-    <string name="nc_dialog_save_to_storage_content">將此媒體儲存到儲存空間中將允許您裝置上的任何其他應用程式存取它。</string>
-    <string name="nc_dialog_save_to_storage_continue">繼續？</string>
-    <string name="nc_dialog_save_to_storage_no">否</string>
-    <string name="nc_dialog_save_to_storage_title">保存到儲存裝置中？</string>
-    <string name="nc_dialog_save_to_storage_yes">是</string>
-    <string name="nc_display_name_not_fetched">無法取得顯示名稱，將停止操作。</string>
-    <string name="nc_display_name_not_stored">無法儲存顯示名稱，操作中斷。</string>
-    <string name="nc_edit_icon">編輯</string>
-    <string name="nc_edit_message">編輯</string>
-    <string name="nc_edit_message_text">編輯訊息</string>
-    <string name="nc_edited_by_admin">編輯由管理員完成</string>
-    <string name="nc_event_conversation_menu">活動對話選項單</string>
-    <string name="nc_event_schedule">預定</string>
-    <string name="nc_expire_message_eight_hours">8 小时</string>
-    <string name="nc_expire_message_four_weeks">4 個星期</string>
-    <string name="nc_expire_message_off">關閉</string>
-    <string name="nc_expire_message_one_day">1 日</string>
-    <string name="nc_expire_message_one_hour">1 小時</string>
-    <string name="nc_expire_message_one_week">1 星期</string>
-    <string name="nc_expire_messages">刪除聊天訊息</string>
-    <string name="nc_expire_messages_explanation">聊天訊息可能會在一定時間後過期。注意：在聊天中共享的檔案不會為所有者刪除，但將不再在對話中共享。</string>
-    <string name="nc_external_server_failed">擷取網絡設定失敗</string>
-    <string name="nc_federation_invitation_accept">接受</string>
-    <string name="nc_federation_invitation_reject">不批准</string>
-    <string name="nc_federation_invited_to_room">從 %1$s 到 %2$s</string>
-    <string name="nc_federation_no_invitations">沒有擱置的邀請</string>
-    <string name="nc_federation_pending_invitation_hint">您有擱置的邀請</string>
-    <string name="nc_file_browser_back">返回</string>
-    <string name="nc_file_storage_permission">需要檔案存取權限</string>
-    <string name="nc_filter">篩選對話</string>
-    <string name="nc_following_link">用戶關注公共連結</string>
-    <string name="nc_formatted_message_you">你： %1$s</string>
-    <string name="nc_forward_message">轉寄</string>
-    <string name="nc_forward_to_three_dots">轉寄給 …</string>
-    <string name="nc_gallery">相簿</string>
-    <string name="nc_get_from_provider">您沒有自己的伺服器嗎？\n點這裡向服務供應商購買</string>
-    <string name="nc_get_source_code">取得原始碼</string>
-    <string name="nc_group">群組</string>
-    <string name="nc_guest">訪客</string>
-    <string name="nc_guest_access">訪客存取</string>
-    <string name="nc_guest_access_allow_failed">無法啟用/禁用訪客存取。</string>
-    <string name="nc_guest_access_allow_summary">允許客人分享公共連結以加入此對話。</string>
-    <string name="nc_guest_access_allow_title">允許訪客</string>
-    <string name="nc_guest_access_password_dialog_hint">輸入密碼</string>
-    <string name="nc_guest_access_password_dialog_title">訪客存取密碼</string>
-    <string name="nc_guest_access_password_failed">設置/禁用密碼時出錯。</string>
-    <string name="nc_guest_access_password_summary">設置密碼以限制誰可以使用公共連結。</string>
-    <string name="nc_guest_access_password_title">密碼保護</string>
-    <string name="nc_guest_access_resend_invitations">重新傳送邀請</string>
-    <string name="nc_guest_access_resend_invitations_failed">由於錯誤，未發送邀請。</string>
-    <string name="nc_guest_access_resend_invitations_successful">邀請函再次發出。</string>
-    <string name="nc_guest_access_share_link">分享對話連結</string>
-    <string name="nc_hint_enter_a_message">輸入訊息 …</string>
-    <string name="nc_ignore_battery_optimization_dialog_text">電池優化未被忽略。為確保通知在背景中正常運作，請更改設定。請點擊「確定」並選擇「所有應用程式」-> %1$s -> 不優化。</string>
-    <string name="nc_ignore_battery_optimization_dialog_title">不用理會電池優化</string>
-    <string name="nc_important_conversation">重要對話</string>
-    <string name="nc_important_conversation_desc">「勿擾」用戶狀態將在重要對話中略過。</string>
-    <string name="nc_invalid_time">時間無效</string>
-    <string name="nc_invitations">邀請</string>
-    <string name="nc_join_open_conversations">加入公開對話</string>
-    <string name="nc_keep">保留</string>
-    <string name="nc_last_moderator_leaving_room_warning">在您離開對話之前您需要推舉一位新的主持人</string>
-    <string name="nc_last_modified">%1$s | 上次修改時間：%2$s</string>
-    <string name="nc_leave">結束對話</string>
-    <string name="nc_leaving_call">正在離開通話 …</string>
-    <string name="nc_license_summary">GNU General Public License， 第3版</string>
-    <string name="nc_license_title">授權</string>
-    <string name="nc_limit_hit">已達到%s個字符的限制</string>
-    <string name="nc_lobby">等候室</string>
-    <string name="nc_lobby_start_date">此次會議預定開始時間為 %1$s</string>
-    <string name="nc_lobby_start_soon">會議即將開始</string>
-    <string name="nc_lobby_waiting">您目前正在等候室等候。</string>
-    <string name="nc_location_current_position_description">您目前的位置</string>
-    <string name="nc_location_permission_required">需要位置權限</string>
-    <string name="nc_location_unknown">位置不詳</string>
-    <string name="nc_locked">上鎖</string>
-    <string name="nc_locked_tap_to_unlock">點擊可解除鎖定</string>
-    <string name="nc_manual">未定</string>
-    <string name="nc_mark_as_read">標為已讀</string>
-    <string name="nc_mark_as_unread">標為未讀</string>
-    <string name="nc_mark_conversation_as_important">對話已標記為重要</string>
-    <string name="nc_mark_conversation_as_insensitive">對話已標記為非敏感</string>
-    <string name="nc_mark_conversation_as_sensitive">對話已標記為敏感</string>
-    <string name="nc_mark_conversation_as_unimportant">對話已標記為非重要</string>
-    <string name="nc_meeting_ended">會議已結束</string>
-    <string name="nc_message_added_to_notes">訊息已新增至筆記</string>
-    <string name="nc_message_failed">失敗了</string>
-    <string name="nc_message_failed_to_send">傳送訊息失敗︰</string>
-    <string name="nc_message_offline">離線</string>
-    <string name="nc_message_quote_cancel_reply">取消回覆</string>
-    <string name="nc_message_read">訊息已讀</string>
-    <string name="nc_message_sending">正在發送</string>
-    <string name="nc_message_sent">訊息已傳送</string>
-    <string name="nc_microphone_enabled_audio_recording">麥克風已啟用，音頻正在錄音</string>
-    <string name="nc_microphone_permission_hint">要啟用音頻通訊，請授予「米高風」權限。</string>
-    <string name="nc_missed_call">您錯過了 %s 的來電</string>
-    <string name="nc_moderator">主持人</string>
-    <string name="nc_new_conversation">新對話</string>
-    <string name="nc_new_conversation_visibility">可見性</string>
-    <string name="nc_new_mention">未讀的提及</string>
-    <string name="nc_new_messages">未讀郵件</string>
-    <string name="nc_nextcloud_talk_app_not_installed">%1$s 不可用（管理員未安裝或限制）</string>
-    <string name="nc_nick_guest">訪客</string>
-    <string name="nc_no">否</string>
-    <string name="nc_no_open_conversations_headline">沒有公開的對話</string>
-    <string name="nc_no_open_conversations_text">沒有您可以加入的公開對話。\n可能是沒有公開的對話，或是您已經加入全部的公開對話。</string>
-    <string name="nc_no_proxy">無proxy代理</string>
-    <string name="nc_not_allowed_to_activate_audio">你無權啟動音頻！</string>
-    <string name="nc_not_allowed_to_activate_video">你無權啟動視像！</string>
-    <string name="nc_not_now">現在不了</string>
-    <string name="nc_notification_channel">%1$s在%2$s的通知頻道</string>
-    <string name="nc_notification_channel_calls">通話</string>
-    <string name="nc_notification_channel_calls_description">來電通知</string>
-    <string name="nc_notification_channel_messages">訊息</string>
-    <string name="nc_notification_channel_messages_description">來訊通知</string>
-    <string name="nc_notification_channel_uploads">上傳</string>
-    <string name="nc_notification_channel_uploads_description">通知上傳進度</string>
-    <string name="nc_notification_settings">通知設定</string>
-    <string name="nc_notification_warning">通知設定不正確</string>
-    <string name="nc_notifications_troubleshooting_dialog_text">通知權限和電池設定已正確設置以接收通知。如果您仍然無法接收通知，請檢查是否已啟用通話和訊息的通知通道。您可以在 DontKillMyApp.com 或故障排除檢查清單中找到進一步的幫助。如果這些方法無法解決問題，請轉到診斷畫面並發送錯誤報告。</string>
-    <string name="nc_notifications_troubleshooting_dialog_title">解決通知問題</string>
-    <string name="nc_notify_me_always">一律通知</string>
-    <string name="nc_notify_me_mention">當有人提及你時通知</string>
-    <string name="nc_notify_me_never">從不通知</string>
-    <string name="nc_offline">目前離線，請檢查您的連接</string>
-    <string name="nc_ok">確定</string>
-    <string name="nc_ongoing_meeting">正在進行的會議</string>
-    <string name="nc_open_conversation_to_registered_users">開放對話與註冊用戶</string>
-    <string name="nc_open_to_guest_app_users">也向使用應用程式的來賓用戶開放</string>
-    <string name="nc_owner">擁有者</string>
-    <string name="nc_participants">參與者</string>
-    <string name="nc_participants_add">添加參與者</string>
-    <string name="nc_password">密碼</string>
-    <string name="nc_permissions_ask">設置權限</string>
-    <string name="nc_permissions_denied">部份權限被拒絕。</string>
-    <string name="nc_permissions_rationale_dialog_title">請允許權限</string>
-    <string name="nc_permissions_settings">開啟設定</string>
-    <string name="nc_permissions_settings_hint">請在「設定」→「權限」中授予權限</string>
-    <string name="nc_phone_book_integration_account_not_found">找不到帳戶</string>
-    <string name="nc_phone_book_integration_chat_via">透過 %s 聊天</string>
-    <string name="nc_pip_microphone_mute">靜音米高風</string>
-    <string name="nc_pip_microphone_unmute">啟用米高風</string>
-    <string name="nc_plain_old_messages">訊息</string>
-    <string name="nc_privacy">私隱條款</string>
-    <string name="nc_profile_personal_info_title">個人資訊</string>
-    <string name="nc_promote">晉升為主持人</string>
-    <string name="nc_public_call_status">公開對話</string>
-    <string name="nc_push_disabled">取消推送通知</string>
-    <string name="nc_push_notification_error">抱歉，出現問題，錯誤是 %1$s</string>
-    <string name="nc_push_notification_fetch_error">抱歉，出現問題，無法獲取測試推送訊息</string>
-    <string name="nc_push_notification_message">推送通知已成功發送。您現在應該在此設備上收到標題為「測試推送通知」的通知</string>
-    <string name="nc_push_to_talk">一鍵通</string>
-    <string name="nc_push_to_talk_desc">在停用米高風的情況下，單擊並按住即可使用一鍵通</string>
-    <string name="nc_remind">稍後提醒我</string>
-    <string name="nc_remove_from_favorites">取消我的最愛</string>
-    <string name="nc_remove_group_and_members">移除群組及組員</string>
-    <string name="nc_remove_participant">移除參與者</string>
-    <string name="nc_remove_password">移除密碼</string>
-    <string name="nc_remove_team_and_members">移除團隊和成員</string>
-    <string name="nc_rename">重新命名對話</string>
-    <string name="nc_rename_confirm">重新命名</string>
-    <string name="nc_reply">回覆</string>
-    <string name="nc_reply_privately">私下回覆</string>
-    <string name="nc_room_retention">聊天室已成功保留</string>
-    <string name="nc_save_message">保存</string>
-    <string name="nc_save_success">保存成功</string>
-    <string name="nc_screen_lock_timeout_30">30秒</string>
-    <string name="nc_screen_lock_timeout_300">5分鐘</string>
-    <string name="nc_screen_lock_timeout_60">一分鐘</string>
-    <string name="nc_screen_lock_timeout_600">10分鐘</string>
-    <string name="nc_screen_lock_timeout_immediate">即時</string>
-    <string name="nc_screen_lock_timeout_six_hundred">600</string>
-    <string name="nc_screen_lock_timeout_sixty">60</string>
-    <string name="nc_screen_lock_timeout_thirty">30</string>
-    <string name="nc_screen_lock_timeout_three_hundred">300</string>
-    <string name="nc_search">搜尋</string>
-    <string name="nc_search_clear">清除搜尋</string>
-    <string name="nc_select_an_account">選擇一個賬號</string>
-    <string name="nc_send_edit_message">更新訊息</string>
-    <string name="nc_send_voice_recording">發送語音錄音</string>
-    <string name="nc_sensitive_conversation">敏感對話</string>
-    <string name="nc_sensitive_conversation_hint">對話清單和通知中的訊息預覽將被停用。</string>
-    <string name="nc_sent_a_gif" formatted="true">%1$s 傳送一個 GIF。</string>
-    <string name="nc_sent_a_gif_you">您傳送了一個 GIF 檔</string>
-    <string name="nc_sent_a_video" formatted="true">%1$s 傳送一個影片</string>
-    <string name="nc_sent_a_video_you">您傳送了一個影片</string>
-    <string name="nc_sent_an_audio" formatted="true">%1$s 傳送一個聲音檔</string>
-    <string name="nc_sent_an_audio_you">您傳送了一個聲音檔</string>
-    <string name="nc_sent_an_image" formatted="true">%1$s 傳送一個圖片</string>
-    <string name="nc_sent_an_image_you">你傳送了一張圖片</string>
-    <string name="nc_sent_deck_card" formatted="true">%1$s 傳送了一張卡片</string>
-    <string name="nc_server_connect">測試伺服器連線</string>
-    <string name="nc_server_db_upgrade_needed">請升級你的%1$s數據庫</string>
-    <string name="nc_server_failed_to_import_account">無法匯入所選的帳戶</string>
-    <string name="nc_server_helper_text">在瀏覽器中打開 %1$s 網絡界面的連結。</string>
-    <string name="nc_server_import_account">從%1$s應用程式匯入帳戶</string>
-    <string name="nc_server_import_account_plain">匯入帳戶</string>
-    <string name="nc_server_import_accounts">從%1$s應用程式匯入帳戶</string>
-    <string name="nc_server_import_accounts_plain">匯入帳戶</string>
-    <string name="nc_server_maintenance">撤銷您的%1$s退出維護模式</string>
-    <string name="nc_server_not_installed">請將%1$s完整安裝</string>
-    <string name="nc_server_testing_connection">測試連線</string>
-    <string name="nc_server_unsupported">伺服器未安裝受支持的 Talk 應用程式</string>
-    <string name="nc_server_url">伺服器網址 https://…</string>
-    <string name="nc_server_version">%1$s!只能在%2$s13版以上運作</string>
-    <string name="nc_set_new_password">設置新密碼</string>
-    <string name="nc_set_password">設置密碼</string>
-    <string name="nc_settings">設定</string>
-    <string name="nc_settings_account_updated">已經更新了您現有的帳戶，而不是添加新的帳戶</string>
-    <string name="nc_settings_advanced_title">進階</string>
-    <string name="nc_settings_appearance">外觀</string>
-    <string name="nc_settings_call_ringtone">通話</string>
-    <string name="nc_settings_contact_admin_of">請聯絡以下服務的管理員：</string>
-    <string name="nc_settings_diagnose_subtitle">打開診斷畫面以檢查設定或建立錯誤報告</string>
-    <string name="nc_settings_diagnose_title">診斷</string>
-    <string name="nc_settings_incognito_keyboard_desc">指示鍵盤禁用個性化學習（無保證）</string>
-    <string name="nc_settings_incognito_keyboard_title">隱身鍵盤</string>
-    <string name="nc_settings_no_ringtone">無聲</string>
-    <string name="nc_settings_no_talk_installed">您進行身分驗證的伺服器上未安裝 Talk 應用程式</string>
-    <string name="nc_settings_notification_sounds_post_oreo">通知</string>
-    <string name="nc_settings_notifications_declined">通知被婉拒</string>
-    <string name="nc_settings_notifications_granted">已授予通知功能</string>
-    <string name="nc_settings_other_notifications_ringtone">訊息</string>
-    <string name="nc_settings_phone_book_integration_desc">根據電話號碼匹配聯絡人以將 Talk 快捷方式集成到電話簿中</string>
-    <string name="nc_settings_phone_book_integration_phone_number_dialog_429">錯誤 429 太多要求</string>
-    <string name="nc_settings_phone_book_integration_phone_number_dialog_description">設置您的電話號碼，以便其他用戶可以找到您</string>
-    <string name="nc_settings_phone_book_integration_phone_number_dialog_edit_text_hint">輸入電話號碼</string>
-    <string name="nc_settings_phone_book_integration_phone_number_dialog_invalid">電話號碼無效</string>
-    <string name="nc_settings_phone_book_integration_phone_number_dialog_success">電話號碼設置成功</string>
-    <string name="nc_settings_phone_book_integration_phone_number_dialog_title">電話號碼</string>
-    <string name="nc_settings_phone_book_integration_title">電話號碼整合</string>
-    <string name="nc_settings_privacy">私隱</string>
-    <string name="nc_settings_proxy_host_title">proxy代理主機</string>
-    <string name="nc_settings_proxy_password_title">Proxy 代理伺服器密碼</string>
-    <string name="nc_settings_proxy_port_title">proxy連接埠</string>
-    <string name="nc_settings_proxy_type_title">proxy類型</string>
-    <string name="nc_settings_proxy_username_title">Proxy 代理伺服器用戶名</string>
-    <string name="nc_settings_read_privacy_desc">分享我的閱讀狀態並顯示其他人的閱讀狀態</string>
-    <string name="nc_settings_read_privacy_title">閱讀狀態</string>
-    <string name="nc_settings_reauthorize">重新授權帳戶</string>
-    <string name="nc_settings_remove">移除</string>
-    <string name="nc_settings_remove_account">移除賬號</string>
-    <string name="nc_settings_remove_confirmation">請確認 是否要清除目前的賬號</string>
-    <string name="nc_settings_screen_lock_desc">使用Android螢幕鎖定或生物識別方法去鎖定%1$s</string>
-    <string name="nc_settings_screen_lock_timeout_title">螢幕鎖定不活動超時時間</string>
-    <string name="nc_settings_screen_lock_title">螢幕鎖定</string>
-    <string name="nc_settings_screen_security_desc">防止在最近列表和應用程序內截屏</string>
-    <string name="nc_settings_screen_security_title">螢幕安全</string>
-    <string name="nc_settings_server_almost_eol">伺服器版本非常舊，下一發布將不再支持版本！</string>
-    <string name="nc_settings_server_eol">伺服器版本太舊，此版本的Android應用程式不支持該伺服器版本</string>
-    <string name="nc_settings_server_eol_title">不支援伺服器</string>
-    <string name="nc_settings_server_notification_app_not_installed_title">伺服器通知應用程式未安裝</string>
-    <string name="nc_settings_theme_battery_saver">由省電模式設置</string>
-    <string name="nc_settings_theme_dark">深色</string>
-    <string name="nc_settings_theme_follow_system">使用系統預設</string>
-    <string name="nc_settings_theme_key">佈景主題</string>
-    <string name="nc_settings_theme_light">淺色</string>
-    <string name="nc_settings_theme_title">佈景主題</string>
-    <string name="nc_settings_typing_status_desc">分享我的打字狀態並顯示其他人的打字狀態</string>
-    <string name="nc_settings_typing_status_hpb_description">鍵入狀態僅在使用高性能後端 (HPB) 時可用</string>
-    <string name="nc_settings_typing_status_title">打字狀態</string>
-    <string name="nc_settings_use_credentials_title">代理需要身份驗證</string>
-    <string name="nc_settings_warning">警告</string>
-    <string name="nc_settings_wrong_account">只有特定賬號可以被重新授權</string>
-    <string name="nc_share_contact">分享聯絡人</string>
-    <string name="nc_share_contact_permission">需要讀取聯絡人的權限</string>
-    <string name="nc_share_current_location">分享目前位置</string>
-    <string name="nc_share_link">分享連結</string>
-    <string name="nc_share_location">分享位置</string>
-    <string name="nc_share_this_location">分享此位置</string>
-    <string name="nc_share_to_choose_account">選擇帳戶</string>
-    <string name="nc_shared_items">分享項目</string>
-    <string name="nc_shared_items_deck_card">看板卡片</string>
-    <string name="nc_shared_items_description">圖片、檔案、音頻訊息 …</string>
-    <string name="nc_shared_items_empty">沒有已分享的項目</string>
-    <string name="nc_shared_items_location">位置</string>
-    <string name="nc_shared_location">分享了的位置</string>
-    <string name="nc_show_notification_warning_description">當通知未正確設置時，顯示常規警告。</string>
-    <string name="nc_show_notification_warning_title">顯示常規警告。</string>
-    <string name="nc_sort_by">排序方式</string>
-    <string name="nc_start_group_chat">開始群組聊天</string>
-    <string name="nc_start_time">開始時間</string>
-    <string name="nc_switch_account">切換帳戶</string>
-    <string name="nc_team">團隊</string>
+    <string name="nc_diagnose_signaling_mode_extern">外部</string>
+    <string name="send_email">傳送電郵</string>
+    <string name="create_issue">建立問題</string>
+    <string name="nc_diagnose_flavor" translatable="false">Build flavor</string>
     <string name="nc_test_push_button">測試推送通知</string>
     <string name="nc_test_results">測試結果</string>
-    <string name="nc_today_meeting">於今日 %1$s</string>
-    <string name="nc_tomorrow_meeting">於明天 %1$s</string>
-    <string name="nc_upload_choose_local_files">選擇檔案</string>
-    <string name="nc_upload_confirm_send_multiple">將這些檔案發送到 %1$s？</string>
-    <string name="nc_upload_confirm_send_single">將此檔案發送到 %1$s？</string>
-    <string name="nc_upload_failed">對不起，上傳失敗</string>
-    <string name="nc_upload_failed_notification_text">上傳失敗 %1$s</string>
-    <string name="nc_upload_failed_notification_title">失敗</string>
-    <string name="nc_upload_from_cloud">分享來自 %1$s</string>
-    <string name="nc_upload_from_device">從裝置上傳</string>
-    <string name="nc_upload_in_progess">上傳中</string>
-    <string name="nc_upload_notification_text">%1$s 至 %2$s - %3$s\%%</string>
-    <string name="nc_upload_picture_from_cam">拍照</string>
-    <string name="nc_upload_video_from_cam">拍攝視像</string>
-    <string name="nc_user">用戶</string>
-    <string name="nc_video_filename">視像錄影來自 %1$s</string>
-    <string name="nc_voice_message_filename">談話錄音來自 %1$s（%2$s）</string>
-    <string name="nc_voice_message_hold_to_record_info">按住錄音，鬆開傳送。</string>
-    <string name="nc_voice_message_missing_audio_permission">需要錄音許可</string>
-    <string name="nc_voice_message_slide_to_cancel">« 滑動取消</string>
-    <string name="nc_webinar">網絡研討會</string>
-    <string name="nc_yes">是</string>
-    <string name="next_week">下星期</string>
-    <string name="no_conversations_archived">沒有已封存的對話</string>
-    <string name="no_offline_messages_saved">未儲存離線訊息</string>
-    <string name="no_phone_book_integration_due_to_permissions">由於缺少權限而無法集成電話號碼</string>
-    <string name="notification_all_messages">全部消息</string>
-    <string name="notification_mention_only">僅被 @提及的消息</string>
-    <string name="notification_off">關閉</string>
-    <string name="notifications_default">默認</string>
-    <string name="notifications_default_description">跟隨對話設定</string>
-    <string name="oneHour">1 小時</string>
-    <string name="online">在線</string>
-    <string name="online_status">線上狀態</string>
-    <string name="openConversations">開放對話</string>
-    <string name="open_in_files_app">在“檔案”應用程式中打開</string>
-    <string name="open_notes">開啟筆記</string>
-    <string name="open_thread">前往討論串</string>
-    <string name="play_pause_voice_message">播放﹨暫停話音短訊</string>
-    <string name="playback_speed_control">播放速度控制</string>
-    <string name="polls_add_option">添加選項</string>
-    <string name="polls_edit_vote">編輯選票</string>
-    <string name="polls_end_poll">結束民意調查</string>
-    <string name="polls_end_poll_confirm">你真的要結束這個民意調查嗎？這是無法撤消的。</string>
-    <string name="polls_max_votes_reached">您無法為此民意調查選擇更多選項。</string>
-    <string name="polls_multiple_answers">多個答案</string>
-    <string name="polls_option_delete">刪除選項 %1$d</string>
-    <string name="polls_option_hint">選項 %1$d</string>
-    <string name="polls_options">選項</string>
-    <string name="polls_private_poll">私人投票</string>
-    <string name="polls_question">問題</string>
-    <string name="polls_question_hint">您的問題</string>
-    <string name="polls_results_subtitle">結果</string>
-    <string name="polls_settings">設定</string>
-    <string name="polls_submit_vote">投票</string>
-    <string name="polls_voted_hidden_success">已提交投票</string>
-    <string name="previously_set">先前設定</string>
-    <string name="qr_code_error">無法讀取 QR 碼</string>
+    <string name="message_copied">訊息已複製</string>
+    <string name="nc_push_notification_message">推送通知已成功傳送。您而家應該會喺呢部裝置收到標題係「測試推送通知」嘅通知。</string>
+
+    <!-- Conversation menu -->
+    <string name="nc_leave">離開對話</string>
+    <string name="nc_clear_history">刪晒所有訊息</string>
+    <string name="nc_clear_history_warning">你真係想刪晒呢個對話入面嘅所有訊息？</string>
+    <string name="nc_clear_history_success">所有訊息已刪除</string>
+    <string name="nc_mark_conversation_as_sensitive">對話已標記為敏感</string>
+    <string name="nc_mark_conversation_as_insensitive">對話已取消敏感標記</string>
+    <string name="nc_mark_conversation_as_important">對話已標記為重要</string>
+    <string name="nc_mark_conversation_as_unimportant">對話已取消重要標記</string>
+    <string name="nc_rename">重新命名對話</string>
+    <string name="nc_rename_confirm">重新命名</string>
+    <string name="nc_delete_call">刪除對話</string>
+   <!-- Noun -->
+    <string name="nc_event_schedule">日程</string>
+    <string name="nc_delete">刪除</string>
+    <string name="nc_delete_all">全部刪除</string>
+    <string name="nc_ongoing_meeting">進行中嘅會議</string>
+    <string name="nc_meeting_ended">會議已結束</string>
+    <string name="nc_invalid_time">無效時間</string>
+    <string name="nc_today_meeting">今日 %1$s</string>
+    <string name="nc_tomorrow_meeting">聽日 %1$s</string>
+    <string name="nc_delete_conversation_more">如果你刪除對話，佢都會喺所有其他參與者度刪除。</string>
+
+    <string name="nc_new_conversation">新增對話</string>
+    <string name="nc_mark_as_read">標為已讀</string>
+    <string name="nc_mark_as_unread">標為未讀</string>
+    <string name="nc_add_to_favorites">加入最愛</string>
+    <string name="nc_remove_from_favorites">從最愛移除</string>
+    <string name="nc_create_new_conversation">建立新對話</string>
+    <string name="nc_join_open_conversations">加入公開對話</string>
+    <string name="nc_open_conversation_to_registered_users">向註冊使用者開放對話</string>
+    <string name="nc_open_to_guest_app_users">都對訪客應用程式使用者開放</string>
+    <string name="nc_new_conversation_visibility">可見性</string>
+
+    <string name="added_to_favorites">已將對話 %1$s 加入最愛</string>
+    <string name="removed_from_favorites">已將對話 %1$s 從最愛移除</string>
+    <string name="marked_as_unread">已將對話 %1$s 標為未讀</string>
+    <string name="marked_as_read">已將對話 %1$s 標為已讀</string>
+    <string name="deleted_conversation">已刪除對話 %1$s</string>
+    <string name="left_conversation">你已離開對話 %1$s</string>
+    <string name="renamed_conversation">對話 %1$s 已重新命名</string>
+
+    <string name="nc_forward_to_three_dots">轉發到…</string>
+
+    <!-- Open conversations -->
+    <string name="nc_no_open_conversations_headline">冇公開對話</string>
+    <string name="nc_no_open_conversations_text">冇你可以加入嘅公開對話。\n可能冇公開對話，或者你已經加入晒所有對話。</string>
+
+    <!-- Contacts -->
+    <string name="nc_add_participants">新增參與者</string>
+    <string name="nc_contacts_done">完成</string>
+    <string name="user_avatar">使用者頭像</string>
+    <string name="back_button">返回按鈕</string>
+    <!-- Permissions -->
+    <string name="nc_permissions_rationale_dialog_title">請允許權限</string>
+    <string name="nc_permissions_denied">部份權限被拒絕。</string>
+    <string name="nc_permissions_settings_hint">請喺「設定」>「權限」度授予權限</string>
+    <string name="nc_permissions_settings">開啟設定</string>
+    <string name="nc_permissions_ask">設定權限</string>
+    <string name="nc_camera_permission_hint">要啟用視像通話，請授予「相機」權限。</string>
+    <string name="nc_microphone_permission_hint">要啟用語音通話，請授予「咪高峰」權限。</string>
+    <string name="nc_bluetooth_permission_hint">要啟用藍牙喇叭，請授予「附近裝置」權限。</string>
+    <string name="nc_microphone_enabled_audio_recording">咪高峰已啟用，錄音進行中</string>
+
+    <!-- Call -->
+    <string name="nc_call_voice">%s 語音通話</string>
+    <string name="nc_call_video">%s 視像通話</string>
+    <string name="nc_call_unknown">%s 通話</string>
+    <string name="nc_call_incoming">來電</string>
+    <string name="nc_call_ringing">響緊</string>
+    <string name="nc_connecting_call">連線中…</string>
+    <string name="nc_nick_guest">訪客</string>
+    <string name="nc_public_call_status">公開對話</string>
+    <string name="nc_call_timeout">45 秒內冇回應，㩒吓再試</string>
+    <string name="nc_call_reconnecting">重新連線中…</string>
+    <string name="nc_offline">目前離線，請檢查你嘅連線狀態</string>
+    <string name="nc_leaving_call">離開通話中…</string>
+    <string name="nc_call_state_in_call">%1$s 通話中</string>
+    <string name="nc_call_state_with_phone">%1$s 用手機</string>
+    <string name="nc_call_state_with_video">%1$s 用視像</string>
+    <string name="nc_missed_call">你錯過咗 %s 嘅來電</string>
+    <string name="nc_call_button_content_description_pip">開啟子母畫面模式</string>
+    <string name="nc_call_button_content_description_audio_output">變更音訊輸出</string>
+    <string name="nc_call_button_content_description_camera">切換相機</string>
+    <string name="nc_call_button_content_description_microphone">切換咪高峰</string>
+    <string name="nc_call_button_content_description_hangup">收線</string>
+    <string name="nc_call_button_content_description_answer_voice_only">只以語音通話接聽</string>
+    <string name="nc_call_button_content_description_answer_video_call">以視像通話接聽</string>
+    <string name="nc_call_button_content_description_switch_to_self_vide">切換到自拍視像</string>
+    <string name="nc_call_raised_hand">%1$s 舉咗手</string>
     <string name="raise_hand">舉手</string>
-    <string name="reactions_tab_all">全部</string>
-    <string name="read_storage_no_permission">沒有權限就無法從存儲分享檔案</string>
-    <string name="recent_threads">最近的討論串</string>
-    <string name="record_active_info">通話正在錄音中</string>
-    <string name="record_cancel_start">取消錄製開始</string>
-    <string name="record_failed_info">錄製失敗。請聯絡管理員。</string>
-    <string name="record_start_description">開始錄音</string>
-    <string name="record_stop_confirm_message">你想停止錄音嗎？</string>
-    <string name="record_stop_confirm_title">停止通話錄音</string>
-    <string name="record_stop_description">停止錄音</string>
-    <string name="record_stopping">停止錄音 ...</string>
-    <string name="recording_consent_all">所有通話都需要獲得錄製同意</string>
-    <string name="recording_consent_description">錄製可能包括您的聲音、視像和螢幕共享。在您加入通話之前，需要獲得您的同意。您同意嗎？</string>
-    <string name="recording_consent_for_conversation_description">在此次對話中，需要在加入通話前給予錄製同意</string>
-    <string name="recording_consent_for_conversation_title">錄製同意</string>
-    <string name="recording_consent_title">通話可能會被錄製。</string>
-    <string name="recording_settings_title">錄製</string>
-    <string name="removed_from_favorites">從最愛移除了對話 %1$s</string>
-    <string name="renamed_conversation">對話 %1$s 被重新命名</string>
-    <string name="resend_message">重新發送</string>
-    <string name="reset_status">重設狀態</string>
-    <string name="restrict_join_other_room_while_call">通話時無法加入其他聊天室</string>
-    <string name="save">保存</string>
-    <string name="scan_qr_code">掃描 QR 碼</string>
-    <string name="scope_federated_description">僅同步至受信任的伺服器</string>
-    <string name="scope_federated_title">已聯盟</string>
-    <string name="scope_local_description">僅對此安裝的人和來賓可見</string>
-    <string name="scope_local_title">近端</string>
-    <string name="scope_private_description">僅對透過 Talk 在手提電話上通過電話號碼整合進行匹配的人可見</string>
-    <string name="scope_private_title">私人</string>
-    <string name="scope_published_description">同步到受信任的伺服器以及全域與公開的通訊錄</string>
-    <string name="scope_published_title">已發佈</string>
-    <string name="scope_toggle">切換範圍</string>
-    <string name="scope_toggle_description">更改 %1$s 的私隱級別</string>
-    <string name="scroll_to_bottom">滾動到底部</string>
-    <string name="search_icon">搜尋圖示</string>
-    <string name="secondsAgo">秒前</string>
-    <string name="selected_list_item">已選擇</string>
-    <string name="send_email">傳送電子郵件</string>
-    <string name="send_to">傳送到</string>
-    <string name="send_to_forbidden">您不能在此聊天中分享內容</string>
-    <string name="send_to_three_dots">傳送到 …</string>
-    <string name="send_without_notification">傳送而不通知</string>
-    <string name="set">設置</string>
-    <string name="set_avatar_from_camera">從相機設置虛擬化身大頭照</string>
+    <string name="lower_hand">放低手</string>
+    <string name="restrict_join_other_room_while_call">通話中冇辦法加入其他房間</string>
+    <string name="call_running_since_one_hour">通話已經持續咗一個鐘。</string>
+    <string name="end_call_for_everyone">為所有人結束通話</string>
+    <string name="leave_call">離開通話</string>
+    <string name="end_call">結束通話</string>
+
+    <!-- Picture in Picture -->
+    <string name="nc_pip_microphone_mute">咪高峰靜音</string>
+    <string name="nc_pip_microphone_unmute">啟用咪高峰</string>
+
+    <!-- Notification channels -->
+    <string name="nc_notification_channel">%1$s 喺 %2$s 上嘅通知渠道</string>
+    <string name="nc_notification_channel_calls">通話</string>
+    <string name="nc_notification_channel_messages">訊息</string>
+    <string name="nc_notification_channel_uploads">上載</string>
+    <string name="nc_notification_channel_calls_description">通知來電</string>
+    <string name="nc_notification_channel_messages_description">通知新訊息</string>
+    <string name="nc_notification_channel_uploads_description">通知上載進度</string>
+    <string name="nc_notification_settings">通知設定</string>
+    <string name="nc_plain_old_messages">訊息</string>
+    <string name="nc_notify_me_always">一律通知</string>
+    <string name="nc_notify_me_mention">提到我時通知</string>
+    <string name="nc_notify_me_never">從不通知</string>
+    <string name="nc_call_notifications">通話通知</string>
+    <string name="nc_sensitive_conversation">敏感對話</string>
+    <string name="nc_sensitive_conversation_hint">對話清單同通知度會停用訊息預覽</string>
+    <string name="nc_important_conversation">重要對話</string>
+    <string name="nc_important_conversation_desc">重要對話會忽略「請勿打擾」使用者狀態</string>
+
+    <string name="nc_all_ok_operation">OK，搞掂晒！</string>
+    <string name="nc_ok">OK</string>
+    <string name="nc_call_name">對話名稱</string>
+    <string name="create_conversation">建立對話</string>
+    <string name="nc_add_emojis">加入表情符號</string>
+
+
+    <string name="nc_push_to_talk">按住講嘢</string>
+    <string name="nc_push_to_talk_desc">當咪高峰停用時，長按以使用「按住講嘢」功能</string>
+    <string name="nc_configure_cert_auth">選擇驗證憑證</string>
+    <string name="nc_change_cert_auth">變更驗證憑證</string>
+
+    <!-- Moderation -->
+    <string name="nc_demote">降級做一般參與者</string>
+    <string name="nc_promote">晉升做主持人</string>
+    <string name="nc_remove_participant">移除參與者</string>
+    <string name="nc_remove_team_and_members">移除團隊同成員</string>
+    <string name="nc_remove_group_and_members">移除群組同成員</string>
+    <string name="nc_attendee_pin">PIN: %1$s</string>
+
+    <!-- User Status -->
     <string name="set_status">設定狀態</string>
-    <string name="set_status_message">設定狀態訊息</string>
-    <string name="share">分享</string>
-    <string name="share_link_to_conversation">加入對話 %1$s於 %2$s</string>
-    <string name="shared_items_audio">音頻</string>
-    <string name="shared_items_file">檔案</string>
-    <string name="shared_items_media">多媒體</string>
-    <string name="shared_items_other">其它</string>
-    <string name="shared_items_poll">民意調查</string>
-    <string name="shared_items_recording">通話錄音</string>
-    <string name="shared_items_voice">音頻</string>
-    <string name="show_ban_reason">顯示封禁原因</string>
-    <string name="show_banned_participants">顯示被封禁的參與者</string>
-    <string name="starred">我的最愛</string>
-    <string name="startCallForbidden">你無權開始通話</string>
-    <string name="start_thread">創建討論串</string>
-    <string name="started_a_call">發起了通話</string>
+    <string name="online_status">在線狀態</string>
     <string name="status_message">狀態訊息</string>
-    <string name="status_reverted">狀態已還原</string>
-    <string name="switch_to_breakout_room">切換到分組討論室</string>
-    <string name="switch_to_main_room">切換到主室</string>
-    <string name="take_photo">拍照</string>
-    <string name="take_photo_error_deleting_picture">拍照時出錯</string>
-    <string name="take_photo_permission">沒有權限就無法拍照</string>
-    <string name="take_photo_retake_photo">重新拍照</string>
-    <string name="take_photo_send">傳送</string>
-    <string name="take_photo_switch_camera">切換相機</string>
-    <string name="take_photo_toggle_crop">裁剪照片</string>
-    <string name="take_photo_toggle_lowres">縮小圖像尺寸</string>
-    <string name="take_photo_toggle_torch">切換 torch</string>
-    <string name="thirtyMinutes">30 分鐘</string>
-    <string name="thisWeek">本星期</string>
-    <string name="this_is_a_test_message">此乃測試訊息</string>
-    <string name="this_weekend">本週末</string>
-    <string name="thread_cancel">取消創建討論串</string>
-    <string name="thread_notifications">討論串通知</string>
-    <string name="thread_reply">回覆</string>
-    <string name="thread_title">討論串標題</string>
-    <string name="threads">討論串</string>
-    <string name="threads_list_empty">找不到討論串</string>
+    <string name="whats_your_status">你而家咩狀態？</string>
+    <string name="clear_status_message_after">清除狀態訊息於</string>
+    <string name="clear_status_message">清除狀態訊息</string>
+    <string name="set_status_message">設定狀態訊息</string>
+    <string name="online">在線</string>
+    <string name="dnd">請勿打擾</string>
+    <string name="away">離開</string>
+    <string name="busy">忙碌</string>
+    <string name="invisible">離線顯示</string>
+    <string name="divider" translatable="false">—</string>
+    <string name="mute_all_notifications">靜音所有通知</string>
+    <string name="appear_offline">顯示為離線</string>
+    <string name="default_emoji" translatable="false">😃</string>
+    <string name="emoji_thumbsUp" translatable="false">👍</string>
+    <string name="emoji_thumbsDown" translatable="false">👎</string>
+    <string name="emoji_heart" translatable="false">❤️</string>
+    <string name="emoji_confused" translatable="false">😯</string>
+    <string name="emoji_sad" translatable="false">😢</string>
+    <string name="emoji_pray" translatable="false">🙏</string>
+    <string name="emoji_fire" translatable="false">🔥</string>
+    <string name="emoji_more" translatable="false">More emojis</string>
+    <string name="dontClear">唔清除</string>
     <string name="today">今日</string>
-    <string name="tomorrow">明日</string>
+    <string name="fifteenMinutes">15 分鐘</string>
+    <string name="thirtyMinutes">30 分鐘</string>
+    <string name="oneHour">1 個鐘</string>
+    <string name="fourHours">4 個鐘</string>
+    <string name="thisWeek">呢個禮拜</string>
+    <string name="secondsAgo">秒前</string>
+    <string name="reset_status">重設狀態</string>
+
+    <!-- Conversations List-->
+    <string name="nc_new_mention">未讀提及</string>
+    <string name="conversations">對話</string>
+    <string name="openConversations">公開對話</string>
+    <string name="lock_conversation">鎖定對話</string>
+    <string name="error_loading_chats">載入你嘅對話嗰陣出咗問題</string>
+    <string name="close">閂</string>
+    <string name="close_icon">關閉圖示</string>
+
+    <!-- Chat -->
+    <string name="nc_hint_enter_a_message">輸入訊息…</string>
+    <string name="nc_date_header_yesterday">尋日</string>
+    <string name="nc_date_header_today">今日</string>
+    <string name="nc_conversation_menu_voice_call">語音通話</string>
+    <string name="nc_conversation_menu_video_call">視像通話</string>
+    <string name="nc_event_conversation_menu">活動對話選單</string>
+    <string name="nc_conversation_menu_conversation_info">對話資訊</string>
+    <string name="nc_new_messages">未讀訊息</string>
+    <string name="nc_sent_a_gif" formatted="true">%1$s 傳送咗一個 GIF。</string>
+    <string name="nc_sent_an_audio" formatted="true">%1$s 傳送咗一段音訊。</string>
+    <string name="nc_sent_a_video" formatted="true">%1$s 傳送咗一段影片。</string>
+    <string name="nc_sent_an_image" formatted="true">%1$s 傳送咗一張相。</string>
+    <string name="nc_sent_deck_card" formatted="true">%1$s 傳送咗一張 Deck 卡片</string>
+    <string name="nc_sent_a_gif_you">你傳送咗一個 GIF。</string>
+    <string name="nc_sent_an_audio_you">你傳送咗一段音訊。</string>
+    <string name="nc_sent_a_video_you">你傳送咗一段影片。</string>
+    <string name="nc_sent_an_image_you">你傳送咗一張相。</string>
+    <string name="nc_formatted_message" translatable="false">%1$s: %2$s</string>
+    <string name="nc_message_quote_cancel_reply">取消回覆</string>
+    <!-- When translating to German, please use non-formal variant -->
+    <string name="nc_formatted_message_you">你: %1$s</string>
+    <string name="nc_message_read">訊息已讀</string>
+    <string name="nc_message_sent">訊息已傳送</string>
+    <string name="nc_message_added_to_notes">訊息已加入筆記</string>
+    <string name="nc_message_offline">離線</string>
+    <string name="nc_message_failed">失敗</string>
+    <string name="nc_message_sending">傳送中</string>
+    <string name="nc_message_failed_to_send">傳送訊息失敗：</string>
+    <string name="nc_add_attachment">加入附件</string>
+    <string name="emoji_category_recent">最近用過</string>
+    <string name="nc_current_user">你：</string>
+    <plurals name="see_similar_system_messages">
+        <item quantity="one">睇 %d 則類似訊息</item>
+        <item quantity="other">睇 %d 則類似訊息</item>
+    </plurals>
+    <string name="nc_send_voice_recording">傳送語音錄音</string>
+
+    <!-- Conversation info guest access -->
+    <string name="nc_guest_access">訪客存取</string>
+    <string name="nc_guest_access_allow_title">允許訪客</string>
+    <string name="nc_guest_access_allow_summary">允許訪客分享公開連結加入呢個對話。</string>
+    <string name="nc_guest_access_allow_failed">冇辦法啟用/停用訪客存取。</string>
+    <string name="nc_set_password">設定密碼</string>
+    <string name="nc_password">密碼</string>
+    <string name="nc_change_password">更改密碼</string>
+    <string name="nc_remove_password">移除密碼</string>
+    <string name="nc_set_new_password">設定新密碼</string>
+    <string name="nc_guest_access_password_title">密碼保護</string>
+    <string name="nc_guest_access_password_summary">設定密碼限制邊個可以用公開連結。</string>
+    <string name="nc_guest_access_password_dialog_title">訪客存取密碼</string>
+    <string name="nc_guest_access_password_dialog_hint">輸入密碼</string>
+    <string name="nc_guest_access_password_failed">設定/停用密碼嗰陣出錯。</string>
+    <string name="nc_guest_access_share_link">分享對話連結</string>
+    <string name="nc_guest_access_resend_invitations">重新傳送邀請</string>
+    <string name="nc_guest_access_resend_invitations_successful">邀請已經再傳送多次。</string>
+    <string name="nc_guest_access_resend_invitations_failed">因為錯誤，邀請未傳送。</string>
+    <string name="nc_share_link">分享連結</string>
+
+    <!-- Content descriptions -->
+    <string name="nc_description_send_message_button">傳送訊息</string>
+
+    <!-- Empty states -->
+    <string name="nc_conversations_empty">加入對話或者開始新對話</string>
+    <string name="nc_conversations_empty_details">同你嘅朋友同事打聲招呼！</string>
+
+    <!-- Other -->
+    <string name="nc_limit_hit">已達 %s 個字元嘅上限</string>
+    <string name="nc_group">群組</string>
+    <string name="nc_team">團隊</string>
+    <string name="nc_participants">參與者</string>
+    <string name="nc_participants_add">新增參與者</string>
+    <string name="nc_start_group_chat">開始群組聊天</string>
+
+    <string name="nc_owner">擁有者</string>
+    <string name="nc_moderator">主持人</string>
+    <string name="nc_user">使用者</string>
+    <string name="nc_guest">訪客</string>
+    <string name="nc_following_link">透過公開連結加入嘅使用者</string>
+
+    <!-- Browser component -->
+    <string name="nc_file_browser_back">返回</string>
+    <string name="nc_last_modified">%1$s | 最後修改：%2$s</string>
+    <string name="nc_sort_by">排序方式</string>
+    <string name="nc_file_browser_sort_by_key" translatable="false">file_browser_sort_by</string>
+    <string name="nc_file_browser_sort_by_default" translatable="false">sort_a_to_z</string>
+    <string name="menu_item_sort_by_name_a_z">A - Z</string>
+    <string name="menu_item_sort_by_name_z_a">Z - A</string>
+    <string name="menu_item_sort_by_date_newest_first">最新優先</string>
+    <string name="menu_item_sort_by_date_oldest_first">最舊優先</string>
+    <string name="menu_item_sort_by_size_biggest_first">最大優先</string>
+    <string name="menu_item_sort_by_size_smallest_first">最細優先</string>
+
+    <!-- Lobby -->
+    <string name="nc_webinar">網上研討會</string>
+    <string name="nc_lobby">等候室</string>
+    <string name="nc_start_time">開始時間</string>
+    <string name="nc_lobby_waiting">你而家喺等候室等緊。</string>
+    <string name="nc_lobby_start_date">呢個會議預定喺 %1$s 開始</string>
+    <string name="nc_lobby_start_soon">會議好快開始</string>
+    <string name="nc_manual">未設定</string>
+
+    <!-- Chat -->
+    <string name="nc_copy_message">複製</string>
+    <string name="nc_forward_message">轉發</string>
+    <string name="nc_reply">回覆</string>
+    <string name="nc_reply_privately">私下回覆</string>
+    <plurals name="nc_conversation_auto_delete_info">
+        <item quantity="one">如果 %1$d 日內冇活動，呢個對話會自動為所有人刪除</item>
+        <item quantity="other">如果 %1$d 日內冇活動，呢個對話會自動為所有人刪除</item>
+    </plurals>
+    <string name="nc_delete_message">刪除訊息</string>
+    <string name="nc_delete_now">立即刪除</string>
+    <string name="nc_keep">保留</string>
+    <string name="nc_delete_message_leaked_to_matterbridge">訊息已成功刪除，但可能已經外洩去其他服務</string>
+    <string name="startCallForbidden">你冇權開始通話</string>
+    <string name="nc_last_moderator_leaving_room_warning">你需要先委派新主持人先可以離開對話</string>
+    <string name="nc_room_retention">房間已成功保留</string>
+
+    <string name="share">分享</string>
+    <string name="send_to">傳送去</string>
+    <string name="send_to_three_dots">傳送去…</string>
+    <string name="read_storage_no_permission">冇權限就冇辦法由儲存空間分享檔案</string>
+    <string name="open_in_files_app">喺檔案應用程式開啟</string>
+    <string name="send_to_forbidden">你冇權分享內容去呢個聊天</string>
+
+    <string name="typing_is_typing">喺度打字…</string>
+    <string name="typing_are_typing">喺度打字…</string>
+    <string name="typing_1_other">仲有 1 個人喺度打字…</string>
+    <string name="typing_x_others">仲有 %1$s 個人喺度打字…</string>
+    <string name="deck_card_description">%1$s 喺 %2$s 入面</string>
+
+    <string name="threads">討論串</string>
+    <string name="open_thread">去討論串</string>
+    <string name="start_thread">建立討論串</string>
+    <string name="thread_title">討論串標題</string>
+    <string name="thread_cancel">取消建立討論串</string>
+    <string name="recent_threads">最近嘅討論串</string>
+    <string name="thread_reply">回覆</string>
+    <plurals name="thread_replies">
+        <item quantity="one">%d 則回覆</item>
+        <item quantity="other">%d 則回覆</item>
+    </plurals>
+    <string name="thread_notifications">討論串通知</string>
+    <string name="threads_list_empty">搵唔到討論串</string>
+    <string name="notifications_default">預設</string>
+    <string name="notifications_default_description">跟對話設定</string>
+    <string name="notification_all_messages">所有訊息</string>
+    <string name="notification_mention_only">只限 @提及</string>
+    <string name="notification_off">關閉</string>
+
+    <!-- Upload -->
+    <string name="nc_add_file">加入對話</string>
+    <string name="nc_upload_picture_from_cam">影相</string>
+    <string name="nc_upload_video_from_cam">拍片</string>
+    <string name="nc_create_poll">建立投票</string>
+    <string name="nc_upload_from_cloud">從 %1$s 分享</string>
+    <string name="nc_upload_failed">抱歉，上載失敗</string>
+    <string name="nc_upload_choose_local_files">揀檔案</string>
+    <string name="nc_upload_confirm_send_multiple">傳送呢啲檔案去 %1$s？</string>
+    <string name="nc_upload_confirm_send_single">傳送呢個檔案去 %1$s？</string>
+    <string name="nc_upload_in_progess">上載緊</string>
+    <string name="nc_upload_from_device">從裝置上載</string>
+    <string name="nc_gallery">相簿</string>
+
+    <string name="nc_upload_notification_text">%1$s 去 %2$s - %3$s\%%</string>
+    <string name="nc_upload_failed_notification_title">失敗</string>
+    <string name="nc_upload_failed_notification_text">上載 %1$s 失敗</string>
+    <string name="nc_file_storage_permission">需要檔案存取權限</string>
+
+    <!-- Video -->
+    <string name="nc_video_filename">來自 %1$s 嘅影片錄製</string>
+
+    <!-- location sharing -->
+    <string name="nc_share_location">分享位置</string>
+    <string name="nc_location_permission_required">需要位置權限</string>
+    <string name="nc_share_current_location">分享目前位置</string>
+    <string name="nc_share_this_location">分享呢個位置</string>
+    <string name="nc_shared_location">已分享位置</string>
+    <string name="nc_location_current_position_description">你目前嘅位置</string>
+    <string name="nc_location_unknown">位置唔知</string>
+
+    <!-- share contact -->
+    <string name="nc_share_contact">分享聯絡人</string>
+    <string name="nc_share_contact_permission">需要讀取聯絡人權限</string>
+
+    <!-- share to screen -->
+    <string name="nc_share_to_choose_account">揀帳戶</string>
+
+    <!-- voice messages -->
+    <string name="nc_voice_message_filename">來自 %1$s 嘅 Talk 錄音 (%2$s)</string>
+    <string name="nc_voice_message_hold_to_record_info">撳實錄音，放開傳送。</string>
+    <string name="nc_description_record_voice">錄製語音訊息</string>
+    <string name="nc_voice_message_slide_to_cancel">「 滑動取消</string>
+    <string name="play_pause_voice_message">播放/暫停語音訊息</string>
+    <string name="nc_voice_message_missing_audio_permission">需要錄音權限</string>
+    <string name="playback_speed_control">播放速度控制</string>
+    <string name="delete_voice_recording">刪除語音錄音</string>
+
+    <!-- Phonebook Integration -->
+    <string name="nc_settings_phone_book_integration_desc">根據電話號碼比對聯絡人，將 Talk 捷徑整合到系統聯絡人應用程式</string>
+    <string name="nc_settings_phone_book_integration_title">電話號碼整合</string>
+    <string name="nc_settings_phone_book_integration_phone_number_dialog_title">電話號碼</string>
+    <string name="nc_settings_phone_book_integration_phone_number_dialog_description">你可以設定電話號碼，等其他人可以搵到你</string>
+    <string name="nc_settings_phone_book_integration_phone_number_dialog_invalid">無效嘅電話號碼</string>
+    <string name="nc_settings_phone_book_integration_phone_number_dialog_success">電話號碼設定成功</string>
+    <string name="nc_settings_phone_book_integration_phone_number_dialog_edit_text_hint">輸入電話號碼</string>
+    <string name="no_phone_book_integration_due_to_permissions">因為冇權限，唔可以整合電話號碼</string>
+    <string name="nc_phone_book_integration_chat_via">透過 %s 傾偈</string>
+    <string name="nc_phone_book_integration_account_not_found">搵唔到帳戶</string>
+    <string name= "nc_edit">編輯</string>
+
+    <!--  save feature -->
+    <string name="nc_save_message">儲存</string>
+    <string name="nc_dialog_save_to_storage_title">儲存去儲存空間？</string>
+    <string name="nc_dialog_save_to_storage_content">將呢個媒體儲存去儲存空間，會容許你裝置上任何其他應用程式存取佢。</string>
+    <string name="nc_dialog_save_to_storage_continue">繼續？</string>
+    <string name="nc_dialog_save_to_storage_yes">係</string>
+    <string name="nc_dialog_save_to_storage_no">唔係</string>
+    <string name="nc_save_success">儲存成功</string>
+
+    <string name="starred">最愛</string>
+    <string name="user_status">狀態</string>
+    <string name="encrypted">已加密</string>
+
+    <string name="avatar">頭像</string>
+    <string name="userinfo_no_info_headline">未設定個人資訊</string>
+    <string name="userinfo_no_info_text">喺個人資料頁度加名、相同聯絡方式。</string>
+    <string name="userinfo_error_text">攞個人使用者資訊失敗。</string>
+    <string name="user_info_phone">電話號碼</string>
+    <string name="user_info_email">電郵</string>
+    <string name="user_info_address">地址</string>
+    <string name="user_info_website">網站</string>
+    <string name="user_info_twitter">Twitter</string>
+    <string name="user_info_displayname">全名</string>
+    <string name="file_list_folder">資料夾</string>
+    <string name="file_list_loading">載入緊…</string>
+    <string name="edit">編輯</string>
+    <string name="save">儲存</string>
+    <string name="upload_new_avatar_from_device">從裝置上載新頭像</string>
+    <string name="choose_avatar_from_cloud">從雲端揀頭像</string>
+    <string name="delete_avatar">刪除頭像</string>
+    <string name="scope_private_title">私人</string>
+    <string name="scope_private_description">淨係可以透過 Talk 手機應用程式嘅電話號碼整合功能匹配到嘅人先睇到</string>
+    <string name="lock_symbol">鎖定符號</string>
+    <string name="scope_local_title">本地</string>
+    <string name="scope_local_description">只限呢個實例上嘅使用者同訪客睇到</string>
+    <string name="scope_federated_title">聯邦</string>
+    <string name="scope_federated_description">只同步去受信任嘅伺服器</string>
+    <string name="scope_published_title">已發佈</string>
+    <string name="scope_published_description">同步去受信任嘅伺服器同全球公共通訊錄</string>
+    <string name="scope_toggle">切換範圍</string>
+    <string name="scope_toggle_description">更改 %1$s 嘅私隱層級</string>
+
+    <!-- App Bar -->
+    <string name="appbar_search_in">喺 %s 入面搵</string>
+
+    <!-- Non-translatable strings -->
+    <string name="tooManyUnreadMessages" translatable="false">999+</string>
+    <string name="replyable_message_view_tag" translatable="false">REPLYABLE_TAG</string>
+
+    <string name="nc_action_open_main_menu">開啟主選單</string>
+    <string name="failed_to_save">儲存 %1$s 失敗</string>
+    <string name="selected_list_item">已揀選</string>
+    <string name="filename_progress">%1$s (%2$d)</string>
+    <string name="nc_dialog_invalid_password">密碼無效</string>
+    <string name="nc_dialog_reauth_or_delete">你想重新授權定刪除呢個帳戶？</string>
+    <string name="nc_deleted_user">使用者 %1$s 已移除</string>
+
+    <string name="nc_dialog_outdated_client">應用程式已過時</string>
+    <string name="nc_dialog_outdated_client_description">應用程式版本太舊，呢個伺服器唔再支援。請更新。</string>
+    <string name="nc_dialog_outdated_client_option_update">更新</string>
+    <string name="nc_switch_account">切換帳戶</string>
+    <string name="nc_dialog_maintenance_mode_description">伺服器目前喺維護模式。</string>
+
+    <!-- Take photo -->
+    <string name="take_photo">影相</string>
+    <string name="take_photo_switch_camera">轉相機</string>
+    <string name="take_photo_retake_photo">再影過</string>
+    <string name="take_photo_toggle_torch">開關電筒</string>
+    <string name="take_photo_toggle_crop">裁相</string>
+    <string name="take_photo_toggle_lowres">縮細圖片</string>
+    <string name="take_photo_send">傳送</string>
+    <string name="take_photo_error_deleting_picture">影相嗰陣出錯</string>
+    <string name="take_photo_permission">冇權限冇得影相</string>
+    <string name="camera_permission_granted">相機權限已授予。請再揀相機。</string>
+
+    <!-- Audio selection -->
+    <string name="audio_output_bluetooth">藍牙</string>
+    <string name="audio_output_speaker">喇叭</string>
+    <string name="audio_output_phone">手機</string>
+    <string name="audio_output_dialog_headline">音訊輸出</string>
+    <string name="audio_output_wired_headset">有線耳筒</string>
+
+    <!-- Advanced call options -->
+    <string name="call_more_actions_dialog_headline">進階通話選項</string>
+
+    <!-- Call recording -->
+    <string name="record_start_description">開始錄音</string>
+    <string name="record_stop_description">停止錄音</string>
+    <string name="record_stop_confirm_title">停止通話錄音</string>
+    <string name="record_stop_confirm_message">你真係想停止錄音？</string>
+    <string name="record_active_info">呢個通話錄緊音</string>
+    <string name="record_cancel_start">取消開始錄音</string>
+    <string name="record_stopping">停緊錄音…</string>
+    <string name="record_failed_info">錄音失敗。請聯絡你嘅管理員。</string>
+    <string name="recording_consent_title">通話可能會被錄音。</string>
+    <string name="recording_consent_description">錄音可能會包含你嘅聲音、相機影像同畫面分享。加入通話前需要你同意。你同意嗎？</string>
+    <string name="recording_settings_title">錄音</string>
+    <string name="recording_consent_for_conversation_title">錄音同意</string>
+    <string name="recording_consent_for_conversation_description">要求喺呢個對話加入通話前同意錄音</string>
+    <string name="recording_consent_all">所有通話都需要同意錄音</string>
+
+    <!-- Shared items -->
+    <string name="nc_shared_items">已分享項目</string>
+    <string name="nc_shared_items_description">圖片、檔案、語音訊息…</string>
+    <string name="nc_shared_items_empty">冇已分享項目</string>
+    <string name="shared_items_media">媒體</string>
+    <string name="shared_items_file">檔案</string>
+    <string name="shared_items_recording">通話錄音</string>
+    <string name="shared_items_audio">音訊</string>
+    <string name="shared_items_voice">語音</string>
+    <string name="shared_items_other">其他</string>
+    <string name="shared_items_poll">投票</string>
+    <string name="nc_shared_items_location">位置</string>
+    <string name="nc_shared_items_deck_card">Deck 卡片</string>
+
+    <!-- Message search -->
+    <string name="messages">訊息</string>
+    <string name="load_more_results">載入更多結果</string>
+    <string name="message_search_hint">搜尋…</string>
+    <string name="message_search_begin_typing">開始打字搜尋…</string>
+    <string name="message_search_begin_empty">冇搜尋結果</string>
+    <string name="search_icon">搜尋圖示</string>
+
+    <!-- Polls -->
+    <string name="message_poll_tap_to_open">㩒吓開投票</string>
+    <plurals name="polls_amount_voters">
+        <item quantity="one">%d 票</item>
+        <item quantity="other">%d 票</item>
+    </plurals>
+    <string name="polls_add_option">加選項</string>
+    <string name="polls_edit_vote">編輯投票</string>
+    <string name="polls_submit_vote">投票</string>
+    <string name="polls_voted_hidden_success">投票已提交</string>
+    <string name="polls_end_poll">結束投票</string>
+    <string name="polls_end_poll_confirm">你真係想結束呢個投票？呢個操作冇得還原。</string>
+    <string name="polls_max_votes_reached">你冇得再揀更多選項嚟投票。</string>
+    <string name="polls_results_subtitle">結果</string>
+    <string name="polls_question">問題</string>
+    <string name="polls_question_hint">你嘅問題</string>
+    <string name="polls_options">選項</string>
+    <string name="polls_option_hint">選項 %1$d</string>
+    <string name="polls_option_delete">刪除選項 %1$d</string>
+    <string name="polls_settings">設定</string>
+    <string name="polls_private_poll">不記名投票</string>
+    <string name="polls_multiple_answers">可以揀多個</string>
+
+    <string name="reactions_tab_all">全部</string>
+    <string name="send_without_notification">唔通知就傳送</string>
+    <string name="call_without_notification">唔通知就通話</string>
+    <string name="set_avatar_from_camera">用相機設定頭像</string>
+    <string name="nc_conversation_description">對話描述</string>
+
+    <!-- Expiring messages -->
+    <string name="nc_expire_messages">訊息自動過期</string>
+    <string name="nc_expire_message_off">關</string>
+    <string name="nc_expire_message_four_weeks">4 個禮拜</string>
+    <string name="nc_expire_message_one_week">1 個禮拜</string>
+    <string name="nc_expire_message_one_day">1 日</string>
+    <string name="nc_expire_message_eight_hours">8 個鐘</string>
+    <string name="nc_expire_message_one_hour">1 個鐘</string>
+    <string name="nc_expire_messages_explanation">聊天訊息可以喺一段時間後自動過期。注意：聊天入面分享嘅檔案唔會為擁有者刪除，但會喺對話度取消分享。</string>
+
+    <!-- Breakout rooms -->
+    <string name="switch_to_main_room">轉去主房間</string>
+    <string name="switch_to_breakout_room">轉去分組討論室</string>
+
+    <!-- Invitations -->
+    <string name="nc_invitations">邀請</string>
+    <string name="nc_federation_invited_to_room">來自 %1$s 喺 %2$s</string>
+    <string name="nc_federation_invitation_accept">接受</string>
+    <string name="nc_federation_invitation_reject">拒絕</string>
+    <string name="nc_federation_pending_invitation_hint">你有待處理嘅邀請</string>
+    <string name="nc_federation_no_invitations">冇待處理邀請</string>
+
+    <string name="nc_not_allowed_to_activate_audio">你冇權啟用音訊！</string>
+    <string name="nc_not_allowed_to_activate_video">你冇權啟用視像！</string>
+    <string name="scroll_to_bottom">碌落底</string>
     <string name="translate">翻譯</string>
     <string name="translation">翻譯</string>
-    <string name="translation_copy_translated_text">複製已翻譯的文字</string>
-    <string name="translation_detect_language">檢測語言</string>
+    <string name="translation_from">譯自</string>
+    <string name="translation_to">譯至</string>
+    <string name="translation_detect_language">自動偵測語言</string>
     <string name="translation_device_settings">裝置設定</string>
-    <string name="translation_error_message">無法檢測語言</string>
     <string name="translation_error_title">翻譯失敗</string>
-    <string name="translation_from">從</string>
-    <string name="translation_to">至</string>
-    <string name="typing_1_other">還有 1 個人正在打字 …</string>
-    <string name="typing_are_typing">正在打字 …</string>
-    <string name="typing_is_typing">正在打字 …</string>
-    <string name="typing_x_others">還有 %1$s 個人正在打字 …</string>
-    <string name="unarchive_conversation">解除封存對話</string>
-    <string name="unarchive_hint">對話取消存檔後，默認會再次顯示。</string>
-    <string name="unarchived_conversation">已解除封存 %1$s</string>
-    <string name="unban">解除封禁</string>
+    <string name="translation_error_message">偵測唔到語言</string>
+    <string name="translation_copy_translated_text">複製譯文</string>
+    <string name="danger_zone">危險地帶</string>
+    <string name="nc_filter">篩選對話</string>
+    <string name="mentioned">提及我</string>
     <string name="unread">未讀</string>
-    <string name="upload_new_avatar_from_device">從裝置上傳新虛擬化身大頭照</string>
-    <string name="user_absence">%1$s 不在辦公室，可能不會回覆。</string>
-    <string name="user_absence_for_one_day">%1$s 今日不在辦公室</string>
-    <string name="user_absence_replacement">取代︰</string>
-    <string name="user_avatar">用戶虛擬化身大頭照</string>
-    <string name="user_info_address">地址</string>
-    <string name="user_info_displayname">全名</string>
-    <string name="user_info_email">電郵地址</string>
-    <string name="user_info_phone">電話號碼</string>
-    <string name="user_info_twitter">Twitter</string>
-    <string name="user_info_website">網站</string>
-    <string name="user_status">狀態</string>
-    <string name="userinfo_error_text">無法檢索個人用戶資訊。</string>
-    <string name="userinfo_no_info_headline">未設定個人資訊</string>
-    <string name="userinfo_no_info_text">在您的個人檔案中新增名字、頭像和聯絡資訊</string>
-    <string name="video_call">視頻通話</string>
-    <string name="whats_your_status">您目前的狀態是什麼呢？</string>
-    <plurals name="see_similar_system_messages">
-        <item quantity="other">檢視 %d 則類似的訊息</item>
-    </plurals>
-    <plurals name="nc_conversation_auto_delete_info">
-        <item quantity="other">此對話如無人於%1$d天內互動，將會自動為所有人刪除。</item>
-    </plurals>
-    <plurals name="thread_replies">
-        <item quantity="other">%d 個回覆</item>
-    </plurals>
-    <plurals name="polls_amount_voters">
-        <item quantity="other">%d 選票</item>
-    </plurals>
+    <string name="nc_settings_http_value" translatable="false">3128</string>
+    <string name="nc_settings_direct_value" translatable="false">8080</string>
+    <string name="nc_settings_socks_value" translatable="false">1080</string>
+    <string name="this_is_a_test_message">呢個係測試訊息</string>
+    <string name="continuous_voice_message_recording">鎖定錄音連續錄語音訊息</string>
+    <string name="nc_remind">稍後提我</string>
+    <string name="next_week">下個禮拜</string>
+    <string name="this_weekend">呢個週末</string>
+    <string name="tomorrow">聽日</string>
+    <string name="later_today">今日稍後</string>
+    <string name="custom">自訂</string>
+    <string name="set">設定</string>
+    <string name="calendar">日曆</string>
+    <string name="video_call">視像通話</string>
+    <string name="audio_call">語音通話</string>
+    <string name="started_a_call">開始咗通話</string>
+    <string name="nc_settings_phone_book_integration_phone_number_dialog_429">錯誤 429 太多請求</string>
+    <string name="nc_caption">標題</string>
+    <string name="languages_error_title">攞語言失敗</string>
+    <string name="languages_error_message">攞唔到語言</string>
+    <string name="edit_message_icon_description">編輯訊息</string>
+    <string name="nc_edit_message">編輯</string>
+    <string name="nc_send_edit_message">更新訊息</string>
+    <string name="nc_clear_edit_message">取消編輯</string>
+    <string name="edit_error_24_hours_old_message">超過 24 個鐘嘅訊息冇得編輯</string>
+    <string name="conversation_is_read_only">對話係唯讀</string>
+    <string name="nc_edit_message_text">編輯訊息</string>
+    <string name="hint_edited_message">（已編輯）</string>
+    <string name="nc_conversation_not_found">搵唔到對話</string>
+    <string name="add_to_notes">加入筆記</string>
+    <string name="nc_edited_by_admin">由管理員編輯</string>
+    <string name="nc_clear_edit_button">取消編輯</string>
+    <string name="nc_edit_icon">編輯</string>
+    <string name="get_invitations_error">攞待處理邀請失敗</string>
+    <string name="message_last_edited_by">由 %1$s 編輯</string>
+    <string name="share_link_to_conversation">喺 %2$s 加入對話 %1$s</string>
+    <string name="nc_conversation_settings">對話設定</string>
+    <string name="ban_participant">封鎖參與者</string>
+    <string name="show_banned_participants">顯示被封鎖嘅參與者</string>
+    <string name="bans_list">封鎖清單</string>
+    <string name="connection_lost_sent_messages_are_queued">連線中斷 - 已傳送嘅訊息已排隊</string>
+    <string name="connection_established">連線已建立</string>
+    <string name="message_deleted_by_you">你刪咗呢個訊息</string>
+    <string name="unban">解除封鎖</string>
+    <string name="internal_note">內部註記</string>
+    <string name="ban">封鎖</string>
+    <string name="show_ban_reason">顯示封鎖原因</string>
+    <string name="error_unbanning">解除封鎖參與者嗰陣出錯</string>
+    <string name="connection_lost">連唔到伺服器</string>
+    <string name="archive_conversation">封存對話</string>
+    <string name="unarchive_conversation">取消封存對話</string>
+    <string name="archived">已封存</string>
+    <string name="archive_hint">對話封存之後，預設會隱藏。揀篩選條件「已封存」就可以睇返已封存嘅對話。直接提及仍然會收到。</string>
+    <string name="unarchive_hint">對話取消封存之後，預設會再次顯示。</string>
+    <string name="no_offline_messages_saved">冇儲存離線訊息</string>
+    <string name="previously_set">之前設定</string>
+    <string name="conversation_read_only_failed">設定對話做唯讀失敗</string>
+    <string name="status_reverted">狀態已還原</string>
+    <string name="automatic_status_set">你嘅狀態已自動設定</string>
+
+    <string name="user_absence">%1$s 唔喺辦公室，可能冇咁快覆</string>
+    <string name="user_absence_for_one_day">%1$s 今日唔喺辦公室</string>
+    <string name="user_absence_replacement">代理人：</string>
+    <string name="resend_message">再傳送</string>
+    <string name="no_conversations_archived">冇已封存嘅對話</string>
+    <string name="archived_conversation">已封存 %1$s</string>
+    <string name="unarchived_conversation">已取消封存 %1$s</string>
+    <string name="conversation_archived">對話已封存</string>
+    <string name="local_time">本地時間：%1$s</string>
+    <string name="open_notes">開筆記</string>
+    <string name="cancel_login">取消登入</string>
+    <string name="scan_qr_code">掃描 QR Code</string>
+    <string name="qr_code_error">讀唔到 QR Code</string>
+    <string name="message_delete_are_you_sure">你真係想刪除呢個訊息？</string>
+    <string name="location_permission_denied">位置權限被拒絕</string>
+    <string name="location_permission_denied_msg">請喺應用程式設定度啟用</string>
+    <string name="location_services_disabled">位置服務已停用</string>
+    <string name="location_services_disabled_msg">請啟用位置服務 (GPS) 嚟用呢個功能</string>
 </resources>
