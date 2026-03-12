@@ -35,7 +35,7 @@ object ApiUtils {
     private const val SPREED_API_BASE = "$OCS_API_VERSION/apps/spreed/api/v"
 
     @JvmStatic
-    val userAgent = "Mozilla/5.0 (Android) Nextcloud-Talk v"
+    val userAgent = "Mozilla/5.0 (Android) CLPS-Talk v"
         get() = field + BuildConfig.VERSION_NAME
 
     @Deprecated(

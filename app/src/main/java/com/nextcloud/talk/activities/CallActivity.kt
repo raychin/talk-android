@@ -58,6 +58,7 @@ import autodagger.AutoInjector
 import com.bluelinelabs.logansquare.LoganSquare
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.ParticipantDisplayItem
 import com.nextcloud.talk.api.NcApi
@@ -2199,6 +2200,15 @@ class CallActivity : CallBaseActivity() {
         unchanged: Collection<Participant>
     ) {
         Log.d(TAG, "handleCallParticipantsChanged")
+
+        Log.d("Ray", "================start=================")
+
+        Log.d("Ray", "joined: ${Gson().toJson(joined)}")
+        Log.d("Ray", "updated: ${Gson().toJson(updated)}")
+        Log.d("Ray", "left: ${Gson().toJson(left)}")
+        Log.d("Ray", "unchanged: ${Gson().toJson(unchanged)}")
+
+        Log.d("Ray", "==================end=================")
 
         // The signaling session is the same as the Nextcloud session only when the MCU is not used.
         var currentSessionId = callSession
