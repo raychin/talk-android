@@ -19,6 +19,17 @@
 <!--            android:name="com.yalantis.ucrop.UCropActivity"-->
 <!--            android:theme="@style/Theme.AppCompat.Light.NoActionBar"-->
 <!--            tools:node="replace" />-->
+
+<!--        <provider-->
+<!--            android:name="androidx.core.content.FileProvider"-->
+<!--            android:authorities="${applicationId}.imagepicker.fileprovider"-->
+<!--            tools:replace="android:authorities"-->
+<!--            android:exported="false"-->
+<!--            android:grantUriPermissions="true">-->
+<!--            <meta-data-->
+<!--                android:name="android.support.FILE_PROVIDER_PATHS"-->
+<!--                android:resource="@xml/ip_file_provider_paths" />-->
+<!--        </provider>-->
     </application>
 
 </manifest>

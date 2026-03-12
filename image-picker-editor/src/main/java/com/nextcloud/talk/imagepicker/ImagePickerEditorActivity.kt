@@ -7,14 +7,18 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
@@ -25,12 +29,10 @@ import com.luck.picture.lib.config.SelectMimeType
 import com.luck.picture.lib.entity.LocalMedia
 import com.luck.picture.lib.interfaces.OnMediaEditInterceptListener
 import com.luck.picture.lib.interfaces.OnResultCallbackListener
-import com.luck.picture.lib.manager.SelectedManager
 import com.luck.picture.lib.utils.ActivityCompatHelper.assertValidRequest
 import com.luck.picture.lib.utils.DateUtils
 import com.luck.picture.lib.widget.BottomNavBar
 import com.luck.picture.lib.widget.CompleteSelectView
-import com.luck.picture.lib.widget.MediumBoldTextView
 import com.luck.picture.lib.widget.PreviewBottomNavBar
 import com.luck.picture.lib.widget.PreviewTitleBar
 import com.luck.picture.lib.widget.TitleBar
@@ -47,6 +49,7 @@ class ImagePickerEditorActivity : AppCompatActivity() {
     private var currentPosition = 0
     private lateinit var viewPager: ViewPager2
     private lateinit var tvIndicator: TextView
+    private lateinit var tvEdit: TextView
     private lateinit var btnClose: ImageButton
     private fun setupViewPager() {
         adapter = ImagePreviewAdapter(imageList) { _, _, _ ->
@@ -76,14 +79,14 @@ class ImagePickerEditorActivity : AppCompatActivity() {
         var selectResultCode = selectList.contains(currentMedia)
 
         if (selectResultCode) {
-            tvSelected.isSelected = false
+            ivSelected.isSelected = false
         } else  {
-            tvSelected.isSelected = true
+            ivSelected.isSelected = true
         }
     }
 
     private fun toggleUIVisibility() {
-        if (btnClose.visibility == View.VISIBLE) {
+        if (btnClose.isVisible) {
             hideUI()
         } else {
             showUI()
@@ -101,8 +104,8 @@ class ImagePickerEditorActivity : AppCompatActivity() {
     }
 
     protected lateinit var titleBar: PreviewTitleBar
-    protected lateinit var selectClickArea: View
-    protected lateinit var tvSelected: MediumBoldTextView
+    protected lateinit var selectLayout: LinearLayout
+    protected lateinit var ivSelected: ImageView
 
     private fun initTitleBar() {
         titleBar.setTitleBarStyle()
@@ -116,24 +119,50 @@ class ImagePickerEditorActivity : AppCompatActivity() {
         titleBar.imageDelete.setOnClickListener {
             // deletePreview()
         }
-        selectClickArea.setOnClickListener {
+        selectLayout.setOnClickListener {
             var currentMedia = imageList.get(currentPosition)
             // 判断selectList是否包含currentMedia数据体
             var selectResultCode = selectList.contains(currentMedia)
 
             if (selectResultCode) {
                 selectList.remove(currentMedia)
-                tvSelected.isSelected = false
+                ivSelected.isSelected = false
             } else  {
                 selectList.add(currentMedia)
-                tvSelected.isSelected = true
+                ivSelected.isSelected = true
             }
         }
-        // tvSelected.setOnClickListener(object : View.OnClickListener {
+        // ivSelected.setOnClickListener(object : View.OnClickListener {
         //     override fun onClick(view: View?) {
         //         selectClickArea.performClick()
         //     }
         // })
+    }
+
+    private lateinit var imageEditLauncher: ActivityResultLauncher<Intent>
+
+    fun onChooseImages(uri: Uri, saveToPath: String) {
+        val intent = Intent(this, ImageEditActivity::class.java)
+        intent.putExtra("image_path", uri)
+        intent.putExtra("image_path_save", saveToPath)
+        imageEditLauncher.launch(intent)
+        // startActivity(intent)
+        // startActivityForResult(intent, REQ_IMAGE_EDIT)
+    }
+
+    // override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    //     super.onActivityResult(requestCode, resultCode, data)
+    //     when (requestCode) {
+    //         REQ_IMAGE_EDIT -> {
+    //             if (resultCode == Activity.RESULT_OK) {
+    //                 onImageEditDone()
+    //             }
+    //         }
+    //     }
+    // }
+
+    fun onImageEditDone() {
+        // TODO do some thins
     }
 
     protected lateinit var bottomNarBar: PreviewBottomNavBar
@@ -146,11 +175,13 @@ class ImagePickerEditorActivity : AppCompatActivity() {
             override fun onEditImage() {
                 super.onEditImage()
                 val path = imageList[currentPosition].path
-                // Implement preview for each image
-                val intent = Intent(this@ImagePickerEditorActivity, ImageEditActivity::class.java).apply {
-                    putExtra("image_path", path)
-                }
-                startActivity(intent)
+
+                onChooseImages(Uri.fromFile(File(path)), imageList[currentPosition].realPath)
+                // // Implement preview for each image
+                // val intent = Intent(this@ImagePickerEditorActivity, ImageEditActivity::class.java).apply {
+                //     putExtra("image_path", path)
+                // }
+                // startActivity(intent)
             }
 
             override fun onCheckOriginalChange() {
@@ -161,21 +192,31 @@ class ImagePickerEditorActivity : AppCompatActivity() {
                 super.onFirstCheckOriginalSelectedChange()
             }
         })
+
+        tvEdit.setOnClickListener {
+            val path = imageList[currentPosition].path
+            // // Implement preview for each image
+            // val intent = Intent(this@ImagePickerEditorActivity, ImageEditActivity::class.java).apply {
+            //     putExtra("image_path", path)
+            // }
+            // startActivity(intent)
+            onChooseImages(Uri.fromFile(File(path)), imageList[currentPosition].realPath)
+        }
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.ip_activity_image_picker_editor)
-        setImmersive()
 
         viewPager = findViewById(R.id.viewPager)
         tvIndicator = findViewById(R.id.tvIndicator)
+        tvEdit = findViewById(R.id.ps_tv_edit)
         btnClose = findViewById(R.id.btnClose)
 
         titleBar = findViewById<PreviewTitleBar>(R.id.title_bar)
-        selectClickArea = findViewById<View>(R.id.select_click_area)
-        tvSelected = findViewById<MediumBoldTextView>(R.id.ps_tv_selected)
+        selectLayout = findViewById<LinearLayout>(R.id.ps_ll_selected)
+        ivSelected = findViewById<ImageView>(R.id.ps_iv_selected)
         initTitleBar()
 
         bottomNarBar = findViewById<PreviewBottomNavBar>(R.id.bottom_nar_bar)
@@ -183,28 +224,25 @@ class ImagePickerEditorActivity : AppCompatActivity() {
 
         completeSelectView = findViewById(R.id.ps_complete_select);
 
-        openGallery()
-    }
+        imageEditLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
 
-    private fun setImmersive () {
-        // 设置透明状态栏
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                )
-        } else {
-            // 使用旧版方法
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN
-                )
+            if (result.resultCode == Activity.RESULT_OK) {
+                onImageEditDone()
+            }
+            // when (result.requestCode) {
+            //     REQ_IMAGE_EDIT -> {
+            //
+            //         if (result.resultCode == Activity.RESULT_OK) {
+            //             onImageEditDone()
+            //         }
+            //     }
+            // }
         }
+
+
+        openGallery()
     }
 
     private fun openGallery() {
@@ -219,20 +257,60 @@ class ImagePickerEditorActivity : AppCompatActivity() {
                 // override fun onResult(result: List<LocalMedia>) {
                 override fun onResult(result: ArrayList<LocalMedia>) {
                     if (result.isNotEmpty()) {
-                        // Handle multiple images
-                        imageList = mutableListOf()
-                        selectList = mutableListOf()
-                        result.forEach { media ->
-                            // val path = if (media.isCut) media.cutPath else media.path
-                            // // Implement preview for each image
-                            // val intent = Intent(this@ImagePickerEditorActivity, ImagePreviewActivity::class.java).apply {
-                            //     putExtra("image_path", path)
-                            // }
-                            // startActivity(intent)
-                            imageList.add(media)
 
+                        // TODO RAY 选取图片完成逻辑处理
+                        // setupViewPager()
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            try {
+                                val files: ArrayList<Uri> = withContext(Dispatchers.IO) {
+                                    // 使用 ArrayList 作为可变集合来收集结果
+                                    val tempList = ArrayList<Uri>()
+                                    result.forEach { media ->
+                                        try {
+                                            if (media.isCut && !media.cutPathContent.isNullOrEmpty()) {
+                                                tempList.add(media.cutPathContent.toUri())
+                                            } else if (media.isCut && !media.cutPath.isNullOrEmpty()) {
+                                                val cutFile = File(media.cutPath)
+                                                if (cutFile.exists()) {
+                                                    // 使用正确的 authority，与 AndroidManifest.xml 中的配置保持一致
+                                                    val uri = FileProvider.getUriForFile(
+                                                        this@ImagePickerEditorActivity,
+                                                        applicationContext.packageName,
+                                                        cutFile
+                                                    )
+                                                    tempList.add(uri)
+                                                } else {
+                                                    Log.w("Ray", "Cut file does not exist: ${media.cutPath}")
+                                                }
+                                            } else if (!media.path.isNullOrEmpty()) {
+                                                @Suppress("DEPRECATION")
+                                                tempList.add(Uri.parse(media.path))
+                                            } else {
+                                                Log.w("Ray", "Media path is null or empty")
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("Ray", "Error processing media: ${e.message}", e)
+                                        }
+                                    }
+                                    tempList
+                                }
+
+
+                                withContext(Dispatchers.Main) {
+                                    Log.w("Ray", "files: ${files.toString()}")
+                                    // 发送文件
+                                    val intent = Intent()
+                                    intent.putStringArrayListExtra(EXTRA_SELECTED_IMAGES, files)
+                                    setResult(RESULT_OK, intent)
+                                    finish()
+                                }
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    Log.e("Ray", "Error processing files: ${e.message}", e)
+                                    // 显示错误提示
+                                }
+                            }
                         }
-                        setupViewPager()
 
                         // For now, handle the first image as before
                         // val media = result[0]
@@ -327,6 +405,7 @@ class ImagePickerEditorActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_SELECTED_IMAGES = "selected_images"
         const val REQUEST_CODE_PICK_IMAGES = 1001
+        const val REQ_IMAGE_EDIT = 1002
         fun start(activity: Activity) {
             val intent = Intent(activity, ImagePickerEditorActivity::class.java)
             activity.startActivity(intent)

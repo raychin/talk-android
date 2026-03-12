@@ -29,7 +29,7 @@
     <com.luck.picture.lib.widget.PreviewBottomNavBar
         android:id="@+id/bottom_nar_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:clickable="true"
         android:focusable="true"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -37,18 +37,23 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:layout_height="48dp" />
 
-    <com.luck.picture.lib.widget.MediumBoldTextView
-        android:id="@+id/ps_tv_selected"
+    <LinearLayout
+        android:id="@+id/ps_ll_selected"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/ps_checkbox_selector"
+        android:paddingStart="25dp"
+        android:paddingEnd="15dp"
         android:gravity="center"
-        android:includeFontPadding="false"
-        android:textColor="@color/ps_color_white"
-        android:textSize="11sp"
-        app:layout_constraintBottom_toBottomOf="@id/ps_tv_selected_word"
-        app:layout_constraintRight_toLeftOf="@+id/ps_tv_selected_word"
-        app:layout_constraintTop_toTopOf="@id/ps_tv_selected_word" />
+        android:layout_marginVertical="15dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/title_bar">
+        <ImageView
+            android:id="@+id/ps_iv_selected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="title_bar"
+            android:src="@drawable/ps_checkbox_selector"/>
+    </LinearLayout>
 
     <com.luck.picture.lib.widget.MediumBoldTextView
         android:id="@+id/ps_tv_selected_word"
@@ -59,14 +64,6 @@
         android:includeFontPadding="false"
         android:textColor="@color/ps_color_white"
         android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@id/title_bar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/title_bar" />
-
-    <View
-        android:id="@+id/select_click_area"
-        android:layout_width="50dp"
-        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@id/title_bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/title_bar" />
@@ -94,7 +91,7 @@
         android:gravity="start"
         android:includeFontPadding="false"
         android:textColor="@color/ps_color_white"
-        android:textSize="11sp"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/bottom_nar_bar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/bottom_nar_bar" />
