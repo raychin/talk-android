@@ -13,6 +13,7 @@ import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -1344,6 +1345,9 @@ public class PictureSelectorPreviewFragment extends PictureCommonFragment {
             currentMedia.setCustomData(Crop.getOutputCustomExtraData(data));
             currentMedia.setEditorImage(currentMedia.isCut());
             currentMedia.setSandboxPath(currentMedia.getCutPath());
+            // 新增cutPathContent add by ray on 2026/03/11
+            String key = MediaStore.EXTRA_OUTPUT + "Content";
+            currentMedia.setCutPathContent(data.getStringExtra(key));
             if (SelectedManager.getSelectedResult().contains(currentMedia)) {
                 LocalMedia exitsMedia = currentMedia.getCompareLocalMedia();
                 if (exitsMedia != null) {

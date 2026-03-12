@@ -1,5 +1,6 @@
 package com.lib.picture_editor;
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -7,16 +8,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.RadioGroup;
 import android.widget.ViewSwitcher;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 
 public class EditorActivity extends AppCompatActivity implements View.OnClickListener,
         IMGTextEditDialog.Callback, RadioGroup.OnCheckedChangeListener,
@@ -142,8 +148,45 @@ public class EditorActivity extends AppCompatActivity implements View.OnClickLis
                         }
                     }
                 }
-                setResult(RESULT_OK, new Intent().putExtra(MediaStore.EXTRA_OUTPUT, uri));
-                finish();
+
+                if (!bitmap.isRecycled()) {
+                    bitmap.recycle();
+                    // 避免悬空引用
+                    bitmap = null;
+                }
+
+                /*
+                 * 后台执行content转换
+                 * modify by ray on 2026/03/12
+                 */
+                CompletableFuture.supplyAsync(() -> {
+                    // 这里在 IO 线程执行
+                    Uri result;
+                    try {
+                        result = FileProvider.getUriForFile(
+                            EditorActivity.this,
+                            EditorActivity.this.getPackageName(),
+                            new File(path));
+                        return result;
+                    } catch (Exception e) {
+                        Log.e("Ray", "Error processing file content: " + e.getMessage(), e);
+                    }
+                    return null;
+                }, Executors.newCachedThreadPool()).thenAccept(fileContent -> {
+                    // 这里自动回到主线程（Android需要手动切换）
+                    runOnUiThread(() -> {
+                        Intent intent = new Intent();
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                        if (fileContent != null) {
+                            intent.putExtra(MediaStore.EXTRA_OUTPUT + "Content", fileContent.toString());
+                        }
+                        setResult(RESULT_OK, intent);
+                        finish();
+                    });
+                }).exceptionally(e -> {
+                    Log.e("Ray", "Error: " + e.getMessage());
+                    return null;
+                });
                 return;
             }
         }

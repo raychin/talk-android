@@ -56,6 +56,20 @@ public class LocalMedia implements Parcelable {
      */
     private String cutPath;
     /**
+     * cut path uri content
+     * add by ray on 2026/03/10
+     */
+    private String cutPathContent;
+
+    public String getCutPathContent() {
+        return cutPathContent;
+    }
+
+    public void setCutPathContent(String cutPathContent) {
+        this.cutPathContent = cutPathContent;
+    }
+
+    /**
      * watermark path
      */
     private String watermarkPath;
