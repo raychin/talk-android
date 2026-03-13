@@ -99,6 +99,12 @@ import coil.transform.CircleCropTransformation
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.lib.picture_editor.Editor
+import com.lib.picture_selector.basic.PictureSelector
+import com.lib.picture_selector.config.PictureConfig
+import com.lib.picture_selector.config.PictureMimeType
+import com.lib.picture_selector.config.SelectMimeType
+import com.lib.picture_selector.interfaces.OnMediaEditInterceptListener
 import com.nextcloud.android.common.ui.color.ColorUtil
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.BuildConfig
@@ -143,9 +149,11 @@ import com.nextcloud.talk.conversationlist.ConversationsListActivity
 import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ActivityChatBinding
+import com.nextcloud.talk.engine.GlideEngine
 import com.nextcloud.talk.events.UserMentionClickEvent
 import com.nextcloud.talk.events.WebSocketCommunicationEvent
 import com.nextcloud.talk.extensions.loadAvatarOrImagePreview
+// import com.nextcloud.talk.imagepicker.ImagePickerEditorActivity
 import com.nextcloud.talk.jobs.DeleteConversationWorker
 import com.nextcloud.talk.jobs.DownloadFileToCacheWorker
 import com.nextcloud.talk.jobs.ShareOperationWorker
@@ -2565,7 +2573,139 @@ class ChatActivity :
     }
 
     fun showGalleryPicker() {
-        pickMultipleMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageAndVideo))
+        // 原始多选图片功能，使用coil，其实支持多图预览
+        // pickMultipleMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageAndVideo))
+
+        // 方式一：image-picker-editor库，支持多选【版本较新】、预览、裁剪功能
+        // val Intent = Intent(this, ImagePickerEditorActivity::class.java)
+        // startTakePhotosFromImageEditorForResult.launch(Intent)
+
+        // 方式二：picture-selector【较新】 + picture-editor，支持多选、预览、裁剪、编辑功能
+        PictureSelector.create(this)
+            .openGallery(SelectMimeType.ofImage())
+            .isDisplayCamera(false)
+            // 外部传入图片加载引擎，必传项
+            .setImageEngine(GlideEngine)
+            // 最大图片选择数量
+            .setMaxSelectNum(9)
+            // 最小选择数量
+            .setMinSelectNum(1)
+//            .setCompressEngine(ImageCompressEngine())
+            .isPreviewImage(true)
+            // 裁剪
+//            .setCropEngine(crop())
+            // 编辑
+            .setEditMediaInterceptListener(edit())
+            .forResult(PictureConfig.CHOOSE_REQUEST)
+    }
+
+    private fun edit() = OnMediaEditInterceptListener { fragment, currentLocalMedia, requestCode ->
+        val currentEditPath = currentLocalMedia!!.availablePath
+        val inputUri =
+            if (PictureMimeType.isContent(currentEditPath)) currentEditPath.toUri() else Uri.fromFile(
+                File(currentEditPath)
+            )
+        val destinationUri = Uri.fromFile(
+            File(getSandboxPath(), com.lib.picture_selector.utils.DateUtils.getCreateFileName("CROP_") + ".jpeg")
+        )
+
+        val xCrop = Editor.of(inputUri, destinationUri)
+        xCrop.startEdit(this, fragment, requestCode)
+    }
+
+    private fun getSandboxPath(): String {
+        val externalFilesDir: File? = this.getExternalFilesDir("")
+        val customFile = File(externalFilesDir?.absolutePath, "Sandbox")
+        if (!customFile.exists()) {
+            customFile.mkdirs()
+        }
+        return customFile.absolutePath + File.separator
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        Log.e("Ray", "ChatActivity -> onActivityResult resultCode = $resultCode")
+        Log.e("Ray", "ChatActivity -> onActivityResult requestCode = $requestCode")
+        if (resultCode == RESULT_OK) {
+            if (requestCode == PictureConfig.CHOOSE_REQUEST) {
+                val list = PictureSelector.obtainSelectorList(data)
+
+                // 完整优化版本（协程 + 类型明确）
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val files: ArrayList<Uri> = withContext(Dispatchers.IO) {
+                            // 使用 ArrayList 作为可变集合来收集结果
+                            val result = ArrayList<Uri>()
+                            list.forEach { media ->
+                                try {
+                                    if (media.isCut && !media.cutPathContent.isNullOrEmpty()) {
+                                        result.add(media.cutPathContent.toUri())
+                                    } else if (media.isCut && !media.cutPath.isNullOrEmpty()) {
+                                        val cutFile = File(media.cutPath)
+                                        if (cutFile.exists()) {
+                                            // 使用正确的 authority，与 AndroidManifest.xml 中的配置保持一致
+                                            val uri = FileProvider.getUriForFile(
+                                                this@ChatActivity,
+                                                applicationContext.packageName,
+                                                cutFile
+                                            )
+                                            result.add(uri)
+                                        } else {
+                                            Log.w("Ray", "ChatActivity -> onActivityResult Cut file does not exist: " +
+                                                "${media.cutPath}")
+                                        }
+                                    } else if (!media.path.isNullOrEmpty()) {
+                                        @Suppress("DEPRECATION")
+                                        result.add(Uri.parse(media.path))
+                                    } else {
+                                        Log.w("Ray", "ChatActivity -> onActivityResult Media path is null or empty")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("Ray", "ChatActivity -> onActivityResult Error processing media: ${e.message}", e)
+                                }
+                            }
+                            result
+                        }
+
+
+                        withContext(Dispatchers.Main) {
+                            Log.w("Ray", "ChatActivity -> onActivityResult files: ${files.toString()}")
+                            // 发送文件
+                            onChooseFileResult(files!!)
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Log.e("Ray", "ChatActivity -> onActivityResult Error processing files: ${e.message}", e)
+                            // 显示错误提示
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private val startTakePhotosFromImageEditorForResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        executeIfResultOk(it) { intent ->
+            /**
+             * val imageList = result.data?.getParcelableArrayListExtra<LocalMedia>(
+             *             ImagePickerEditorActivity.EXTRA_SELECTED_IMAGES
+             *         )
+             */
+            onTakePhotosFromImageEditorResult(intent)
+        }
+    }
+
+    private fun onTakePhotosFromImageEditorResult(intent: Intent?) {
+        // TODO RAY 多图选取后后续操作 uris: List<@JvmSuppressWildcards Uri>
+        // // val fileUris = intent?.getStringArrayListExtra(ImagePickerEditorActivity.EXTRA_SELECTED_IMAGES)?.map { it
+        // //     .toUri() }
+        // val fileUris: List<@JvmSuppressWildcards Uri> = intent?.getStringArrayListExtra(ImagePickerEditorActivity.EXTRA_SELECTED_IMAGES)
+        //     ?.map { it.toUri() } ?: emptyList()
+        //
+        // Log.e("Ray", "fileUris: ${fileUris.toString()}")
+        // onChooseFileResult(fileUris!!)
     }
 
     private fun showLocalFilePicker() {
