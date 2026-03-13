@@ -6,7 +6,8 @@
  * SPDX-FileCopyrightText: 2022 Tim Krüger <t@timkrueger.me>
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-include ':app'
+include ':app', 'picture-editor', 'picture-selector'
+//    ':image-picker-editor'
 
 //// uncomment to use local build of common-ui
 //includeBuild('../android-common') {

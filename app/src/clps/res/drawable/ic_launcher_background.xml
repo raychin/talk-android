@@ -10,22 +10,14 @@
     android:height="108dp"
     android:viewportWidth="1024"
     android:viewportHeight="1024">
-  <group android:scaleX="0.58"
-      android:scaleY="0.58"
-      android:translateX="215.04"
-      android:translateY="215.04">
-    <group android:scaleX="2.44"
-        android:scaleY="2.44"
-        android:translateX="-737.28"
-        android:translateY="-737.28">
-      <group android:scaleX="0.64"
-          android:scaleY="0.64"
-          android:translateX="184.32"
-          android:translateY="184.32">
-        <group android:scaleX="0.64"
-            android:scaleY="0.64"
-            android:translateX="184.32"
-            android:translateY="184.32">
+  <group android:scaleX="1"
+      android:scaleY="1">
+    <group android:scaleX="1"
+        android:scaleY="1">
+      <group android:scaleX="1"
+          android:scaleY="1">
+        <group android:scaleX="1"
+            android:scaleY="1">
             <group>
                 <clip-path
                     android:pathData="M100,0L924,0A100,100 0,0 1,1024 100L1024,924A100,100 0,0 1,924 1024L100,1024A100,100 0,0 1,0 924L0,100A100,100 0,0 1,100 0z"/>
