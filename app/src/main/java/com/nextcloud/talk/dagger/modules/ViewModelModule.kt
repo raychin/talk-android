@@ -10,18 +10,21 @@ package com.nextcloud.talk.dagger.modules
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.nextcloud.talk.account.viewmodels.BrowserLoginActivityViewModel
+import com.nextcloud.talk.activities.CallViewModel
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
-import com.nextcloud.talk.chat.viewmodels.MessageInputViewModel
+import com.nextcloud.talk.chat.viewmodels.ScheduledMessagesViewModel
+import com.nextcloud.talk.chooseaccount.StatusViewModel
 import com.nextcloud.talk.contacts.ContactsViewModel
 import com.nextcloud.talk.contextchat.ContextChatViewModel
 import com.nextcloud.talk.conversationcreation.ConversationCreationViewModel
 import com.nextcloud.talk.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.nextcloud.talk.conversationinfoedit.viewmodel.ConversationInfoEditViewModel
 import com.nextcloud.talk.conversationlist.viewmodels.ConversationsListViewModel
-import com.nextcloud.talk.diagnose.DiagnoseViewModel
+import com.nextcloud.talk.diagnosis.DiagnosisViewModel
 import com.nextcloud.talk.invitation.viewmodels.InvitationsViewModel
 import com.nextcloud.talk.messagesearch.MessageSearchViewModel
 import com.nextcloud.talk.openconversations.viewmodels.OpenConversationsViewModel
+import com.nextcloud.talk.ui.chooseaccount.ChooseAccountShareToViewModel
 import com.nextcloud.talk.polls.viewmodels.PollCreateViewModel
 import com.nextcloud.talk.polls.viewmodels.PollMainViewModel
 import com.nextcloud.talk.polls.viewmodels.PollResultsViewModel
@@ -32,6 +35,7 @@ import com.nextcloud.talk.shareditems.viewmodels.SharedItemsViewModel
 import com.nextcloud.talk.threadsoverview.viewmodels.ThreadsOverviewViewModel
 import com.nextcloud.talk.translate.viewmodels.TranslateViewModel
 import com.nextcloud.talk.viewmodels.CallRecordingViewModel
+import com.nextcloud.talk.viewmodels.LocationPickerViewModel
 import dagger.Binds
 import dagger.MapKey
 import dagger.Module
@@ -100,6 +104,11 @@ abstract class ViewModelModule {
 
     @Binds
     @IntoMap
+    @ViewModelKey(LocationPickerViewModel::class)
+    abstract fun locationPickerViewModel(viewModel: LocationPickerViewModel): ViewModel
+
+    @Binds
+    @IntoMap
     @ViewModelKey(RaiseHandViewModel::class)
     abstract fun raiseHandViewModel(viewModel: RaiseHandViewModel): ViewModel
 
@@ -122,11 +131,6 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(ChatViewModel::class)
     abstract fun chatViewModel(viewModel: ChatViewModel): ViewModel
-
-    @Binds
-    @IntoMap
-    @ViewModelKey(MessageInputViewModel::class)
-    abstract fun messageInputViewModel(viewModel: MessageInputViewModel): ViewModel
 
     @Binds
     @IntoMap
@@ -155,8 +159,8 @@ abstract class ViewModelModule {
 
     @Binds
     @IntoMap
-    @ViewModelKey(DiagnoseViewModel::class)
-    abstract fun diagnoseViewModel(viewModel: DiagnoseViewModel): ViewModel
+    @ViewModelKey(DiagnosisViewModel::class)
+    abstract fun diagnosisViewModel(viewModel: DiagnosisViewModel): ViewModel
 
     @Binds
     @IntoMap
@@ -172,4 +176,24 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(ContextChatViewModel::class)
     abstract fun contextChatViewModel(viewModel: ContextChatViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(CallViewModel::class)
+    abstract fun callViewModel(viewModel: CallViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(StatusViewModel::class)
+    abstract fun statusRepositoryViewModel(viewModel: StatusViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(ScheduledMessagesViewModel::class)
+    abstract fun scheduledMessagesViewModel(viewModel: ScheduledMessagesViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(ChooseAccountShareToViewModel::class)
+    abstract fun chooseAccountShareToViewModel(viewModel: ChooseAccountShareToViewModel): ViewModel
 }

@@ -15,6 +15,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -38,6 +39,9 @@ import androidx.work.Data
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import autodagger.AutoInjector
+import coil.executeBlocking
+import coil.imageLoader
+import coil.request.ImageRequest
 import com.bluelinelabs.logansquare.LoganSquare
 import com.nextcloud.talk.BuildConfig
 import com.nextcloud.talk.R
@@ -80,13 +84,13 @@ import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_MESSAGE_ID
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_NOTIFICATION_ID
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_NOTIFICATION_RESTRICT_DELETION
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_NOTIFICATION_TIMESTAMP
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_OPENED_VIA_NOTIFICATION
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_REMOTE_TALK_SHARE
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_ROOM_ONE_TO_ONE
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_ROOM_TOKEN
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SHARE_RECORDING_TO_CHAT_URL
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SYSTEM_NOTIFICATION_ID
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_THREAD_ID
-import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_OPENED_VIA_NOTIFICATION
 import com.nextcloud.talk.utils.preferences.AppPreferences
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -137,6 +141,8 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
     private var context: Context? = null
     private var conversationType: String? = "one2one"
     private lateinit var notificationManager: NotificationManagerCompat
+    private var imagePreviewUrl: String? = null
+    private var imageMimeType: String? = null
 
     override fun doWork(): Result {
         sharedApplication!!.componentApplication.inject(this)
@@ -192,11 +198,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
 
     private fun handleNonCallPushMessage() {
         val mainActivityIntent = createMainActivityIntent()
-        if (pushMessage.notificationId != Long.MIN_VALUE) {
-            getNcDataAndShowNotification(mainActivityIntent)
-        } else {
-            showNotification(mainActivityIntent, null)
-        }
+        getNcDataAndShowNotification(mainActivityIntent)
     }
 
     private fun handleRemoteTalkSharePushMessage() {
@@ -206,12 +208,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         bundle.putLong(KEY_INTERNAL_USER_ID, signatureVerification.user!!.id!!)
         bundle.putBoolean(KEY_REMOTE_TALK_SHARE, true)
         mainActivityIntent.putExtras(bundle)
-
-        if (pushMessage.notificationId != Long.MIN_VALUE) {
-            getNcDataAndShowNotification(mainActivityIntent)
-        } else {
-            showNotification(mainActivityIntent, null)
-        }
+        getNcDataAndShowNotification(mainActivityIntent)
     }
 
     private fun handleCallPushMessage() {
@@ -232,7 +229,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             bundle.putInt(BundleKeys.KEY_CALL_FLAG, conversation.callFlag)
 
             val participantPermission = ParticipantPermissions(
-                userBeingCalled!!.capabilities!!.spreedCapability!!,
+                userBeingCalled?.capabilities?.spreedCapability,
                 conversation
             )
             bundle.putBoolean(
@@ -387,7 +384,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             credentials,
             ApiUtils.getUrlForNcNotificationWithId(
                 user!!.baseUrl!!,
-                (pushMessage.notificationId!!).toString()
+                pushMessage.notificationId.toString()
             )
         )
             .blockingSubscribe(object : Observer<NotificationOverall> {
@@ -408,7 +405,17 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.e(TAG, "Failed to get NC notification", e)
+                    fun setContentsFromPushNotificationSubject() {
+                        if (pushMessage.subject.contains(LINEBREAK)) {
+                            pushMessage.text = pushMessage.subject.substringAfter(LINEBREAK)
+                            pushMessage.subject = pushMessage.subject.substringBefore(LINEBREAK)
+                        }
+                    }
+
+                    setContentsFromPushNotificationSubject()
+                    showNotification(intent, null)
+
+                    Log.e(TAG, "Failed to get NC notification. Using decrypted data from push notification itself", e)
                     if (BuildConfig.DEBUG) {
                         Handler(Looper.getMainLooper()).post {
                             Toast.makeText(context, "Failed to get NC notification", Toast.LENGTH_LONG).show()
@@ -476,6 +483,36 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         } else {
             pushMessage.subject = ncNotification.subject.orEmpty()
         }
+
+        checkAndExtractImagePreviewData(ncNotification)
+    }
+
+    private fun checkAndExtractImagePreviewData(
+        notification: com.nextcloud.talk.models.json.notifications.Notification
+    ) {
+        imagePreviewUrl = null
+        imageMimeType = null
+        val msgParams = notification.messageRichParameters
+        if (msgParams != null) {
+            for ((_, param) in msgParams) {
+                if (extractImagePreviewData(param)) break
+            }
+        }
+    }
+
+    private fun extractImagePreviewData(param: HashMap<String?, String?>): Boolean {
+        if (param["type"] == "file") {
+            val mimetype = param["mimetype"].orEmpty()
+            val fileId = param["id"]
+            if (mimetype.startsWith("image/") && fileId != null) {
+                val baseUrl = signatureVerification.user!!.baseUrl!!
+                val px = context!!.resources.displayMetrics.widthPixels
+                imagePreviewUrl = ApiUtils.getUrlForFilePreviewWithFileId(baseUrl, fileId, px)
+                imageMimeType = mimetype
+                return true
+            }
+        }
+        return false
     }
 
     @Suppress("MagicNumber")
@@ -505,13 +542,25 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
 
         var contentText: CharSequence? = ""
         if (!TextUtils.isEmpty(pushMessage.text)) {
-            contentText = EmojiCompat.get().process(pushMessage.text!!)
+            contentText = EmojiCompat.get().process(pushMessage.text)
         }
 
         val autoCancelOnClick = TYPE_RECORDING != pushMessage.type
 
         val notificationBuilder =
-            createNotificationBuilder(category, contentTitle, contentText, baseUrl, pendingIntent, autoCancelOnClick)
+            createNotificationBuilder(
+                category,
+                contentTitle,
+                contentText,
+                baseUrl,
+                pendingIntent,
+                autoCancelOnClick
+            )
+
+        if (ncNotification != null) {
+            notificationBuilder.setLargeIcon(getLargeIcon())
+        }
+
         val activeStatusBarNotification = findNotificationForRoom(
             context,
             signatureVerification.user!!,
@@ -523,12 +572,17 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         val systemNotificationId: Int =
             activeStatusBarNotification?.id ?: calculateCRC32(System.currentTimeMillis().toString()).toInt()
 
-        if ((TYPE_CHAT == pushMessage.type || TYPE_REMINDER == pushMessage.type) &&
-            pushMessage.notificationUser != null
-        ) {
-            prepareChatNotification(notificationBuilder, activeStatusBarNotification)
-            addReplyAction(notificationBuilder, systemNotificationId)
-            addMarkAsReadAction(notificationBuilder, systemNotificationId)
+        if (TYPE_CHAT == pushMessage.type || TYPE_REMINDER == pushMessage.type) {
+            notificationBuilder.setOnlyAlertOnce(false)
+            if (pushMessage.notificationUser != null) {
+                if (imagePreviewUrl != null) {
+                    styleImageNotification(notificationBuilder)
+                } else {
+                    styleChatNotification(notificationBuilder, activeStatusBarNotification)
+                }
+                addReplyAction(notificationBuilder, systemNotificationId)
+                addMarkAsReadAction(notificationBuilder, systemNotificationId)
+            }
         }
 
         if (TYPE_RECORDING == pushMessage.type && ncNotification != null) {
@@ -549,7 +603,6 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         val notificationBuilder = NotificationCompat.Builder(context!!, "1")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(category)
-            .setLargeIcon(getLargeIcon())
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(contentTitle)
             .setContentText(contentText)
@@ -600,7 +653,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                 "one2one" -> {
                     pushMessage.subject = ""
                     largeIcon =
-                        ContextCompat.getDrawable(context!!, R.drawable.ic_people_group_black_24px)?.toBitmap()!!
+                        ContextCompat.getDrawable(context!!, R.drawable.ic_baseline_person_black_24)?.toBitmap()!!
                 }
 
                 "group" ->
@@ -630,12 +683,41 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         return crc32.value
     }
 
-    private fun prepareChatNotification(
+    private fun styleImageNotification(notificationBuilder: NotificationCompat.Builder) {
+        val bitmap = loadImageBitmapSync(imagePreviewUrl!!)
+        if (bitmap != null) {
+            notificationBuilder
+                .setLargeIcon(bitmap)
+                .setStyle(
+                    NotificationCompat.BigPictureStyle()
+                        .bigPicture(bitmap)
+                        .bigLargeIcon(null as Bitmap?)
+                )
+        }
+    }
+
+    private fun loadImageBitmapSync(imageUrl: String): Bitmap? {
+        var bitmap: Bitmap? = null
+        val request = ImageRequest.Builder(context!!)
+            .data(imageUrl)
+            .allowHardware(false)
+            .addHeader("Authorization", credentials)
+            .target(
+                onSuccess = { result -> bitmap = (result as BitmapDrawable).bitmap },
+                onError = { Log.w(TAG, "Failed to load notification image: $imageUrl") }
+            )
+            .build()
+        context!!.imageLoader.executeBlocking(request)
+        return bitmap
+    }
+
+    private fun styleChatNotification(
         notificationBuilder: NotificationCompat.Builder,
         activeStatusBarNotification: StatusBarNotification?
     ) {
-        val notificationUser = pushMessage.notificationUser
-        val userType = notificationUser!!.type
+        val notificationUser = pushMessage.notificationUser ?: return
+
+        val userType = notificationUser.type
         var style: NotificationCompat.MessagingStyle? = null
         if (activeStatusBarNotification != null) {
             style = NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(
@@ -646,7 +728,6 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             .setKey(signatureVerification.user!!.id.toString() + "@" + notificationUser.id)
             .setName(EmojiCompat.get().process(notificationUser.name!!))
             .setBot("bot" == userType)
-        notificationBuilder.setOnlyAlertOnce(false)
 
         if ("user" == userType || "guest" == userType) {
             val baseUrl = signatureVerification.user!!.baseUrl
@@ -697,7 +778,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                 messageId
             )
             val markAsReadAction = NotificationCompat.Action.Builder(
-                R.drawable.ic_eye,
+                R.drawable.ic_mark_chat_read_24px,
                 context!!.resources.getString(R.string.nc_mark_as_read),
                 pendingIntent
             )
@@ -1023,5 +1104,6 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         private const val TIMER_START = 1
         private const val TIMER_COUNT = 12
         private const val TIMER_DELAY: Long = 5
+        private const val LINEBREAK: String = "\n"
     }
 }

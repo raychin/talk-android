@@ -39,6 +39,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.util.Collections
+import java.util.Locale
 import javax.inject.Inject
 
 @AutoInjector(NextcloudTalkApplication::class)
@@ -47,7 +48,7 @@ class ShowReactionsDialog(
     private val roomToken: String,
     private val chatMessage: ChatMessage,
     private val user: User?,
-    private val hasChatPermission: Boolean,
+    private val hasReactPermission: Boolean,
     private val ncApi: NcApi
 ) : BottomSheetDialog(activity),
     ReactionItemClickListener {
@@ -94,7 +95,7 @@ class ShowReactionsDialog(
                 val itemBinding = ItemReactionsTabBinding.inflate(layoutInflater)
                 itemBinding.reactionTab.tag = emoji
                 itemBinding.reactionIcon.text = emoji
-                itemBinding.reactionCount.text = amount.toString()
+                itemBinding.reactionCount.text = String.format(Locale.getDefault(), "%d", amount)
                 tab.customView = itemBinding.root
 
                 binding.emojiReactionsTabs.addTab(tab)
@@ -105,7 +106,7 @@ class ShowReactionsDialog(
             val itemBinding = ItemReactionsTabBinding.inflate(layoutInflater)
             itemBinding.reactionTab.tag = tagAll
             itemBinding.reactionIcon.text = context.getString(R.string.reactions_tab_all)
-            itemBinding.reactionCount.text = reactionsTotal.toString()
+            itemBinding.reactionCount.text = String.format(Locale.getDefault(), "%d", reactionsTotal)
             tab.customView = itemBinding.root
 
             binding.emojiReactionsTabs.addTab(tab, 0)
@@ -185,7 +186,7 @@ class ShowReactionsDialog(
     }
 
     override fun onClick(reactionItem: ReactionItem) {
-        if (hasChatPermission && reactionItem.reactionVoter.actorId?.equals(user?.userId) == true) {
+        if (hasReactPermission && reactionItem.reactionVoter.actorId?.equals(user?.userId) == true) {
             deleteReaction(chatMessage, reactionItem.reaction!!)
             adapter?.list?.remove(reactionItem)
             dismiss()

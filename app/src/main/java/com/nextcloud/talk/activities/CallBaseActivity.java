@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
 import android.util.Rational;
 import android.view.View;
@@ -97,7 +98,7 @@ public abstract class CallBaseActivity extends BaseActivity {
     @Override
     public void onStop() {
         super.onStop();
-        if (isInPipMode) {
+        if (shouldFinishOnStop()) {
             finish();
         }
     }
@@ -139,6 +140,19 @@ public abstract class CallBaseActivity extends BaseActivity {
                 android.os.Process.myUid(),
                 BuildConfig.APPLICATION_ID) == AppOpsManager.MODE_ALLOWED;
             return deviceHasPipFeature && isPipFeatureGranted;
+    }
+
+    private boolean shouldFinishOnStop() {
+        if (!isInPipMode) {
+            return false;
+        }
+
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (powerManager == null) {
+            return true;
+        }
+
+        return powerManager.isInteractive();
     }
 
     public abstract void updateUiForPipMode();

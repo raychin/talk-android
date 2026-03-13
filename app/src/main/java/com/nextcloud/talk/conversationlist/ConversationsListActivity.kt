@@ -38,6 +38,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -68,8 +69,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
+import com.nextcloud.talk.account.BrowserLoginActivity
 import com.nextcloud.talk.account.ServerSelectionActivity
-import com.nextcloud.talk.account.WebViewLoginActivity
 import com.nextcloud.talk.activities.BaseActivity
 import com.nextcloud.talk.activities.CallActivity
 import com.nextcloud.talk.activities.MainActivity
@@ -86,9 +87,9 @@ import com.nextcloud.talk.arbitrarystorage.ArbitraryStorageManager
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.contacts.ContactsActivity
-import com.nextcloud.talk.contacts.ContactsUiState
 import com.nextcloud.talk.contacts.ContactsViewModel
-import com.nextcloud.talk.contacts.RoomUiState
+import com.nextcloud.talk.contextchat.ContextChatView
+import com.nextcloud.talk.contextchat.ContextChatViewModel
 import com.nextcloud.talk.conversationlist.viewmodels.ConversationsListViewModel
 import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
@@ -104,17 +105,12 @@ import com.nextcloud.talk.messagesearch.MessageSearchHelper
 import com.nextcloud.talk.messagesearch.MessageSearchHelper.MessageSearchResults
 import com.nextcloud.talk.models.domain.ConversationModel
 import com.nextcloud.talk.models.json.conversations.ConversationEnums
-import com.nextcloud.talk.models.json.conversations.RoomsOverall
-import com.nextcloud.talk.models.json.converters.EnumActorTypeConverter
-import com.nextcloud.talk.models.json.participants.Participant
 import com.nextcloud.talk.repositories.unifiedsearch.UnifiedSearchRepository
 import com.nextcloud.talk.settings.SettingsActivity
 import com.nextcloud.talk.threadsoverview.ThreadsOverviewActivity
 import com.nextcloud.talk.ui.BackgroundVoiceMessageCard
-import com.nextcloud.talk.ui.dialog.ChooseAccountDialogFragment
-import com.nextcloud.talk.ui.dialog.ChooseAccountShareToDialogFragment
-import com.nextcloud.talk.contextchat.ContextChatView
-import com.nextcloud.talk.contextchat.ContextChatViewModel
+import com.nextcloud.talk.ui.dialog.ChooseAccountDialogCompose
+import com.nextcloud.talk.ui.chooseaccount.ChooseAccountShareToDialogFragment
 import com.nextcloud.talk.ui.dialog.ConversationsListBottomDialog
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment.Companion.ARCHIVE
@@ -125,7 +121,6 @@ import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.BrandingUtils
 import com.nextcloud.talk.utils.CapabilitiesUtil.hasSpreedFeatureCapability
 import com.nextcloud.talk.utils.CapabilitiesUtil.isServerEOL
-import com.nextcloud.talk.utils.CapabilitiesUtil.isUnifiedSearchAvailable
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
 import com.nextcloud.talk.utils.ConversationUtils
 import com.nextcloud.talk.utils.FileUtils
@@ -158,6 +153,7 @@ import io.reactivex.subjects.BehaviorSubject
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import org.apache.commons.lang3.builder.CompareToBuilder
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -216,6 +212,7 @@ class ConversationsListActivity :
     private var conversationItemsWithHeader: MutableList<AbstractFlexibleItem<*>> = ArrayList()
     private var searchableConversationItems: MutableList<AbstractFlexibleItem<*>> = ArrayList()
     private var filterableConversationItems: MutableList<AbstractFlexibleItem<*>> = ArrayList()
+    private val mutex = Mutex()
     private var nearFutureEventConversationItems: MutableList<AbstractFlexibleItem<*>> = ArrayList()
     private var searchItem: MenuItem? = null
     private var chooseAccountItem: MenuItem? = null
@@ -260,7 +257,7 @@ class ConversationsListActivity :
         super.onCreate(savedInstanceState)
         NextcloudTalkApplication.sharedApplication!!.componentApplication.inject(this)
 
-        currentUser = currentUserProvider.currentUser.blockingGet()
+        currentUser = currentUserProviderOld.currentUser.blockingGet()
 
         conversationsListViewModel = ViewModelProvider(this, viewModelFactory)[ConversationsListViewModel::class.java]
         contextChatViewModel = ViewModelProvider(this, viewModelFactory)[ContextChatViewModel::class.java]
@@ -269,7 +266,7 @@ class ConversationsListActivity :
         setupActionBar()
         setContentView(binding.root)
         initSystemBars()
-        viewThemeUtils.material.themeSearchCardView(binding.searchToolbar)
+        viewThemeUtils.material.themeSearchCardView(binding.searchToolbarContainer)
         viewThemeUtils.material.colorMaterialButtonContent(binding.menuButton, ColorRole.ON_SURFACE_VARIANT)
         viewThemeUtils.platform.colorTextView(binding.searchText, ColorRole.ON_SURFACE_VARIANT)
 
@@ -319,8 +316,11 @@ class ConversationsListActivity :
                 return
             }
             currentUser?.capabilities?.spreedCapability?.let { spreedCapabilities ->
-                if (isUnifiedSearchAvailable(spreedCapabilities)) {
-                    searchHelper = MessageSearchHelper(unifiedSearchRepository)
+                if (hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.UNIFIED_SEARCH)) {
+                    searchHelper = MessageSearchHelper(
+                        unifiedSearchRepository = unifiedSearchRepository,
+                        currentUser = currentUser!!
+                    )
                 }
             }
             credentials = ApiUtils.getCredentials(currentUser!!.username, currentUser!!.token)
@@ -372,6 +372,14 @@ class ConversationsListActivity :
                 showNetworkErrorDialog(!isOnline)
                 handleUI(isOnline)
             }.collect()
+        }
+
+        lifecycleScope.launch {
+            conversationsListViewModel.searchResultFlow.collect { searchResults ->
+                if (adapter?.hasFilter() == true) {
+                    adapter?.updateDataSet(searchResults)
+                }
+            }
         }
 
         conversationsListViewModel.getFederationInvitationsViewState.observe(this) { state ->
@@ -464,7 +472,7 @@ class ConversationsListActivity :
         lifecycleScope.launch {
             contactsViewModel.roomViewState.onEach { state ->
                 when (state) {
-                    is RoomUiState.Success -> {
+                    is ContactsViewModel.RoomUiState.Success -> {
                         val conversation = state.conversation
                         val bundle = Bundle()
                         bundle.putString(KEY_ROOM_TOKEN, conversation?.token)
@@ -472,51 +480,6 @@ class ConversationsListActivity :
                         chatIntent.putExtras(bundle)
                         chatIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         startActivity(chatIntent)
-                    }
-
-                    else -> {}
-                }
-            }.collect()
-        }
-
-        lifecycleScope.launch {
-            contactsViewModel.contactsViewState.onEach { state ->
-                when (state) {
-                    is ContactsUiState.Success -> {
-                        if (state.contacts.isNullOrEmpty()) return@onEach
-
-                        val userItems: MutableList<AbstractFlexibleItem<*>> = ArrayList()
-                        val actorTypeConverter = EnumActorTypeConverter()
-                        var genericTextHeaderItem: GenericTextHeaderItem
-                        for (autocompleteUser in state.contacts) {
-                            val headerTitle = resources!!.getString(R.string.nc_user)
-                            if (!callHeaderItems.containsKey(headerTitle)) {
-                                genericTextHeaderItem = GenericTextHeaderItem(headerTitle, viewThemeUtils)
-                                callHeaderItems[headerTitle] = genericTextHeaderItem
-                            }
-
-                            val participant = Participant()
-                            participant.actorId = autocompleteUser.id
-                            participant.actorType = actorTypeConverter.getFromString(autocompleteUser.source)
-                            participant.displayName = autocompleteUser.label
-
-                            val contactItem = ContactItem(
-                                participant,
-                                currentUser!!,
-                                callHeaderItems[headerTitle],
-                                viewThemeUtils
-                            )
-
-                            userItems.add(contactItem)
-                        }
-
-                        val list = searchableConversationItems.filter {
-                            it !is ContactItem
-                        }.toMutableList()
-
-                        list.addAll(userItems)
-
-                        searchableConversationItems = list
                     }
 
                     else -> {}
@@ -628,13 +591,6 @@ class ConversationsListActivity :
         }
 
         Handler().postDelayed({ checkToShowUnreadBubble() }, UNREAD_BUBBLE_DELAY.toLong())
-
-        // Fetch Open Conversations
-        val apiVersion = ApiUtils.getConversationApiVersion(
-            currentUser!!,
-            intArrayOf(ApiUtils.API_V4, ApiUtils.API_V3, 1)
-        )
-        fetchOpenConversations(apiVersion)
     }
 
     fun applyFilter() {
@@ -654,10 +610,9 @@ class ConversationsListActivity :
     }
 
     private fun isFutureEvent(conversation: ConversationModel): Boolean {
-        if (!conversation.objectId.contains("#")) {
-            return false
-        }
-        val eventTimeStart = conversation.objectId.split("#")[0].toLong()
+        val eventTimeStart = conversation.objectId
+            .substringBefore("#")
+            .toLongOrNull() ?: return false
         val currentTimeStampInSeconds = System.currentTimeMillis() / LONG_1000
         val sixteenHoursAfterTimeStamp = (eventTimeStart - currentTimeStampInSeconds) > SIXTEEN_HOURS_IN_SECONDS
         return conversation.objectType == ConversationEnums.ObjectType.EVENT && sixteenHoursAfterTimeStamp
@@ -797,6 +752,20 @@ class ConversationsListActivity :
         } else {
             Log.e(TAG, "currentUser was null in loadUserAvatar")
             Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showChooseAccountDialog() {
+        val brandedClient = getResources().getBoolean(R.bool.is_branded_client)
+        binding.genericComposeView.apply {
+            val shouldDismiss = mutableStateOf(false)
+            setContent {
+                ChooseAccountDialogCompose().GetChooseAccountDialog(
+                    shouldDismiss,
+                    this@ConversationsListActivity,
+                    appPreferences.isShowEcosystem && !brandedClient
+                )
+            }
         }
     }
 
@@ -942,6 +911,7 @@ class ConversationsListActivity :
             searchView!!.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(p0: String?): Boolean {
                     initSearchDisposable()
+                    searchView!!.clearFocus()
                     return true
                 }
 
@@ -955,9 +925,9 @@ class ConversationsListActivity :
                 override fun onMenuItemActionExpand(item: MenuItem): Boolean {
                     initSearchDisposable()
                     adapter?.setHeadersShown(true)
-                    if (!hasFilterEnabled()) filterableConversationItems = searchableConversationItems
-                    adapter!!.updateDataSet(filterableConversationItems, false)
                     adapter!!.showAllHeaders()
+                    searchableConversationItems.addAll(conversationItemsWithHeader)
+                    if (!hasFilterEnabled()) filterableConversationItems = searchableConversationItems
                     binding.swipeRefreshLayoutView.isEnabled = false
                     searchBehaviorSubject.onNext(true)
                     return true
@@ -1068,11 +1038,11 @@ class ConversationsListActivity :
     }
 
     fun fetchRooms() {
-        conversationsListViewModel.getRooms()
+        conversationsListViewModel.getRooms(currentUser!!)
     }
 
     private fun fetchPendingInvitations() {
-        if (hasSpreedFeatureCapability(currentUser!!.capabilities!!.spreedCapability!!, SpreedFeatures.FEDERATION_V1)) {
+        if (hasSpreedFeatureCapability(currentUser?.capabilities?.spreedCapability, SpreedFeatures.FEDERATION_V1)) {
             binding.conversationListHintInclude.conversationListHintLayout.setOnClickListener {
                 val intent = Intent(this, InvitationsActivity::class.java)
                 startActivity(intent)
@@ -1151,8 +1121,7 @@ class ConversationsListActivity :
 
             if (resources!!.getBoolean(R.bool.multiaccount_support) && userManager.users.blockingGet().size > 1) {
                 dialogBuilder.setPositiveButton(R.string.nc_switch_account) { _, _ ->
-                    val newFragment: DialogFragment = ChooseAccountDialogFragment.newInstance()
-                    newFragment.show(supportFragmentManager, ChooseAccountDialogFragment.TAG)
+                    showChooseAccountDialog()
                 }
             }
 
@@ -1199,52 +1168,14 @@ class ConversationsListActivity :
         }
     }
 
-    private fun fetchOpenConversations(apiVersion: Int) {
+    private suspend fun fetchOpenConversations(searchTerm: String) {
         searchableConversationItems.clear()
         searchableConversationItems.addAll(conversationItemsWithHeader)
-        if (hasSpreedFeatureCapability(
-                currentUser!!.capabilities!!.spreedCapability!!,
-                SpreedFeatures.LISTABLE_ROOMS
-            )
-        ) {
-            val openConversationItems: MutableList<AbstractFlexibleItem<*>> = ArrayList()
-            openConversationsQueryDisposable = ncApi.getOpenConversations(
-                credentials,
-                ApiUtils.getUrlForOpenConversations(apiVersion, currentUser!!.baseUrl!!),
-                ""
-            )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ (ocs): RoomsOverall ->
-                    for (conversation in ocs!!.data!!) {
-                        val headerTitle = resources!!.getString(R.string.openConversations)
-                        var genericTextHeaderItem: GenericTextHeaderItem
-                        if (!callHeaderItems.containsKey(headerTitle)) {
-                            genericTextHeaderItem = GenericTextHeaderItem(headerTitle, viewThemeUtils)
-                            callHeaderItems[headerTitle] = genericTextHeaderItem
-                        }
-                        val conversationItem = ConversationItem(
-                            ConversationModel.mapToConversationModel(conversation, currentUser!!),
-                            currentUser!!,
-                            this,
-                            callHeaderItems[headerTitle],
-                            viewThemeUtils
-                        )
-                        openConversationItems.add(conversationItem)
-                    }
-                    searchableConversationItems.addAll(openConversationItems)
-                }, { throwable: Throwable ->
-                    Log.e(TAG, "fetchData - getRooms - ERROR", throwable)
-                    handleHttpExceptions(throwable)
-                    dispose(openConversationsQueryDisposable)
-                }) { dispose(openConversationsQueryDisposable) }
-        } else {
-            Log.d(TAG, "no open conversations fetched because of missing capability")
-        }
+        conversationsListViewModel.fetchOpenConversations(searchTerm)
     }
 
-    private fun fetchUsers(query: String = "") {
-        contactsViewModel.getContactsFromSearchParams(query)
+    private suspend fun fetchUsers(query: String = "") {
+        contactsViewModel.getBlockingContactsFromSearchParams(query)
     }
 
     private fun handleHttpExceptions(throwable: Throwable) {
@@ -1309,8 +1240,7 @@ class ConversationsListActivity :
 
         binding.switchAccountButton.setOnClickListener {
             if (resources != null && resources!!.getBoolean(R.bool.multiaccount_support)) {
-                val newFragment: DialogFragment = ChooseAccountDialogFragment.newInstance()
-                newFragment.show(supportFragmentManager, ChooseAccountDialogFragment.TAG)
+                showChooseAccountDialog()
             } else {
                 val intent = Intent(context, SettingsActivity::class.java)
                 startActivity(intent)
@@ -1448,32 +1378,15 @@ class ConversationsListActivity :
 
     private fun performFilterAndSearch(filter: String?) {
         if (filter!!.length >= SEARCH_MIN_CHARS) {
-            clearMessageSearchResults()
             binding.noArchivedConversationLayout.visibility = View.GONE
-
-            fetchUsers(filter)
-
-            if (hasFilterEnabled()) {
-                adapter?.updateDataSet(conversationItems)
-                adapter?.setFilter(filter)
-                adapter?.filterItems()
-                adapter?.updateDataSet(filterableConversationItems)
-            } else {
-                adapter?.updateDataSet(searchableConversationItems)
-                adapter?.setFilter(filter)
-                adapter?.filterItems()
-            }
-
-            if (isUnifiedSearchAvailable(currentUser!!.capabilities!!.spreedCapability!!)) {
-                startMessageSearch(filter)
-            }
+            adapter?.setFilter(filter)
+            conversationsListViewModel.getSearchQuery(context, filter)
         } else {
             resetSearchResults()
         }
     }
 
     private fun resetSearchResults() {
-        clearMessageSearchResults()
         adapter?.updateDataSet(conversationItems)
         adapter?.setFilter("")
         adapter?.filterItems()
@@ -1514,7 +1427,10 @@ class ConversationsListActivity :
         binding.swipeRefreshLayoutView.isRefreshing = true
         val observable = searchHelper!!.loadMore()
         observable?.observeOn(AndroidSchedulers.mainThread())
-            ?.subscribe({ results: MessageSearchResults -> onMessageSearchResult(results) }) { throwable: Throwable ->
+            ?.subscribe({ results: MessageSearchResults ->
+                onMessageSearchResult(results)
+                binding.swipeRefreshLayoutView.isRefreshing = false
+            }) { throwable: Throwable ->
                 onMessageSearchError(
                     throwable
                 )
@@ -1527,7 +1443,7 @@ class ConversationsListActivity :
             when (item) {
                 is MessageResultItem -> {
                     val token = item.messageEntry.conversationToken
-                    val conversationName = (
+                    (
                         conversationItems.first {
                             (it is ConversationItem) && it.model.token == token
                         } as ConversationItem
@@ -1549,7 +1465,7 @@ class ConversationsListActivity :
                 }
 
                 is LoadMoreResultsItem -> {
-                    loadMoreMessages()
+                    conversationsListViewModel.loadMoreMessages(context)
                 }
 
                 is ConversationItem -> {
@@ -1584,7 +1500,7 @@ class ConversationsListActivity :
         selectedConversation = conversation
         if (selectedConversation != null) {
             val hasChatPermission = ParticipantPermissions(
-                currentUser!!.capabilities!!.spreedCapability!!,
+                currentUser?.capabilities?.spreedCapability,
                 selectedConversation!!
             )
                 .hasChatPermission()
@@ -1612,11 +1528,11 @@ class ConversationsListActivity :
 
     private fun shouldShowLobby(conversation: ConversationModel): Boolean {
         val participantPermissions = ParticipantPermissions(
-            currentUser!!.capabilities?.spreedCapability!!,
+            currentUser?.capabilities?.spreedCapability,
             selectedConversation!!
         )
         return conversation.lobbyState == ConversationEnums.LobbyState.LOBBY_STATE_MODERATORS_ONLY &&
-            !ConversationUtils.canModerate(conversation, currentUser!!.capabilities!!.spreedCapability!!) &&
+            !ConversationUtils.canModerate(conversation, currentUser?.capabilities?.spreedCapability) &&
             !participantPermissions.canIgnoreLobby()
     }
 
@@ -1991,7 +1907,7 @@ class ConversationsListActivity :
                     deleteUserAndRestartApp()
                 }
                 .setNegativeButton(R.string.nc_settings_reauthorize) { _, _ ->
-                    val intent = Intent(context, WebViewLoginActivity::class.java)
+                    val intent = Intent(context, BrowserLoginActivity::class.java)
                     val bundle = Bundle()
                     bundle.putString(BundleKeys.KEY_BASE_URL, currentUser!!.baseUrl!!)
                     bundle.putBoolean(BundleKeys.KEY_REAUTHORIZE_ACCOUNT, true)
@@ -2078,8 +1994,7 @@ class ConversationsListActivity :
 
             if (resources!!.getBoolean(R.bool.multiaccount_support) && userManager.users.blockingGet().size > 1) {
                 dialogBuilder.setNegativeButton(R.string.nc_switch_account) { _, _ ->
-                    val newFragment: DialogFragment = ChooseAccountDialogFragment.newInstance()
-                    newFragment.show(supportFragmentManager, ChooseAccountDialogFragment.TAG)
+                    showChooseAccountDialog()
                 }
             }
 
@@ -2122,8 +2037,7 @@ class ConversationsListActivity :
 
             if (resources!!.getBoolean(R.bool.multiaccount_support) && userManager.users.blockingGet().size > 1) {
                 dialogBuilder.setNegativeButton(R.string.nc_switch_account) { _, _ ->
-                    val newFragment: DialogFragment = ChooseAccountDialogFragment.newInstance()
-                    newFragment.show(supportFragmentManager, ChooseAccountDialogFragment.TAG)
+                    showChooseAccountDialog()
                 }
             }
 
@@ -2206,10 +2120,8 @@ class ConversationsListActivity :
                 }
 
                 adapter?.addItems(Int.MAX_VALUE, adapterItems)
-                binding.recyclerView.scrollToPosition(0)
             }
         }
-        binding.swipeRefreshLayoutView.isRefreshing = false
     }
 
     private fun onMessageSearchError(throwable: Throwable) {

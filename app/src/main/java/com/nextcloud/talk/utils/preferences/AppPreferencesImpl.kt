@@ -185,22 +185,6 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         temporaryClientCertAlias = ""
     }
 
-    override fun getPushToTalkIntroShown(): Boolean =
-        runBlocking {
-            async { readBoolean(PUSH_TO_TALK_INTRO_SHOWN).first() }
-        }.getCompleted()
-
-    override fun setPushToTalkIntroShown(shown: Boolean) =
-        runBlocking<Unit> {
-            async {
-                writeBoolean(PUSH_TO_TALK_INTRO_SHOWN, shown)
-            }
-        }
-
-    override fun removePushToTalkIntroShown() {
-        pushToTalkIntroShown = false
-    }
-
     override fun getCallRingtoneUri(): String =
         runBlocking {
             async { readString(CALL_RINGTONE).first() }
@@ -315,6 +299,22 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
 
     override fun removeIncognitoKeyboard() {
         setIncognitoKeyboard(false)
+    }
+
+    override fun getIsShowEcosystem(): Boolean {
+        val read = runBlocking { async { readBoolean(SHOW_ECOSYSTEM, true).first() } }.getCompleted()
+        return read
+    }
+
+    override fun setShowEcosystem(value: Boolean) =
+        runBlocking<Unit> {
+            async {
+                writeBoolean(SHOW_ECOSYSTEM, value)
+            }
+        }
+
+    override fun removeShowEcosystem() {
+        setShowEcosystem(false)
     }
 
     override fun isPhoneBookIntegrationEnabled(): Boolean =
@@ -616,7 +616,6 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         const val PUSH_TOKEN_LATEST_GENERATION = "push_token_latest_generation"
         const val PUSH_TOKEN_LATEST_FETCH = "push_token_latest_fetch"
         const val TEMP_CLIENT_CERT_ALIAS = "tempClientCertAlias"
-        const val PUSH_TO_TALK_INTRO_SHOWN = "pushToTalk_intro_shown"
         const val CALL_RINGTONE = "call_ringtone"
         const val MESSAGE_RINGTONE = "message_ringtone"
         const val NOTIFY_UPGRADE_V2 = "notification_channels_upgrade_to_v2"
@@ -624,6 +623,7 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         const val SCREEN_SECURITY = "screen_security"
         const val SCREEN_LOCK = "screen_lock"
         const val INCOGNITO_KEYBOARD = "incognito_keyboard"
+        const val SHOW_ECOSYSTEM = "SHOW_ECOSYSTEM"
         const val PHONE_BOOK_INTEGRATION = "phone_book_integration"
         const val LINK_PREVIEWS = "link_previews"
         const val SCREEN_LOCK_TIMEOUT = "screen_lock_timeout"

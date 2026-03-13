@@ -19,6 +19,7 @@ import com.nextcloud.talk.models.RetrofitBucket
 import com.nextcloud.talk.models.json.capabilities.SpreedCapability
 import com.nextcloud.talk.utils.CapabilitiesUtil.hasSpreedFeatureCapability
 import okhttp3.Credentials.basic
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @Suppress("TooManyFunctions")
@@ -245,6 +246,12 @@ object ApiUtils {
     fun getUrlForChatSharedItemsOverview(version: Int, baseUrl: String?, token: String): String =
         getUrlForChatSharedItems(version, baseUrl, token) + "/overview"
 
+    fun getUrlForChatMessagePinning(version: Int, baseUrl: String?, token: String, messageId: String): String =
+        "${getUrlForChatMessage(version, baseUrl, token, messageId)}/pin"
+
+    fun getUrlForChatMessageHiding(version: Int, baseUrl: String?, token: String, messageId: String): String =
+        "${getUrlForChatMessage(version, baseUrl, token, messageId)}/pin/self"
+
     fun getUrlForSignaling(version: Int, baseUrl: String?): String = getUrlForApi(version, baseUrl) + "/signaling"
 
     fun getUrlForTestPushNotifications(baseUrl: String): String =
@@ -402,13 +409,17 @@ object ApiUtils {
     fun getUrlForUnbindingRoom(baseUrl: String, roomToken: String): String =
         "$baseUrl/ocs/v2.php/apps/spreed/api/v4/room/$roomToken/object"
 
-    fun getUrlForFileUpload(baseUrl: String, user: String, remotePath: String): String =
-        "$baseUrl/remote.php/dav/files/$user$remotePath"
+    fun getUrlForFileUpload(baseUrl: String, user: String, remotePath: String): String {
+        val encodedRemotePath = Uri.encode(remotePath, "/")
+        return "$baseUrl/remote.php/dav/files/$user$encodedRemotePath"
+    }
 
     fun getUrlForChunkedUpload(baseUrl: String, user: String): String = "$baseUrl/remote.php/dav/uploads/$user"
 
-    fun getUrlForFileDownload(baseUrl: String, user: String, remotePath: String): String =
-        "$baseUrl/remote.php/dav/files/$user/$remotePath"
+    fun getUrlForFileDownload(baseUrl: String, user: String, remotePath: String): String {
+        val encodedRemotePath = Uri.encode(remotePath, "/")
+        return "$baseUrl/remote.php/dav/files/$user/$encodedRemotePath"
+    }
 
     fun userFileUploadPath(baseUrl: String, user: String): String = "$baseUrl/remote.php/dav/files/$user"
 
@@ -523,6 +534,10 @@ object ApiUtils {
     fun getUrlForOutOfOffice(baseUrl: String, userId: String): String =
         "$baseUrl$OCS_API_VERSION/apps/dav/api/v1/outOfOffice/$userId/now"
 
+    fun getUrlForUpcomingEvents(baseUrl: String, roomToken: String): String =
+        "$baseUrl$OCS_API_VERSION/apps/dav/api/v1/events/upcoming" +
+            "?location=${URLEncoder.encode("$baseUrl/call/$roomToken", "UTF-8")}"
+
     fun getUrlForChatMessageContext(baseUrl: String, token: String, messageId: String): String =
         "$baseUrl$OCS_API_VERSION$SPREED_API_VERSION/chat/$token/$messageId/context"
 
@@ -539,4 +554,10 @@ object ApiUtils {
 
     fun getUrlForThreadNotificationLevel(version: Int, baseUrl: String?, token: String, threadId: Int): String =
         getUrlForChat(version, baseUrl, token) + "/threads" + "/$threadId" + "/notify"
+
+    fun getUrlForScheduledMessages(baseUrl: String?, token: String): String =
+        "$baseUrl$OCS_API_VERSION/apps/spreed/api/v1/chat/$token/schedule"
+
+    fun getUrlForScheduledMessage(baseUrl: String?, token: String, messageId: String?): String =
+        getUrlForScheduledMessages(baseUrl, token) + "/$messageId"
 }

@@ -32,6 +32,8 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
@@ -56,9 +58,10 @@ import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.setAppTheme
 import com.nextcloud.talk.conversationlist.ConversationsListActivity
 import com.nextcloud.talk.conversationlist.ConversationsListActivity.Companion.NOTIFICATION_WARNING_DATE_NOT_SET
+import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ActivitySettingsBinding
-import com.nextcloud.talk.diagnose.DiagnoseActivity
+import com.nextcloud.talk.diagnosis.DiagnosisActivity
 import com.nextcloud.talk.jobs.AccountRemovalWorker
 import com.nextcloud.talk.jobs.CapabilitiesWorker
 import com.nextcloud.talk.jobs.ContactAddressBookWorker
@@ -114,6 +117,9 @@ class SettingsActivity :
     lateinit var ncApi: NcApi
 
     @Inject
+    lateinit var networkMonitor: NetworkMonitor
+
+    @Inject
     lateinit var ncApiCoroutines: NcApiCoroutines
 
     @Inject
@@ -136,11 +142,16 @@ class SettingsActivity :
     private var profileQueryDisposable: Disposable? = null
     private var dbQueryDisposable: Disposable? = null
     private var openedByNotificationWarning: Boolean = false
+    private var isOnline: MutableState<Boolean> = mutableStateOf(false)
 
     @SuppressLint("StringFormatInvalid")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NextcloudTalkApplication.sharedApplication!!.componentApplication.inject(this)
+        networkMonitor.isOnlineLiveData.observe(this) { online ->
+            isOnline.value = online
+            handleNetworkChange(isOnline.value)
+        }
 
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setupActionBar()
@@ -152,7 +163,7 @@ class SettingsActivity :
         getCurrentUser()
         handleIntent(intent)
 
-        setupLicenceSetting()
+        setupLicenceSetting(isOnline.value)
 
         binding.settingsScreenLockSummary.text = String.format(
             Locale.getDefault(),
@@ -160,14 +171,26 @@ class SettingsActivity :
             resources!!.getString(R.string.nc_app_product_name)
         )
 
-        setupDiagnose()
-        setupPrivacyUrl()
-        setupSourceCodeUrl()
+        setupDiagnosis()
+
+        setupPrivacyUrl(isOnline.value)
+        setupSourceCodeUrl(isOnline.value)
+
         binding.settingsVersionSummary.text = String.format("v" + BuildConfig.VERSION_NAME)
 
-        setupPhoneBookIntegration()
+        setupPhoneBookIntegration(isOnline.value)
 
         setupClientCertView()
+        showSetupClientCertView(isOnline.value)
+    }
+
+    private fun handleNetworkChange(isOnline: Boolean) {
+        setupLicenceSetting(isOnline)
+        setupPrivacyUrl(isOnline)
+        setupSourceCodeUrl(isOnline)
+        setupPhoneBookIntegration(isOnline)
+        setupCheckables(isOnline)
+        showSetupClientCertView(isOnline)
     }
 
     private fun handleIntent(intent: Intent) {
@@ -180,7 +203,7 @@ class SettingsActivity :
         supportActionBar?.show()
         dispose(null)
 
-        loadCapabilitiesAndUpdateSettings()
+        loadCapabilitiesAndUpdateSettings(isOnline.value)
 
         binding.settingsVersion.setOnClickListener {
             sendLogs()
@@ -192,7 +215,8 @@ class SettingsActivity :
             binding.settingsClientCertTitle.setText(R.string.nc_client_cert_setup)
         }
 
-        setupCheckables()
+        setupCheckables(isOnline.value)
+        setupEcosystemSetting()
         setupScreenLockSetting()
         setupNotificationSettings()
         setupProxyTypeSettings()
@@ -229,6 +253,14 @@ class SettingsActivity :
         }
     }
 
+    private fun setupEcosystemSetting() {
+        if (getResources().getBoolean(R.bool.is_branded_client)) {
+            binding.settingsShowEcosystem.visibility = View.GONE
+        } else {
+            binding.settingsShowEcosystem.visibility = View.VISIBLE
+        }
+    }
+
     @Suppress("MagicNumber")
     private fun scrollToNotificationCategory() {
         binding.scrollView.post {
@@ -241,7 +273,7 @@ class SettingsActivity :
         }
     }
 
-    private fun loadCapabilitiesAndUpdateSettings() {
+    private fun loadCapabilitiesAndUpdateSettings(isOnline: Boolean) {
         val capabilitiesWork = OneTimeWorkRequest.Builder(CapabilitiesWorker::class.java).build()
         WorkManager.getInstance(context).enqueue(capabilitiesWork)
 
@@ -249,7 +281,7 @@ class SettingsActivity :
             .observe(this) { workInfo ->
                 if (workInfo?.state == WorkInfo.State.SUCCEEDED) {
                     getCurrentUser()
-                    setupCheckables()
+                    setupCheckables(isOnline)
                 }
             }
     }
@@ -267,15 +299,16 @@ class SettingsActivity :
     }
 
     private fun getCurrentUser() {
-        currentUser = currentUserProvider.currentUser.blockingGet()
+        currentUser = currentUserProviderOld.currentUser.blockingGet()
         credentials = ApiUtils.getCredentials(currentUser!!.username, currentUser!!.token)
     }
 
-    private fun setupPhoneBookIntegration() {
+    private fun setupPhoneBookIntegration(isOnline: Boolean) {
         if (CapabilitiesUtil.hasSpreedFeatureCapability(
                 currentUser?.capabilities?.spreedCapability!!,
                 SpreedFeatures.PHONEBOOK_SEARCH
-            )
+            ) &&
+            isOnline
         ) {
             binding.settingsPhoneBookIntegration.visibility = View.VISIBLE
         } else {
@@ -299,13 +332,13 @@ class SettingsActivity :
 
             if (PowerManagerUtils().isIgnoringBatteryOptimizations()) {
                 binding.batteryOptimizationIgnored.text =
-                    resources!!.getString(R.string.nc_diagnose_battery_optimization_ignored)
+                    resources!!.getString(R.string.battery_optimization_ignored)
                 binding.batteryOptimizationIgnored.setTextColor(
                     resources.getColor(R.color.high_emphasis_text, null)
                 )
             } else {
                 binding.batteryOptimizationIgnored.text =
-                    resources!!.getString(R.string.nc_diagnose_battery_optimization_not_ignored)
+                    resources!!.getString(R.string.battery_optimization_not_ignored)
                 binding.batteryOptimizationIgnored.setTextColor(resources.getColor(R.color.nc_darkRed, null))
 
                 if (openedByNotificationWarning) {
@@ -339,9 +372,9 @@ class SettingsActivity :
             // handle notification permission on API level >= 33
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 if (platformPermissionUtil.isPostNotificationsPermissionGranted()) {
-                    binding.ncDiagnoseNotificationPermissionSubtitle.text =
+                    binding.ncDiagnosisNotificationPermissionSubtitle.text =
                         resources.getString(R.string.nc_settings_notifications_granted)
-                    binding.ncDiagnoseNotificationPermissionSubtitle.setTextColor(
+                    binding.ncDiagnosisNotificationPermissionSubtitle.setTextColor(
                         resources.getColor(R.color.high_emphasis_text, null)
                     )
                     binding.settingsCallSound.isEnabled = true
@@ -349,9 +382,9 @@ class SettingsActivity :
                     binding.settingsMessageSound.isEnabled = true
                     binding.settingsMessageSound.alpha = ENABLED_ALPHA
                 } else {
-                    binding.ncDiagnoseNotificationPermissionSubtitle.text =
+                    binding.ncDiagnosisNotificationPermissionSubtitle.text =
                         resources.getString(R.string.nc_settings_notifications_declined)
-                    binding.ncDiagnoseNotificationPermissionSubtitle.setTextColor(
+                    binding.ncDiagnosisNotificationPermissionSubtitle.setTextColor(
                         resources.getColor(R.color.nc_darkRed, null)
                     )
 
@@ -438,7 +471,7 @@ class SettingsActivity :
             val dialogBuilder = MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.nc_notifications_troubleshooting_dialog_title)
                 .setMessage(R.string.nc_notifications_troubleshooting_dialog_text)
-                .setNegativeButton(R.string.nc_diagnose_dialog_open_checklist) { _, _ ->
+                .setNegativeButton(R.string.nc_diagnosis_dialog_open_checklist) { _, _ ->
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
@@ -446,7 +479,7 @@ class SettingsActivity :
                         )
                     )
                 }
-                .setPositiveButton(R.string.nc_diagnose_dialog_open_dontkillmyapp_website) { _, _ ->
+                .setPositiveButton(R.string.nc_diagnosis_dialog_open_dontkillmyapp_website) { _, _ ->
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
@@ -454,8 +487,8 @@ class SettingsActivity :
                         )
                     )
                 }
-                .setNeutralButton(R.string.nc_diagnose_dialog_open_diagnose) { _, _ ->
-                    val intent = Intent(context, DiagnoseActivity::class.java)
+                .setNeutralButton(R.string.nc_diagnosis_dialog_open_diagnosis) { _, _ ->
+                    val intent = Intent(context, DiagnosisActivity::class.java)
                     startActivity(intent)
                 }
             viewThemeUtils.dialog.colorMaterialAlertDialogBackground(this, dialogBuilder)
@@ -481,13 +514,14 @@ class SettingsActivity :
 
     private fun setupServerNotificationAppCheck() {
         val serverNotificationAppInstalled =
-            currentUserProvider.currentUser.blockingGet().capabilities?.notificationsCapability?.features?.isNotEmpty()
+            currentUserProviderOld.currentUser.blockingGet()
+                .capabilities?.notificationsCapability?.features?.isNotEmpty()
                 ?: false
         if (!serverNotificationAppInstalled) {
             binding.settingsServerNotificationAppWrapper.visibility = View.VISIBLE
 
             val description = context.getString(R.string.nc_settings_contact_admin_of) + LINEBREAK +
-                currentUserProvider.currentUser.blockingGet().baseUrl!!
+                currentUserProviderOld.currentUser.blockingGet().baseUrl!!
 
             binding.settingsServerNotificationAppDescription.text = description
             if (openedByNotificationWarning) {
@@ -498,8 +532,9 @@ class SettingsActivity :
         }
     }
 
-    private fun setupSourceCodeUrl() {
-        if (!TextUtils.isEmpty(resources!!.getString(R.string.nc_source_code_url))) {
+    private fun setupSourceCodeUrl(isOnline: Boolean) {
+        if (!TextUtils.isEmpty(resources!!.getString(R.string.nc_source_code_url)) && isOnline) {
+            binding.settingsSourceCode.visibility = View.VISIBLE
             binding.settingsSourceCode.setOnClickListener {
                 startActivity(
                     Intent(
@@ -513,15 +548,16 @@ class SettingsActivity :
         }
     }
 
-    private fun setupDiagnose() {
-        binding.diagnoseWrapper.setOnClickListener {
-            val intent = Intent(context, DiagnoseActivity::class.java)
+    private fun setupDiagnosis() {
+        binding.diagnosisWrapper.setOnClickListener {
+            val intent = Intent(context, DiagnosisActivity::class.java)
             startActivity(intent)
         }
     }
 
-    private fun setupPrivacyUrl() {
-        if (!TextUtils.isEmpty(resources!!.getString(R.string.nc_privacy_url))) {
+    private fun setupPrivacyUrl(isOnline: Boolean) {
+        if (!TextUtils.isEmpty(resources!!.getString(R.string.nc_privacy_url)) && isOnline) {
+            binding.settingsPrivacy.visibility = View.VISIBLE
             binding.settingsPrivacy.setOnClickListener {
                 startActivity(
                     Intent(
@@ -535,8 +571,9 @@ class SettingsActivity :
         }
     }
 
-    private fun setupLicenceSetting() {
-        if (!TextUtils.isEmpty(resources!!.getString(R.string.nc_gpl3_url))) {
+    private fun setupLicenceSetting(isOnline: Boolean) {
+        if (!TextUtils.isEmpty(resources!!.getString(R.string.nc_gpl3_url)) && isOnline) {
+            binding.settingsLicence.visibility = View.VISIBLE
             binding.settingsLicence.setOnClickListener {
                 startActivity(
                     Intent(
@@ -547,6 +584,16 @@ class SettingsActivity :
             }
         } else {
             binding.settingsLicence.visibility = View.GONE
+        }
+    }
+
+    private fun showSetupClientCertView(isOnline: Boolean) {
+        if (isOnline) {
+            binding.settingsClientCert.visibility = View.VISIBLE
+            binding.settingsProxyGroup.visibility = View.VISIBLE
+        } else {
+            binding.settingsClientCert.visibility = View.GONE
+            binding.settingsProxyGroup.visibility = View.GONE
         }
     }
 
@@ -733,6 +780,7 @@ class SettingsActivity :
     private fun themeSwitchPreferences() {
         binding.run {
             listOf(
+                settingsShowEcosystemSwitch,
                 settingsShowNotificationWarningSwitch,
                 settingsScreenLockSwitch,
                 settingsScreenSecuritySwitch,
@@ -928,7 +976,9 @@ class SettingsActivity :
         }
     }
 
-    private fun setupCheckables() {
+    private fun setupCheckables(isOnline: Boolean) {
+        setupShowEcosystemCheckable()
+
         binding.settingsShowNotificationWarningSwitch.isChecked =
             appPreferences.showRegularNotificationWarning
 
@@ -945,13 +995,16 @@ class SettingsActivity :
             binding.settingsShowNotificationWarning.visibility = View.GONE
         }
 
-        if (CapabilitiesUtil.isReadStatusAvailable(currentUser!!.capabilities!!.spreedCapability!!)) {
+        if (CapabilitiesUtil.isReadStatusAvailable(currentUser?.capabilities?.spreedCapability) &&
+            isOnline
+        ) {
+            binding.settingsReadPrivacy.visibility = View.VISIBLE
             binding.settingsReadPrivacySwitch.isChecked = !CapabilitiesUtil.isReadStatusPrivate(currentUser!!)
         } else {
             binding.settingsReadPrivacy.visibility = View.GONE
         }
 
-        setupTypingStatusSetting()
+        setupTypingStatusSetting(isOnline)
         setupProxyUseSetting()
 
         binding.settingsScreenLockSwitch.isChecked = appPreferences.isScreenLocked
@@ -990,6 +1043,15 @@ class SettingsActivity :
         }
     }
 
+    private fun setupShowEcosystemCheckable() {
+        binding.settingsShowEcosystemSwitch.isChecked = appPreferences.isShowEcosystem
+        binding.settingsShowEcosystem.setOnClickListener {
+            val isChecked = binding.settingsShowEcosystemSwitch.isChecked
+            binding.settingsShowEcosystemSwitch.isChecked = !isChecked
+            appPreferences.setShowEcosystem(!isChecked)
+        }
+    }
+
     private fun setupPhoneBookIntegrationSetting() {
         binding.settingsPhoneBookIntegrationSwitch.isChecked = appPreferences.isPhoneBookIntegrationEnabled
         binding.settingsPhoneBookIntegration.setOnClickListener {
@@ -1015,12 +1077,13 @@ class SettingsActivity :
         }
     }
 
-    private fun setupTypingStatusSetting() {
+    private fun setupTypingStatusSetting(isOnline: Boolean) {
         if (currentUser!!.externalSignalingServer?.externalSignalingServer?.isNotEmpty() == true) {
             binding.settingsTypingStatusOnlyWithHpb.visibility = View.GONE
             Log.i(TAG, "Typing Status Available: ${CapabilitiesUtil.isTypingStatusAvailable(currentUser!!)}")
 
-            if (CapabilitiesUtil.isTypingStatusAvailable(currentUser!!)) {
+            if (CapabilitiesUtil.isTypingStatusAvailable(currentUser!!) && isOnline) {
+                binding.settingsTypingStatus.visibility = View.VISIBLE
                 binding.settingsTypingStatusSwitch.isChecked = !CapabilitiesUtil.isTypingStatusPrivate(currentUser!!)
             } else {
                 binding.settingsTypingStatus.visibility = View.GONE
@@ -1030,7 +1093,6 @@ class SettingsActivity :
             binding.settingsTypingStatusSwitch.isChecked = false
             binding.settingsTypingStatusOnlyWithHpb.visibility = View.VISIBLE
             binding.settingsTypingStatus.isEnabled = false
-            binding.settingsTypingStatusOnlyWithHpb.alpha = DISABLED_ALPHA
             binding.settingsTypingStatus.alpha = DISABLED_ALPHA
         }
     }

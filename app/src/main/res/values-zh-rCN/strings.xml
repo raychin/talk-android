@@ -15,6 +15,8 @@
     <string name="automatic_status_set">您的状态已自动设定</string>
     <string name="avatar">头像</string>
     <string name="away">离开</string>
+    <string name="ban">禁止</string>
+    <string name="battery_optimization_title">电池设置</string>
     <string name="busy">忙碌</string>
     <string name="calendar">日历</string>
     <string name="call_more_actions_dialog_headline">高级呼叫选项</string>
@@ -36,6 +38,9 @@
     <string name="deleted_conversation">对话%1$s已删除</string>
     <string name="dnd">不要打扰</string>
     <string name="dontClear">不要清除</string>
+    <string name="ecosystem_apps_files">文件</string>
+    <string name="ecosystem_apps_more">更多</string>
+    <string name="ecosystem_apps_notes">附注</string>
     <string name="edit">编辑</string>
     <string name="edit_message_icon_description">编辑消息</string>
     <string name="emoji_category_recent">最近</string>
@@ -61,8 +66,8 @@
     <string name="marked_as_read">已将对话%1$s标记为已读</string>
     <string name="marked_as_unread">已将对话%1$s标记为未读</string>
     <string name="mentioned">已提及</string>
-    <string name="menu_item_sort_by_date_newest_first">最新的在前</string>
-    <string name="menu_item_sort_by_date_oldest_first">最旧的在前</string>
+    <string name="menu_item_sort_by_date_newest_first">从新到旧</string>
+    <string name="menu_item_sort_by_date_oldest_first">从旧到新</string>
     <string name="menu_item_sort_by_name_a_z">A - Z</string>
     <string name="menu_item_sort_by_name_z_a">Z - A</string>
     <string name="menu_item_sort_by_size_biggest_first">大文件在前</string>
@@ -101,6 +106,7 @@
     <string name="nc_call_incoming">来电</string>
     <string name="nc_call_name">对话名称</string>
     <string name="nc_call_notifications">呼叫通知</string>
+    <string name="nc_call_ongoing_notification_default_title">通话中...</string>
     <string name="nc_call_raised_hand">%1$s 举手了</string>
     <string name="nc_call_reconnecting">正在重新连接 ...</string>
     <string name="nc_call_ringing">响铃</string>
@@ -131,16 +137,18 @@
     <string name="nc_common_copy_success">已复制到剪贴板</string>
     <string name="nc_common_create">创建</string>
     <string name="nc_common_disabled">已禁用</string>
-    <string name="nc_common_dismiss">不予理会</string>
+    <string name="nc_common_dismiss">关闭</string>
     <string name="nc_common_error_sorry">抱歉，出问题了！</string>
     <string name="nc_common_more_options">更多选项</string>
     <string name="nc_common_set">设置</string>
     <string name="nc_common_skip">跳过</string>
     <string name="nc_common_unknown">未知</string>
     <string name="nc_configure_cert_auth">选择验证证书</string>
+    <string name="nc_confirm">确认</string>
     <string name="nc_connecting_call">连接中……</string>
     <string name="nc_contacts_done">完成</string>
     <string name="nc_conversation_description">对话描述</string>
+    <string name="nc_conversation_menu_conversation_go_to_file">前往文件</string>
     <string name="nc_conversation_menu_conversation_info">对话信息</string>
     <string name="nc_conversation_menu_video_call">视频通话</string>
     <string name="nc_conversation_menu_voice_call">语音通话</string>
@@ -254,6 +262,7 @@
     <string name="nc_mark_as_unread">标为未读</string>
     <string name="nc_message_failed">失败</string>
     <string name="nc_message_failed_to_send">消息发送失败：</string>
+    <string name="nc_message_offline">离线</string>
     <string name="nc_message_quote_cancel_reply">取消回复</string>
     <string name="nc_message_read">消息已读</string>
     <string name="nc_message_sent">消息已发送</string>
@@ -285,7 +294,7 @@
     <string name="nc_notify_me_mention">当被提及时提醒</string>
     <string name="nc_notify_me_never">从不提醒</string>
     <string name="nc_offline">当前离线，请检查您的连接</string>
-    <string name="nc_ok">OK</string>
+    <string name="nc_ok">确定</string>
     <string name="nc_open_conversation_to_registered_users">向注册用户开放对话 </string>
     <string name="nc_open_to_guest_app_users">同样对访客用户开放</string>
     <string name="nc_owner">所有者</string>
@@ -307,8 +316,6 @@
     <string name="nc_promote">设置为主持人</string>
     <string name="nc_public_call_status">公开对话</string>
     <string name="nc_push_disabled">通知推送已禁用</string>
-    <string name="nc_push_to_talk">按键讲话</string>
-    <string name="nc_push_to_talk_desc">禁用麦克风的情况下，点击&amp;并按住使用“按键讲话”功能</string>
     <string name="nc_remind">以后提醒我 </string>
     <string name="nc_remove_from_favorites">取消收藏</string>
     <string name="nc_remove_group_and_members">移除群组和成员</string>
@@ -320,6 +327,10 @@
     <string name="nc_reply_privately">私下回复</string>
     <string name="nc_save_message">保存</string>
     <string name="nc_save_success">已成功保存</string>
+    <string name="nc_schedule_message">安排消息</string>
+    <string name="nc_schedule_message_title">安排消息</string>
+    <string name="nc_scheduled_messages">已安排的消息</string>
+    <string name="nc_scheduled_time">预定时间</string>
     <string name="nc_screen_lock_timeout_30">30秒</string>
     <string name="nc_screen_lock_timeout_300">5 分钟</string>
     <string name="nc_screen_lock_timeout_60">1分钟</string>
@@ -331,6 +342,8 @@
     <string name="nc_search">搜索</string>
     <string name="nc_search_clear">清除搜索</string>
     <string name="nc_select_an_account">选择一个账号</string>
+    <string name="nc_send_later">稍后发送</string>
+    <string name="nc_send_now">立即发送</string>
     <string name="nc_sensitive_conversation">敏感对话</string>
     <string name="nc_sensitive_conversation_hint">将在对话列表和通知中禁用消息预览</string>
     <string name="nc_sent_a_gif" formatted="true">%1$s发送一个GIF图</string>
@@ -361,6 +374,8 @@
     <string name="nc_settings_advanced_title">高级</string>
     <string name="nc_settings_appearance">外观</string>
     <string name="nc_settings_call_ringtone">通话</string>
+    <string name="nc_settings_diagnose_title">诊断</string>
+    <string name="nc_settings_diagnosis_title">诊断</string>
     <string name="nc_settings_incognito_keyboard_desc">要求输入法禁用个性化学习（不保证键盘会执行）</string>
     <string name="nc_settings_incognito_keyboard_title">无痕键盘</string>
     <string name="nc_settings_no_ringtone">无声音</string>
@@ -419,6 +434,7 @@
     <string name="nc_shared_items_empty">沒有已分享的项目</string>
     <string name="nc_shared_items_location">位置</string>
     <string name="nc_shared_location">分享的位置</string>
+    <string name="nc_show_ecosystem_title">显示应用切换器</string>
     <string name="nc_sort_by">排序依据</string>
     <string name="nc_start_time">开始时间</string>
     <string name="nc_switch_account">切换账号</string>
@@ -443,6 +459,8 @@
     <string name="nc_voice_message_slide_to_cancel">«滑动取消</string>
     <string name="nc_webinar">网络研讨会</string>
     <string name="nc_yes">是的</string>
+    <string name="nc_zoom_in">放大</string>
+    <string name="nc_zoom_out">缩小</string>
     <string name="next_week">下周</string>
     <string name="no_phone_book_integration_due_to_permissions">由于缺少权限，没有电话集成 </string>
     <string name="notification_mention_only">仅被@提及的消息</string>
@@ -455,6 +473,10 @@
     <string name="openConversations">开启对话</string>
     <string name="open_in_files_app">在 Files 应用中打开</string>
     <string name="open_thread">转到帖子</string>
+    <string name="pin_message">置顶消息</string>
+    <string name="pinned">已置顶</string>
+    <string name="pinned_dismiss">关闭</string>
+    <string name="pinned_message_options">消息选项</string>
     <string name="play_pause_voice_message">播放/暂停语音消息</string>
     <string name="polls_add_option">添加选项</string>
     <string name="polls_edit_vote">编辑投票</string>
@@ -565,21 +587,30 @@
     <string name="typing_x_others">以及另外 %1$s 个人正在输入...</string>
     <string name="unarchive_conversation">取消归档对话</string>
     <string name="unban">解除封禁</string>
+    <string name="unpin_message">取消置顶消息</string>
     <string name="unread">未读</string>
+    <string name="until_unpin">直到取消置顶</string>
     <string name="upload_new_avatar_from_device">从设备上传新头像</string>
     <string name="user_absence_replacement">接替者：</string>
     <string name="user_avatar">用户头像</string>
     <string name="user_info_address">地址</string>
+    <string name="user_info_bluesky">Bluesky</string>
     <string name="user_info_displayname">全名</string>
     <string name="user_info_email">电子邮件</string>
+    <string name="user_info_fediverse">联邦宇宙</string>
+    <string name="user_info_headline">标题</string>
+    <string name="user_info_organisation">组织</string>
     <string name="user_info_phone">电话号码  </string>
+    <string name="user_info_profile_enable">启用简介</string>
+    <string name="user_info_pronouns">称号</string>
+    <string name="user_info_role">角色</string>
     <string name="user_info_twitter">Twitter</string>
     <string name="user_info_website">网站</string>
     <string name="user_status">状态</string>
     <string name="userinfo_error_text">检索个人用户信息失败</string>
     <string name="userinfo_no_info_headline">未设置个人信息</string>
     <string name="userinfo_no_info_text">在你的个人资料页上添加姓名、图片和联系方式。</string>
-    <string name="whats_your_status">你什么状态？</string>
+    <string name="whats_your_status">您的状态如何？</string>
     <plurals name="polls_amount_voters">
         <item quantity="other">%d 票</item>
     </plurals>

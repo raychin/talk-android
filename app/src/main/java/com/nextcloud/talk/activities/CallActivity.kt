@@ -1,6 +1,7 @@
 /*
  * Nextcloud Talk - Android Client
  *
+ * SPDX-FileCopyrightText: 2025 Julius Linus <juliuslinus1@gmail.com>
  * SPDX-FileCopyrightText: 2023 Marcel Hibbe <dev@mhibbe.de>
  * SPDX-FileCopyrightText: 2022 Tim Krüger <t@timkrueger.me>
  * SPDX-FileCopyrightText: 2017-2018 Mario Danic <mario@lovelyhq.com>
@@ -9,8 +10,6 @@
 package com.nextcloud.talk.activities
 
 import android.Manifest
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.RemoteAction
@@ -41,17 +40,16 @@ import android.view.MotionEvent
 import android.view.OrientationEventListener
 import android.view.View
 import android.view.View.OnTouchListener
-import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.RelativeLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModelProvider
 import autodagger.AutoInjector
@@ -59,22 +57,22 @@ import com.bluelinelabs.logansquare.LoganSquare
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.talk.R
-import com.nextcloud.talk.adapters.ParticipantDisplayItem
 import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
-import com.nextcloud.talk.call.CallParticipant
 import com.nextcloud.talk.call.CallParticipantList
-import com.nextcloud.talk.call.CallParticipantModel
 import com.nextcloud.talk.call.LocalStateBroadcaster
 import com.nextcloud.talk.call.LocalStateBroadcasterMcu
 import com.nextcloud.talk.call.LocalStateBroadcasterNoMcu
+import com.nextcloud.talk.call.MediaConstraintsHelper
 import com.nextcloud.talk.call.MessageSender
 import com.nextcloud.talk.call.MessageSenderMcu
 import com.nextcloud.talk.call.MessageSenderNoMcu
 import com.nextcloud.talk.call.MutableLocalCallParticipantModel
 import com.nextcloud.talk.call.ReactionAnimator
 import com.nextcloud.talk.call.components.ParticipantGrid
+import com.nextcloud.talk.call.components.SelfVideoView
+import com.nextcloud.talk.call.components.screenshare.ScreenShareComponent
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.CallActivityBinding
@@ -96,6 +94,7 @@ import com.nextcloud.talk.models.json.signaling.settings.SignalingSettingsOveral
 import com.nextcloud.talk.raisehand.viewmodel.RaiseHandViewModel
 import com.nextcloud.talk.raisehand.viewmodel.RaiseHandViewModel.LoweredHandState
 import com.nextcloud.talk.raisehand.viewmodel.RaiseHandViewModel.RaisedHandState
+import com.nextcloud.talk.services.CallForegroundService
 import com.nextcloud.talk.signaling.SignalingMessageReceiver
 import com.nextcloud.talk.signaling.SignalingMessageReceiver.CallParticipantMessageListener
 import com.nextcloud.talk.signaling.SignalingMessageReceiver.LocalParticipantMessageListener
@@ -108,7 +107,6 @@ import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.CapabilitiesUtil
 import com.nextcloud.talk.utils.CapabilitiesUtil.hasSpreedFeatureCapability
 import com.nextcloud.talk.utils.CapabilitiesUtil.isCallRecordingAvailable
-import com.nextcloud.talk.utils.DisplayUtils
 import com.nextcloud.talk.utils.NotificationUtils.cancelExistingNotificationsForRoom
 import com.nextcloud.talk.utils.NotificationUtils.getCallRingtoneUri
 import com.nextcloud.talk.utils.ReceiverFlag
@@ -147,12 +145,14 @@ import com.nextcloud.talk.webrtc.WebRtcAudioManager
 import com.nextcloud.talk.webrtc.WebRtcAudioManager.AudioDevice
 import com.nextcloud.talk.webrtc.WebSocketConnectionHelper
 import com.nextcloud.talk.webrtc.WebSocketInstance
-import com.wooplr.spotlight.SpotlightView
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.Cache
 import org.apache.commons.lang3.StringEscapeUtils
 import org.greenrobot.eventbus.Subscribe
@@ -174,6 +174,8 @@ import org.webrtc.PeerConnection
 import org.webrtc.PeerConnection.IceConnectionState
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.RendererCommon
+import org.webrtc.SoftwareVideoDecoderFactory
+import org.webrtc.SoftwareVideoEncoderFactory
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.VideoCapturer
 import org.webrtc.VideoSource
@@ -183,11 +185,11 @@ import java.util.Objects
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
+import kotlin.String
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 @AutoInjector(NextcloudTalkApplication::class)
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "ReturnCount", "LargeClass")
 class CallActivity : CallBaseActivity() {
     @JvmField
     @Inject
@@ -207,11 +209,14 @@ class CallActivity : CallBaseActivity() {
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+    lateinit var callViewModel: CallViewModel
+
     var audioManager: WebRtcAudioManager? = null
     var callRecordingViewModel: CallRecordingViewModel? = null
     var raiseHandViewModel: RaiseHandViewModel? = null
     private var mReceiver: BroadcastReceiver? = null
     private var peerConnectionFactory: PeerConnectionFactory? = null
+    private var screenSharePeerConnectionFactory: PeerConnectionFactory? = null
     private var audioConstraints: MediaConstraints? = null
     private var videoConstraints: MediaConstraints? = null
     private var sdpConstraints: MediaConstraints? = null
@@ -234,7 +239,7 @@ class CallActivity : CallBaseActivity() {
     private val peerConnectionWrapperList: MutableList<PeerConnectionWrapper> = ArrayList()
     private var videoOn = false
     private var microphoneOn = false
-    private var isVoiceOnlyCall = false
+    var isVoiceOnlyCall = false
     private var isCallWithoutNotification = false
     private var isIncomingCallFromNotification = false
     private val callControlHandler = Handler()
@@ -248,7 +253,6 @@ class CallActivity : CallBaseActivity() {
     private var pulseAnimation: PulseAnimation? = null
     private var baseUrl: String? = null
     private var roomId: String? = null
-    private var spotlightView: SpotlightView? = null
     private val internalSignalingMessageReceiver = InternalSignalingMessageReceiver()
     private var signalingMessageReceiver: SignalingMessageReceiver? = null
     private val internalSignalingMessageSender = InternalSignalingMessageSender()
@@ -259,12 +263,7 @@ class CallActivity : CallBaseActivity() {
     private val offerAnswerNickProviders: MutableMap<String?, OfferAnswerNickProvider?> = HashMap()
     private val callParticipantMessageListeners: MutableMap<String?, CallParticipantMessageListener> = HashMap()
     private val selfPeerConnectionObserver: PeerConnectionObserver = CallActivitySelfPeerConnectionObserver()
-    private var callParticipants: MutableMap<String?, CallParticipant?> = HashMap()
-    private val screenParticipantDisplayItemManagers: MutableMap<String?, ScreenParticipantDisplayItemManager> =
-        HashMap()
-    private val screenParticipantDisplayItemManagersHandler = Handler(Looper.getMainLooper())
-    private val callParticipantEventDisplayers: MutableMap<String?, CallParticipantEventDisplayer> = HashMap()
-    private val callParticipantEventDisplayersHandler = Handler(Looper.getMainLooper())
+
     private val callParticipantListObserver: CallParticipantList.Observer = object : CallParticipantList.Observer {
         override fun onCallParticipantsChanged(
             joined: Collection<Participant>,
@@ -305,7 +304,6 @@ class CallActivity : CallBaseActivity() {
     private var currentCallStatus: CallStatus? = null
     private var mediaPlayer: MediaPlayer? = null
 
-    private val participantItems = mutableStateListOf<ParticipantDisplayItem>()
     private var binding: CallActivityBinding? = null
     private var audioOutputDialog: AudioOutputDialog? = null
     private var moreCallActionsDialog: MoreCallActionsDialog? = null
@@ -371,19 +369,73 @@ class CallActivity : CallBaseActivity() {
 
     private var recordingConsentGiven = false
 
+    private var isFrontCamera by mutableStateOf(true)
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
         sharedApplication!!.componentApplication.inject(this)
 
+        callViewModel = ViewModelProvider(this, viewModelFactory)[CallViewModel::class.java]
+
         rootEglBase = EglBase.create()
         binding = CallActivityBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
-        hideNavigationIfNoPipAvailable()
-        processExtras(intent.extras!!)
 
-        conversationUser = currentUserProvider.currentUser.blockingGet()
+        binding!!.screenShareFullscreenView.setContent {
+            MaterialTheme {
+                val screenShareParticipantUiState by callViewModel.activeScreenShareSession.collectAsState()
+                if (screenShareParticipantUiState != null) {
+                    binding!!.selfVideoViewWrapper.visibility = View.GONE
+                    ScreenShareComponent(
+                        participantUiState = screenShareParticipantUiState!!,
+                        eglBase = rootEglBase!!,
+                        onCloseIconClick = {
+                            callViewModel.setActiveScreenShareSession(null)
+                            initViews()
+                        }
+                    )
+                }
+            }
+        }
+
+        binding!!.composeParticipantGrid.setContent {
+            MaterialTheme {
+                val screenShareParticipantUiState by callViewModel.activeScreenShareSession.collectAsState()
+                val participantUiStates by callViewModel.participants.collectAsState(initial = emptyList())
+
+                LaunchedEffect(participantUiStates) {
+                    participantUiStates.forEach {
+                        Log.d(TAG, "Participant: ${it.nick} (${it.sessionKey})")
+                    }
+                }
+
+                if (screenShareParticipantUiState == null) {
+                    ParticipantGrid(
+                        participantUiStates = participantUiStates,
+                        eglBase = rootEglBase!!,
+                        isVoiceOnlyCall = isVoiceOnlyCall,
+                        onClick = {},
+                        onScreenShareIconClick = {
+                            callViewModel.setActiveScreenShareSession(it)
+                        }
+                    )
+                }
+            }
+        }
+
+        hideNavigationIfNoPipAvailable()
+        val extras = intent.extras
+        if (extras != null) {
+            processExtras(extras)
+        } else {
+            Log.d(TAG, "extras is null")
+            finish()
+            return
+        }
+        processExtras(intent.extras!!)
+        conversationUser = currentUserProviderOld.currentUser.blockingGet()
 
         credentials = ApiUtils.getCredentials(conversationUser!!.username, conversationUser!!.token)
         if (TextUtils.isEmpty(baseUrl)) {
@@ -394,14 +446,14 @@ class CallActivity : CallBaseActivity() {
         setCallState(CallStatus.CONNECTING)
 
         initRaiseHandViewModel()
-        initCallRecordingViewModel(intent.extras!!.getInt(KEY_RECORDING_STATE))
+        initCallRecordingViewModel(extras.getInt(KEY_RECORDING_STATE, 0))
+
         initClickListeners(isModerator, isOneToOneConversation)
         binding!!.microphoneButton.setOnTouchListener(MicrophoneButtonTouchListener())
         pulseAnimation = PulseAnimation.create().with(binding!!.microphoneButton)
             .setDuration(PULSE_ANIMATION_DURATION)
             .setRepeatCount(PulseAnimation.INFINITE)
             .setRepeatMode(PulseAnimation.REVERSE)
-        callParticipants = HashMap()
         reactionAnimator = ReactionAnimator(context, binding!!.reactionAnimationWrapper, viewThemeUtils)
 
         checkInitialDevicePermissions()
@@ -532,12 +584,12 @@ class CallActivity : CallBaseActivity() {
             )
         }
 
-        when (CapabilitiesUtil.getRecordingConsentType(conversationUser!!.capabilities!!.spreedCapability!!)) {
+        when (CapabilitiesUtil.getRecordingConsentType(conversationUser.capabilities!!.spreedCapability!!)) {
             CapabilitiesUtil.RECORDING_CONSENT_NOT_REQUIRED -> initiateCall()
             CapabilitiesUtil.RECORDING_CONSENT_REQUIRED -> askForRecordingConsent()
             CapabilitiesUtil.RECORDING_CONSENT_DEPEND_ON_CONVERSATION -> {
                 val getRoomApiVersion = ApiUtils.getConversationApiVersion(
-                    conversationUser!!,
+                    conversationUser,
                     intArrayOf(ApiUtils.API_V4, 1)
                 )
                 ncApi!!.getRoom(credentials, ApiUtils.getUrlForRoom(getRoomApiVersion, baseUrl, roomToken))
@@ -649,9 +701,6 @@ class CallActivity : CallBaseActivity() {
                     cameraSwitchHandler.removeCallbacksAndMessages(null)
                     isPushToTalkActive = true
                     binding!!.callControls.visibility = View.VISIBLE
-                    if (!isVoiceOnlyCall) {
-                        binding!!.switchSelfVideoButton.visibility = View.VISIBLE
-                    }
                 }
                 onMicrophoneClick()
                 true
@@ -734,8 +783,6 @@ class CallActivity : CallBaseActivity() {
                 binding!!.endCallPopupMenu.visibility = View.GONE
             }
         }
-
-        binding!!.switchSelfVideoButton.setOnClickListener { switchCamera() }
 
         binding!!.lowerHandButton.setOnClickListener { l: View? -> raiseHandViewModel!!.lowerHand() }
         binding!!.pictureInPictureButton.setOnClickListener { enterPipMode() }
@@ -872,39 +919,19 @@ class CallActivity : CallBaseActivity() {
     @SuppressLint("ClickableViewAccessibility")
     private fun initViews() {
         Log.d(TAG, "initViews")
-        binding!!.callInfosLinearLayout.visibility = View.VISIBLE
         if (!isPipModePossible) {
             binding!!.pictureInPictureButton.visibility = View.GONE
         }
+
         if (isVoiceOnlyCall) {
-            binding!!.switchSelfVideoButton.visibility = View.GONE
             binding!!.cameraButton.visibility = View.GONE
-            binding!!.selfVideoRenderer.visibility = View.GONE
-            val params = RelativeLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            params.addRule(RelativeLayout.BELOW, R.id.callInfosLinearLayout)
-            val callControlsHeight =
-                applicationContext.resources.getDimension(R.dimen.call_controls_height).roundToInt()
-            params.setMargins(0, 0, 0, callControlsHeight)
-            binding!!.composeParticipantGrid.layoutParams = params
+            binding!!.selfVideoViewWrapper.visibility = View.GONE
         } else {
-            val params = RelativeLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            params.setMargins(0, 0, 0, 0)
-            binding!!.composeParticipantGrid.layoutParams = params
-            if (cameraEnumerator!!.deviceNames.size < 2) {
-                binding!!.switchSelfVideoButton.visibility = View.GONE
-            }
             initSelfVideoViewForNormalMode()
         }
         binding!!.composeParticipantGrid.setOnTouchListener { _, me ->
             val action = me.actionMasked
             if (action == MotionEvent.ACTION_DOWN) {
-                animateCallControls(true, 0)
                 binding!!.endCallPopupMenu.visibility = View.GONE
             }
             false
@@ -912,49 +939,32 @@ class CallActivity : CallBaseActivity() {
         binding!!.conversationRelativeLayout.setOnTouchListener { _, me ->
             val action = me.actionMasked
             if (action == MotionEvent.ACTION_DOWN) {
-                animateCallControls(true, 0)
                 binding!!.endCallPopupMenu.visibility = View.GONE
             }
             false
         }
-        animateCallControls(true, 0)
-        initGrid()
+        initPipMode()
         binding!!.composeParticipantGrid.z = 0f
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initSelfVideoViewForNormalMode() {
-        try {
-            binding!!.selfVideoRenderer.init(rootEglBase!!.eglBaseContext, null)
-        } catch (e: IllegalStateException) {
-            Log.d(TAG, "selfVideoRenderer already initialized", e)
+        binding!!.selfVideoViewWrapper.visibility = View.VISIBLE
+
+        binding!!.selfVideoComposeView.setContent {
+            SelfVideoView(
+                eglBase = rootEglBase!!.eglBaseContext,
+                videoTrack = localVideoTrack,
+                isFrontCamera = isFrontCamera,
+                onSwitchCamera = { switchCamera() }
+            )
         }
-        binding!!.selfVideoRenderer.setZOrderMediaOverlay(true)
-        // disabled because it causes some devices to crash
-        binding!!.selfVideoRenderer.setEnableHardwareScaler(false)
-        binding!!.selfVideoRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-        binding!!.selfVideoRenderer.setOnTouchListener(SelfVideoTouchListener())
 
         binding!!.pipSelfVideoRenderer.clearImage()
         binding!!.pipSelfVideoRenderer.release()
     }
 
-    private fun initGrid() {
-        Log.d(TAG, "initGrid")
-        binding!!.composeParticipantGrid.visibility = View.VISIBLE
-        binding!!.composeParticipantGrid.setContent {
-            MaterialTheme {
-                val participantUiStates = participantItems.map { it.uiStateFlow.collectAsState().value }
-                ParticipantGrid(
-                    participantUiStates = participantUiStates,
-                    eglBase = rootEglBase!!,
-                    isVoiceOnlyCall = isVoiceOnlyCall
-                ) {
-                    animateCallControls(true, 0)
-                }
-            }
-        }
-
+    private fun initPipMode() {
         if (isInPipMode) {
             updateUiForPipMode()
         }
@@ -1007,10 +1017,11 @@ class CallActivity : CallBaseActivity() {
     private fun prepareCall() {
         basicInitialization()
         initViews()
-        updateSelfVideoViewPosition(true)
+        // updateSelfVideoViewPosition(true)
         checkRecordingConsentAndInitiateCall()
 
         if (permissionUtil!!.isMicrophonePermissionGranted()) {
+            CallForegroundService.start(applicationContext, conversationName, intent.extras)
             if (!microphoneOn) {
                 onMicrophoneClick()
             }
@@ -1023,9 +1034,6 @@ class CallActivity : CallBaseActivity() {
             onCameraClick()
             if (cameraEnumerator!!.deviceNames.isEmpty()) {
                 binding!!.cameraButton.visibility = View.GONE
-            }
-            if (cameraEnumerator!!.deviceNames.size > 1) {
-                binding!!.switchSelfVideoButton.visibility = View.VISIBLE
             }
         }
     }
@@ -1106,12 +1114,12 @@ class CallActivity : CallBaseActivity() {
                 rootEglBase!!.eglBaseContext
             )
             videoSource = peerConnectionFactory!!.createVideoSource(false)
+
             videoCapturer!!.initialize(surfaceTextureHelper, applicationContext, videoSource!!.capturerObserver)
         }
         localVideoTrack = peerConnectionFactory!!.createVideoTrack("NCv0", videoSource)
         localStream!!.addTrack(localVideoTrack)
         localVideoTrack!!.setEnabled(false)
-        localVideoTrack!!.addSink(binding!!.selfVideoRenderer)
         localCallParticipantModel.isVideoEnabled = false
     }
 
@@ -1165,7 +1173,7 @@ class CallActivity : CallBaseActivity() {
                 Logging.d(TAG, "Creating front facing camera capturer.")
                 val videoCapturer: VideoCapturer? = enumerator.createCapturer(deviceName, null)
                 if (videoCapturer != null) {
-                    binding!!.selfVideoRenderer.setMirror(true)
+                    isFrontCamera = true
                     return videoCapturer
                 }
             }
@@ -1178,7 +1186,7 @@ class CallActivity : CallBaseActivity() {
                 Logging.d(TAG, "Creating other camera capturer.")
                 val videoCapturer: VideoCapturer? = enumerator.createCapturer(deviceName, null)
                 if (videoCapturer != null) {
-                    binding!!.selfVideoRenderer.setMirror(false)
+                    isFrontCamera = false
                     return videoCapturer
                 }
             }
@@ -1197,10 +1205,6 @@ class CallActivity : CallBaseActivity() {
             return
         }
         if (permissionUtil!!.isMicrophonePermissionGranted()) {
-            if (!appPreferences.pushToTalkIntroShown) {
-                spotlightView = getSpotlightView()
-                appPreferences.pushToTalkIntroShown = true
-            }
             if (!isPushToTalkActive) {
                 microphoneOn = !microphoneOn
                 if (microphoneOn) {
@@ -1234,44 +1238,18 @@ class CallActivity : CallBaseActivity() {
         }
     }
 
-    private fun getSpotlightView(): SpotlightView? {
-        val builder = SpotlightView.Builder(this)
-            .introAnimationDuration(INTRO_ANIMATION_DURATION)
-            .enableRevealAnimation(true)
-            .performClick(false)
-            .fadeinTextDuration(FADE_IN_ANIMATION_DURATION)
-            .headingTvSize(SPOTLIGHT_HEADING_SIZE)
-            .headingTvText(resources.getString(R.string.nc_push_to_talk))
-            .subHeadingTvColor(resources.getColor(R.color.bg_default, null))
-            .subHeadingTvSize(SPOTLIGHT_SUBHEADING_SIZE)
-            .subHeadingTvText(resources.getString(R.string.nc_push_to_talk_desc))
-            .maskColor("#dc000000".toColorInt())
-            .target(binding!!.microphoneButton)
-            .lineAnimDuration(FADE_IN_ANIMATION_DURATION)
-            .enableDismissAfterShown(true)
-            .dismissOnBackPress(true)
-            .usageId("pushToTalk")
-
-        return viewThemeUtils.talk.themeSpotlightView(context, builder).show()
-    }
-
     private fun onCameraClick() {
         if (!canPublishVideoStream) {
             videoOn = false
             binding!!.cameraButton.setImageResource(R.drawable.ic_videocam_off_white_24px)
-            binding!!.switchSelfVideoButton.visibility = View.GONE
             return
         }
         if (permissionUtil!!.isCameraPermissionGranted()) {
             videoOn = !videoOn
             if (videoOn) {
                 binding!!.cameraButton.setImageResource(R.drawable.ic_videocam_white_24px)
-                if (cameraEnumerator!!.deviceNames.size > 1) {
-                    binding!!.switchSelfVideoButton.visibility = View.VISIBLE
-                }
             } else {
                 binding!!.cameraButton.setImageResource(R.drawable.ic_videocam_off_white_24px)
-                binding!!.switchSelfVideoButton.visibility = View.GONE
             }
             toggleMedia(videoOn, true)
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
@@ -1288,7 +1266,7 @@ class CallActivity : CallBaseActivity() {
         val cameraVideoCapturer = videoCapturer as CameraVideoCapturer?
         cameraVideoCapturer?.switchCamera(object : CameraSwitchHandler {
             override fun onCameraSwitchDone(currentCameraIsFront: Boolean) {
-                binding!!.selfVideoRenderer.setMirror(currentCameraIsFront)
+                isFrontCamera = currentCameraIsFront
             }
 
             override fun onCameraSwitchError(s: String) {
@@ -1320,16 +1298,13 @@ class CallActivity : CallBaseActivity() {
                 localCallParticipantModel.isVideoEnabled = enable
             }
             if (enable) {
-                binding!!.selfVideoRenderer.visibility = View.VISIBLE
+                binding!!.selfVideoViewWrapper.visibility = View.VISIBLE
                 binding!!.pipSelfVideoRenderer.visibility = View.VISIBLE
 
                 initSelfVideoViewForNormalMode()
             } else {
-                binding!!.selfVideoRenderer.visibility = View.INVISIBLE
+                binding!!.selfVideoViewWrapper.visibility = View.INVISIBLE
                 binding!!.pipSelfVideoRenderer.visibility = View.INVISIBLE
-
-                binding!!.selfVideoRenderer.clearImage()
-                binding!!.selfVideoRenderer.release()
 
                 binding!!.pipSelfVideoRenderer.clearImage()
                 binding!!.pipSelfVideoRenderer.release()
@@ -1351,100 +1326,6 @@ class CallActivity : CallBaseActivity() {
         raiseHandViewModel!!.clickHandButton()
     }
 
-    private fun animateCallControls(show: Boolean, startDelay: Long) {
-        if (isVoiceOnlyCall) {
-            if (spotlightView != null && spotlightView!!.visibility != View.GONE) {
-                spotlightView!!.visibility = View.GONE
-            }
-        } else if (!isPushToTalkActive) {
-            val alpha: Float
-            val duration: Long
-            if (show) {
-                callControlHandler.removeCallbacksAndMessages(null)
-                callInfosHandler.removeCallbacksAndMessages(null)
-                cameraSwitchHandler.removeCallbacksAndMessages(null)
-                alpha = OPACITY_ENABLED
-                duration = SECOND_IN_MILLIS
-                if (binding!!.callControls.visibility != View.VISIBLE) {
-                    binding!!.callControls.alpha = OPACITY_INVISIBLE
-                    binding!!.callControls.visibility = View.VISIBLE
-                    binding!!.callInfosLinearLayout.alpha = OPACITY_INVISIBLE
-                    binding!!.callInfosLinearLayout.visibility = View.VISIBLE
-                    binding!!.switchSelfVideoButton.alpha = OPACITY_INVISIBLE
-                    if (videoOn) {
-                        binding!!.switchSelfVideoButton.visibility = View.VISIBLE
-                    }
-                } else {
-                    callControlHandler.postDelayed({ animateCallControls(false, 0) }, FIVE_SECONDS)
-                    return
-                }
-            } else {
-                alpha = OPACITY_INVISIBLE
-                duration = SECOND_IN_MILLIS
-            }
-            binding!!.callControls.isEnabled = false
-            binding!!.callControls.animate()
-                .translationY(0f)
-                .alpha(alpha)
-                .setDuration(duration)
-                .setStartDelay(startDelay)
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        super.onAnimationEnd(animation)
-                        if (!show) {
-                            binding!!.callControls.visibility = View.GONE
-                            if (spotlightView != null && spotlightView!!.visibility != View.GONE) {
-                                spotlightView!!.visibility = View.GONE
-                            }
-                        } else {
-                            callControlHandler.postDelayed({
-                                if (!isPushToTalkActive) {
-                                    animateCallControls(false, 0)
-                                }
-                            }, CALL_CONTROLLS_ANIMATION_DELAY)
-                        }
-                        binding!!.callControls.isEnabled = true
-                    }
-                })
-            binding!!.callInfosLinearLayout.isEnabled = false
-            binding!!.callInfosLinearLayout.animate()
-                .translationY(0f)
-                .alpha(alpha)
-                .setDuration(duration)
-                .setStartDelay(startDelay)
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        super.onAnimationEnd(animation)
-                        if (!show) {
-                            binding!!.callInfosLinearLayout.visibility = View.GONE
-                        } else {
-                            callInfosHandler.postDelayed({
-                                if (!isPushToTalkActive) {
-                                    animateCallControls(false, 0)
-                                }
-                            }, CALL_CONTROLLS_ANIMATION_DELAY)
-                        }
-                        binding!!.callInfosLinearLayout.isEnabled = true
-                    }
-                })
-            binding!!.switchSelfVideoButton.isEnabled = false
-            binding!!.switchSelfVideoButton.animate()
-                .translationY(0f)
-                .alpha(alpha)
-                .setDuration(duration)
-                .setStartDelay(startDelay)
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        super.onAnimationEnd(animation)
-                        if (!show) {
-                            binding!!.switchSelfVideoButton.visibility = View.GONE
-                        }
-                        binding!!.switchSelfVideoButton.isEnabled = true
-                    }
-                })
-        }
-    }
-
     public override fun onDestroy() {
         if (signalingMessageReceiver != null) {
             signalingMessageReceiver!!.removeListener(localParticipantMessageListener)
@@ -1460,6 +1341,7 @@ class CallActivity : CallBaseActivity() {
         if (currentCallStatus !== CallStatus.LEAVING) {
             hangup(true, false)
         }
+        CallForegroundService.stop(applicationContext)
         powerManagerUtils!!.updatePhoneState(PowerManagerUtils.PhoneState.IDLE)
         super.onDestroy()
     }
@@ -1587,7 +1469,7 @@ class CallActivity : CallBaseActivity() {
 
                         messageSender = MessageSenderNoMcu(
                             signalingMessageSender,
-                            callParticipants.keys,
+                            getParticipantSessionKeys(),
                             peerConnectionWrapperList
                         )
 
@@ -1606,6 +1488,11 @@ class CallActivity : CallBaseActivity() {
                 }
             })
     }
+
+    private fun getParticipantSessionKeys(): Set<String> =
+        callViewModel.participants.value
+            .mapNotNull { it.sessionKey }
+            .toSet()
 
     private fun joinRoomAndCall() {
         callSession = ApplicationWideCurrentRoomHolder.getInstance().session
@@ -1785,6 +1672,7 @@ class CallActivity : CallBaseActivity() {
             )
         ) {
             binding!!.callDuration.visibility = View.VISIBLE
+            callTimeHandler.removeCallbacksAndMessages(null)
             val currentTimeInSec = System.currentTimeMillis() / SECOND_IN_MILLIS
             elapsedSeconds = currentTimeInSec - callStartTime
 
@@ -1894,14 +1782,14 @@ class CallActivity : CallBaseActivity() {
             if (hasMCU) {
                 messageSender = MessageSenderMcu(
                     signalingMessageSender,
-                    callParticipants.keys,
+                    getParticipantSessionKeys(),
                     peerConnectionWrapperList,
                     webSocketClient!!.sessionId
                 )
             } else {
                 messageSender = MessageSenderNoMcu(
                     signalingMessageSender,
-                    callParticipants.keys,
+                    getParticipantSessionKeys(),
                     peerConnectionWrapperList
                 )
             }
@@ -1937,14 +1825,14 @@ class CallActivity : CallBaseActivity() {
                     if (hasMCU) {
                         messageSender = MessageSenderMcu(
                             signalingMessageSender,
-                            callParticipants.keys,
+                            getParticipantSessionKeys(),
                             peerConnectionWrapperList,
                             webSocketClient!!.sessionId
                         )
                     } else {
                         messageSender = MessageSenderNoMcu(
                             signalingMessageSender,
-                            callParticipants.keys,
+                            getParticipantSessionKeys(),
                             peerConnectionWrapperList
                         )
                     }
@@ -2049,8 +1937,10 @@ class CallActivity : CallBaseActivity() {
             endPeerConnection(sessionId, "screen")
         }
         val callParticipantIdsToEnd: MutableList<String> = ArrayList(peerConnectionWrapperList.size)
-        for (callParticipant in callParticipants.values) {
-            callParticipantIdsToEnd.add(callParticipant!!.callParticipantModel.sessionId)
+        for (sessionId in callViewModel.participants.value.map { it.sessionKey }) {
+            sessionId?.let {
+                callParticipantIdsToEnd.add(it)
+            }
         }
         for (sessionId in callParticipantIdsToEnd) {
             removeCallParticipant(sessionId)
@@ -2070,8 +1960,6 @@ class CallActivity : CallBaseActivity() {
             videoCapturer!!.dispose()
             videoCapturer = null
         }
-        binding!!.selfVideoRenderer.clearImage()
-        binding!!.selfVideoRenderer.release()
 
         binding!!.pipSelfVideoRenderer.clearImage()
         binding!!.pipSelfVideoRenderer.release()
@@ -2161,7 +2049,6 @@ class CallActivity : CallBaseActivity() {
             it.stopCapture()
             it.startCapture(width, height, FRAME_RATE)
         }
-        updateSelfVideoViewPosition(isPortrait)
     }
 
     private fun setupOrientationListener(context: Context) {
@@ -2295,16 +2182,11 @@ class CallActivity : CallBaseActivity() {
             addCallParticipant(sessionId)
 
             if (participant.actorType != null && participant.actorId != null) {
-                callParticipants[sessionId]!!.setActor(participant.actorType, participant.actorId)
-            }
-
-            val userId = participant.userId
-            if (userId != null) {
-                callParticipants[sessionId]!!.setUserId(userId)
+                callViewModel.getParticipant(sessionId)?.updateActor(participant.actorType, participant.actorId)
             }
 
             if (participant.internal != null) {
-                callParticipants[sessionId]!!.setInternal(participant.internal)
+                callViewModel.getParticipant(sessionId)?.updateIsInternal(participant.internal == true)
             }
 
             val nick: String? = if (hasExternalSignalingServer) {
@@ -2313,7 +2195,7 @@ class CallActivity : CallBaseActivity() {
                 if (offerAnswerNickProviders[sessionId] != null) offerAnswerNickProviders[sessionId]?.nick else ""
             }
 
-            callParticipants[sessionId]!!.setNick(nick)
+            callViewModel.getParticipant(sessionId)?.updateNick(nick)
             val participantHasAudioOrVideo = participantInCallFlagsHaveAudioOrVideo(participant)
 
             // FIXME Without MCU, PeerConnectionWrapper only sends an offer if the local session ID is higher than the
@@ -2389,14 +2271,14 @@ class CallActivity : CallBaseActivity() {
             peerConnectionWrapper = createPeerConnectionWrapperForSessionIdAndType(publisher, sessionId, type)
             peerConnectionWrapperList.add(peerConnectionWrapper)
             if (!publisher) {
-                var callParticipant = callParticipants[sessionId]
-                if (callParticipant == null) {
-                    callParticipant = addCallParticipant(sessionId)
+                if (!callViewModel.doesParticipantExist(sessionId)) {
+                    addCallParticipant(sessionId)
                 }
+
                 if ("screen" == type) {
-                    callParticipant.setScreenPeerConnectionWrapper(peerConnectionWrapper)
+                    callViewModel.getParticipant(sessionId)?.setScreenPeerConnection(peerConnectionWrapper)
                 } else {
-                    callParticipant.setPeerConnectionWrapper(peerConnectionWrapper)
+                    callViewModel.getParticipant(sessionId)?.setPeerConnection(peerConnectionWrapper)
                 }
             }
             if (publisher) {
@@ -2412,22 +2294,55 @@ class CallActivity : CallBaseActivity() {
         sessionId: String?,
         type: String
     ): PeerConnectionWrapper {
+        fun getPeerConnectionFactory(type: String): PeerConnectionFactory? {
+            fun initScreenSharePeerConnectionFactory(): PeerConnectionFactory? {
+                val options = PeerConnectionFactory.Options()
+                val softwareVideoEncoderFactory = SoftwareVideoEncoderFactory()
+                val softwareVideoDecoderFactory = SoftwareVideoDecoderFactory()
+                screenSharePeerConnectionFactory = PeerConnectionFactory.builder()
+                    .setOptions(options)
+                    .setVideoEncoderFactory(softwareVideoEncoderFactory)
+                    .setVideoDecoderFactory(softwareVideoDecoderFactory)
+                    .createPeerConnectionFactory()
+                return screenSharePeerConnectionFactory
+            }
+
+            val tempPeerConnectionFactory = if (type == "screen") {
+                screenSharePeerConnectionFactory ?: run {
+                    initScreenSharePeerConnectionFactory()
+                }
+            } else {
+                peerConnectionFactory
+            }
+            return tempPeerConnectionFactory
+        }
+
+        val tempPeerConnectionFactory: PeerConnectionFactory?
         val tempSdpConstraints: MediaConstraints?
         val tempIsMCUPublisher: Boolean
         val tempHasMCU: Boolean
         val tempLocalStream: MediaStream?
         if (hasMCU && publisher) {
+            tempPeerConnectionFactory = peerConnectionFactory
             tempSdpConstraints = sdpConstraintsForMCUPublisher
             tempIsMCUPublisher = true
             tempHasMCU = true
             tempLocalStream = localStream
         } else if (hasMCU) {
-            tempSdpConstraints = sdpConstraints
+            tempPeerConnectionFactory = getPeerConnectionFactory(type)
+            tempSdpConstraints = MediaConstraintsHelper(sdpConstraints)
+                .copy()
+                .applyIf(type == "screen") { replaceOrAddConstraint("OfferToReceiveVideo", "true") }
+                .build()
             tempIsMCUPublisher = false
             tempHasMCU = true
             tempLocalStream = null
         } else {
-            tempSdpConstraints = sdpConstraints
+            tempPeerConnectionFactory = getPeerConnectionFactory(type)
+            tempSdpConstraints = MediaConstraintsHelper(sdpConstraints)
+                .copy()
+                .applyIf(type == "screen") { replaceOrAddConstraint("OfferToReceiveVideo", "true") }
+                .build()
             tempIsMCUPublisher = false
             tempHasMCU = false
             tempLocalStream = if ("screen" != type) {
@@ -2438,7 +2353,7 @@ class CallActivity : CallBaseActivity() {
         }
 
         return PeerConnectionWrapper(
-            peerConnectionFactory,
+            tempPeerConnectionFactory,
             iceServers,
             tempSdpConstraints,
             sessionId,
@@ -2452,9 +2367,7 @@ class CallActivity : CallBaseActivity() {
         )
     }
 
-    private fun addCallParticipant(sessionId: String?): CallParticipant {
-        val callParticipant = CallParticipant(sessionId, signalingMessageReceiver)
-        callParticipants[sessionId] = callParticipant
+    private fun addCallParticipant(sessionId: String?) {
         val callParticipantMessageListener: CallParticipantMessageListener =
             CallActivityCallParticipantMessageListener(sessionId)
         callParticipantMessageListeners[sessionId] = callParticipantMessageListener
@@ -2473,21 +2386,17 @@ class CallActivity : CallBaseActivity() {
                 "screen"
             )
         }
-        val callParticipantModel = callParticipant.callParticipantModel
-        val screenParticipantDisplayItemManager = ScreenParticipantDisplayItemManager(callParticipantModel)
-        screenParticipantDisplayItemManagers[sessionId] = screenParticipantDisplayItemManager
-        callParticipantModel.addObserver(
-            screenParticipantDisplayItemManager,
-            screenParticipantDisplayItemManagersHandler
+
+        callViewModel.addParticipant(
+            baseUrl!!,
+            roomToken!!,
+            sessionId!!,
+            signalingMessageReceiver!!
         )
-        val callParticipantEventDisplayer = CallParticipantEventDisplayer(callParticipantModel)
-        callParticipantEventDisplayers[sessionId] = callParticipantEventDisplayer
-        callParticipantModel.addObserver(callParticipantEventDisplayer, callParticipantEventDisplayersHandler)
-        runOnUiThread { addParticipantDisplayItem(callParticipantModel, "video") }
 
-        localStateBroadcaster!!.handleCallParticipantAdded(callParticipant.callParticipantModel)
+        localStateBroadcaster!!.handleCallParticipantAdded(callViewModel.getParticipant(sessionId)?.uiState?.value)
 
-        return callParticipant
+        initPipMode()
     }
 
     private fun endPeerConnection(sessionId: String?, type: String) {
@@ -2498,28 +2407,26 @@ class CallActivity : CallBaseActivity() {
         ) {
             peerConnectionWrapper.removeObserver(selfPeerConnectionObserver)
         }
-        val callParticipant = callParticipants[sessionId]
-        if (callParticipant != null) {
-            if ("screen" == type) {
-                callParticipant.setScreenPeerConnectionWrapper(null)
-            } else {
-                callParticipant.setPeerConnectionWrapper(null)
-            }
+
+        if ("screen" == type) {
+            callViewModel.getParticipant(sessionId)?.setScreenPeerConnection(null)
+        } else {
+            callViewModel.getParticipant(sessionId)?.setPeerConnection(null)
         }
+
         peerConnectionWrapper.removePeerConnection()
         peerConnectionWrapperList.remove(peerConnectionWrapper)
     }
 
     private fun removeCallParticipant(sessionId: String?) {
-        val callParticipant = callParticipants.remove(sessionId) ?: return
+        if (!callViewModel.doesParticipantExist(sessionId)) {
+            return
+        }
 
-        localStateBroadcaster!!.handleCallParticipantRemoved(callParticipant.callParticipantModel)
+        callViewModel.removeParticipant(sessionId!!)
 
-        val screenParticipantDisplayItemManager = screenParticipantDisplayItemManagers.remove(sessionId)
-        callParticipant.callParticipantModel.removeObserver(screenParticipantDisplayItemManager)
-        val callParticipantEventDisplayer = callParticipantEventDisplayers.remove(sessionId)
-        callParticipant.callParticipantModel.removeObserver(callParticipantEventDisplayer)
-        callParticipant.destroy()
+        localStateBroadcaster!!.handleCallParticipantRemoved(sessionId)
+
         val listener = callParticipantMessageListeners.remove(sessionId)
         signalingMessageReceiver!!.removeListener(listener)
         val offerAnswerNickProvider = offerAnswerNickProviders.remove(sessionId)
@@ -2527,58 +2434,13 @@ class CallActivity : CallBaseActivity() {
             signalingMessageReceiver!!.removeListener(offerAnswerNickProvider.videoWebRtcMessageListener)
             signalingMessageReceiver!!.removeListener(offerAnswerNickProvider.screenWebRtcMessageListener)
         }
-        runOnUiThread { removeParticipantDisplayItem(sessionId, "video") }
-    }
-
-    private fun removeParticipantDisplayItem(sessionId: String?, videoStreamType: String) {
-        val key = "$sessionId-$videoStreamType"
-        val participant = participantItems.find { it.sessionKey == key }
-        participant?.destroy()
-        participantItems.removeAll { it.sessionKey == key }
-        initGrid()
+        initPipMode()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(configurationChangeEvent: ConfigurationChangeEvent?) {
         powerManagerUtils!!.setOrientation(Objects.requireNonNull(resources).configuration.orientation)
-        initGrid()
-    }
-
-    private fun updateSelfVideoViewIceConnectionState(iceConnectionState: IceConnectionState) {
-        val connected = iceConnectionState == IceConnectionState.CONNECTED ||
-            iceConnectionState == IceConnectionState.COMPLETED
-
-        // FIXME In voice only calls there is no video view, so the progress bar would appear floating in the middle of
-        // nowhere. However, a way to signal that the local participant is not connected to the HPB is still need in
-        // that case.
-        if (!connected && !isVoiceOnlyCall) {
-            binding!!.selfVideoViewProgressBar.visibility = View.VISIBLE
-        } else {
-            binding!!.selfVideoViewProgressBar.visibility = View.GONE
-        }
-    }
-
-    private fun updateSelfVideoViewPosition(isPortrait: Boolean) {
-        Log.d(TAG, "updateSelfVideoViewPosition")
-        if (!isInPipMode) {
-            val layoutParams = binding!!.selfVideoRenderer.layoutParams as FrameLayout.LayoutParams
-            if (!isPortrait) {
-                layoutParams.height =
-                    DisplayUtils.convertDpToPixel(SELFVIDEO_HEIGHT_16_TO_9_RATIO.toFloat(), applicationContext).toInt()
-                layoutParams.width =
-                    DisplayUtils.convertDpToPixel(SELFVIDEO_WIDTH_16_TO_9_RATIO.toFloat(), applicationContext).toInt()
-                binding!!.selfVideoViewWrapper.y = SELFVIDEO_POSITION_X_LANDSCAPE
-                binding!!.selfVideoViewWrapper.x = SELFVIDEO_POSITION_Y_LANDSCAPE
-            } else {
-                layoutParams.height =
-                    DisplayUtils.convertDpToPixel(SELFVIDEO_HEIGHT_4_TO_3_RATIO.toFloat(), applicationContext).toInt()
-                layoutParams.width =
-                    DisplayUtils.convertDpToPixel(SELFVIDEO_WIDTH_4_TO_3_RATIO.toFloat(), applicationContext).toInt()
-                binding!!.selfVideoViewWrapper.y = SELFVIDEO_POSITION_X_PORTRAIT
-                binding!!.selfVideoViewWrapper.x = SELFVIDEO_POSITION_Y_PORTRAIT
-            }
-            binding!!.selfVideoRenderer.layoutParams = layoutParams
-        }
+        initPipMode()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -2635,29 +2497,6 @@ class CallActivity : CallBaseActivity() {
         }
     }
 
-    private fun addParticipantDisplayItem(callParticipantModel: CallParticipantModel, videoStreamType: String) {
-        if (callParticipantModel.isInternal == true) return
-
-        val defaultGuestNick = resources.getString(R.string.nc_nick_guest)
-        val participantDisplayItem = ParticipantDisplayItem(
-            context = context,
-            baseUrl = baseUrl!!,
-            defaultGuestNick = defaultGuestNick,
-            rootEglBase = rootEglBase!!,
-            streamType = videoStreamType,
-            roomToken = roomToken!!,
-            callParticipantModel = callParticipantModel
-        )
-
-        val sessionKey = participantDisplayItem.sessionKey
-
-        if (participantItems.none { it.sessionKey == sessionKey }) {
-            participantItems.add(participantDisplayItem)
-        }
-
-        initGrid()
-    }
-
     private fun setCallState(callState: CallStatus) {
         if (currentCallStatus == null || currentCallStatus !== callState) {
             currentCallStatus = callState
@@ -2686,7 +2525,6 @@ class CallActivity : CallBaseActivity() {
     private fun handleCallStateLeaving() {
         if (!isDestroyed) {
             stopCallingSound()
-            binding!!.callModeTextView.text = descriptionForCallType
             binding!!.callStates.callStateTextView.setText(R.string.nc_leaving_call)
             binding!!.callStates.callStateRelativeLayout.visibility = View.VISIBLE
             binding!!.composeParticipantGrid.visibility = View.INVISIBLE
@@ -2715,13 +2553,6 @@ class CallActivity : CallBaseActivity() {
 
     private fun handleCallStateInConversation() {
         stopCallingSound()
-        binding!!.callModeTextView.text = descriptionForCallType
-        if (!isVoiceOnlyCall) {
-            binding!!.callInfosLinearLayout.visibility = View.GONE
-        }
-        if (!isPushToTalkActive) {
-            animateCallControls(false, FIVE_SECONDS)
-        }
         if (binding!!.callStates.callStateRelativeLayout.visibility != View.INVISIBLE) {
             binding!!.callStates.callStateRelativeLayout.visibility = View.INVISIBLE
         }
@@ -2737,7 +2568,6 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun handleCallStateJoined() {
-        binding!!.callModeTextView.text = descriptionForCallType
         if (isIncomingCallFromNotification) {
             binding!!.callStates.callStateTextView.setText(R.string.nc_call_incoming)
         } else {
@@ -2760,7 +2590,6 @@ class CallActivity : CallBaseActivity() {
     private fun handleCallStateReconnecting() {
         playCallingSound()
         binding!!.callStates.callStateTextView.setText(R.string.nc_call_reconnecting)
-        binding!!.callModeTextView.text = descriptionForCallType
         if (binding!!.callStates.callStateRelativeLayout.visibility != View.VISIBLE) {
             binding!!.callStates.callStateRelativeLayout.visibility = View.VISIBLE
         }
@@ -2778,7 +2607,6 @@ class CallActivity : CallBaseActivity() {
     private fun handleCallStatePublisherFailed() {
         // No calling sound when the publisher failed
         binding!!.callStates.callStateTextView.setText(R.string.nc_call_reconnecting)
-        binding!!.callModeTextView.text = descriptionForCallType
         if (binding!!.callStates.callStateRelativeLayout.visibility != View.VISIBLE) {
             binding!!.callStates.callStateRelativeLayout.visibility = View.VISIBLE
         }
@@ -2796,7 +2624,6 @@ class CallActivity : CallBaseActivity() {
     private fun handleCallStateCallingTimeout() {
         hangup(shutDownView = false, endCallForAll = false)
         binding!!.callStates.callStateTextView.setText(R.string.nc_call_timeout)
-        binding!!.callModeTextView.text = descriptionForCallType
         if (binding!!.callStates.callStateRelativeLayout.visibility != View.VISIBLE) {
             binding!!.callStates.callStateRelativeLayout.visibility = View.VISIBLE
         }
@@ -2820,7 +2647,6 @@ class CallActivity : CallBaseActivity() {
             binding!!.callStates.callStateTextView.setText(R.string.nc_call_ringing)
         }
         binding!!.callConversationNameTextView.text = conversationName
-        binding!!.callModeTextView.text = descriptionForCallType
         if (binding!!.callStates.callStateRelativeLayout.visibility != View.VISIBLE) {
             binding!!.callStates.callStateRelativeLayout.visibility = View.VISIBLE
         }
@@ -2834,16 +2660,6 @@ class CallActivity : CallBaseActivity() {
             binding!!.callStates.errorImageView.visibility = View.GONE
         }
     }
-
-    private val descriptionForCallType: String
-        get() {
-            val appName = resources.getString(R.string.nc_app_product_name)
-            return if (isVoiceOnlyCall) {
-                String.format(resources.getString(R.string.nc_call_voice), appName)
-            } else {
-                String.format(resources.getString(R.string.nc_call_video), appName)
-            }
-        }
 
     private fun playCallingSound() {
         stopCallingSound()
@@ -2935,20 +2751,35 @@ class CallActivity : CallBaseActivity() {
 
         private fun onOfferOrAnswer(nick: String?) {
             this.nick = nick
-            if (callParticipants[sessionId] != null) {
-                callParticipants[sessionId]!!.setNick(nick)
-            }
+            callViewModel.getParticipant(sessionId)?.updateNick(nick)
         }
     }
 
     private inner class CallActivityCallParticipantMessageListener(private val sessionId: String?) :
         CallParticipantMessageListener {
         override fun onRaiseHand(state: Boolean, timestamp: Long) {
-            // unused atm
+            if (state) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    callViewModel.getParticipant(sessionId)?.uiState?.value?.nick?.let {
+                        Snackbar.make(
+                            binding!!.root,
+                            String.format(context.resources.getString(R.string.nc_call_raised_hand), it),
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
         }
 
         override fun onReaction(reaction: String) {
-            // unused atm
+            CoroutineScope(Dispatchers.Main).launch {
+                callViewModel.getParticipant(sessionId)?.uiState?.value?.nick?.let {
+                    addReactionForAnimation(
+                        emoji = reaction,
+                        displayName = it
+                    )
+                }
+            }
         }
 
         override fun onUnshareScreen() {
@@ -2967,63 +2798,12 @@ class CallActivity : CallBaseActivity() {
 
         override fun onIceConnectionStateChanged(iceConnectionState: IceConnectionState) {
             runOnUiThread {
-                updateSelfVideoViewIceConnectionState(iceConnectionState)
                 if (iceConnectionState == IceConnectionState.FAILED) {
                     setCallState(CallStatus.PUBLISHER_FAILED)
                     webSocketClient!!.clearResumeId()
                     hangup(false, false)
                 }
             }
-        }
-    }
-
-    private inner class ScreenParticipantDisplayItemManager(private val callParticipantModel: CallParticipantModel) :
-        CallParticipantModel.Observer {
-        override fun onChange() {
-            val sessionId = callParticipantModel.sessionId
-            if (callParticipantModel.screenIceConnectionState == null) {
-                removeParticipantDisplayItem(sessionId, "screen")
-                return
-            }
-            val screenParticipantDisplayItem = participantItems.find { it.sessionKey == "$sessionId-screen" }
-            if (screenParticipantDisplayItem == null) {
-                addParticipantDisplayItem(callParticipantModel, "screen")
-            }
-        }
-
-        override fun onReaction(reaction: String) {
-            // unused atm
-        }
-    }
-
-    private inner class CallParticipantEventDisplayer(private val callParticipantModel: CallParticipantModel) :
-        CallParticipantModel.Observer {
-        private var raisedHand: Boolean
-
-        init {
-            raisedHand = if (callParticipantModel.raisedHand != null) callParticipantModel.raisedHand.state else false
-        }
-
-        @SuppressLint("StringFormatInvalid")
-        override fun onChange() {
-            if (callParticipantModel.raisedHand == null || !callParticipantModel.raisedHand.state) {
-                raisedHand = false
-                return
-            }
-            if (raisedHand) {
-                return
-            }
-            raisedHand = true
-            val nick = callParticipantModel.nick
-            Snackbar.make(
-                binding!!.root,
-                String.format(context.resources.getString(R.string.nc_call_raised_hand), nick),
-                Snackbar.LENGTH_LONG
-            ).show()
-        }
-
-        override fun onReaction(reaction: String) {
-            addReactionForAnimation(reaction, callParticipantModel.nick)
         }
     }
 
@@ -3114,7 +2894,6 @@ class CallActivity : CallBaseActivity() {
                 binding!!.microphoneButton.setImageResource(R.drawable.ic_mic_off_white_24px)
                 pulseAnimation!!.stop()
                 toggleMedia(false, false)
-                animateCallControls(false, FIVE_SECONDS)
             }
             return true
         }
@@ -3190,15 +2969,11 @@ class CallActivity : CallBaseActivity() {
     override fun updateUiForPipMode() {
         Log.d(TAG, "updateUiForPipMode")
         binding!!.callControls.visibility = View.GONE
-        binding!!.callInfosLinearLayout.visibility = View.GONE
         binding!!.selfVideoViewWrapper.visibility = View.GONE
         binding!!.callStates.callStateRelativeLayout.visibility = View.GONE
         binding!!.pipCallConversationNameTextView.text = conversationName
 
-        binding!!.selfVideoRenderer.clearImage()
-        binding!!.selfVideoRenderer.release()
-
-        if (participantItems.size == 1) {
+        if (callViewModel.participants.value.size == 1) {
             binding!!.pipOverlay.visibility = View.GONE
         } else {
             binding!!.composeParticipantGrid.visibility = View.GONE
@@ -3230,14 +3005,8 @@ class CallActivity : CallBaseActivity() {
         binding!!.pipOverlay.visibility = View.GONE
         binding!!.composeParticipantGrid.visibility = View.VISIBLE
 
-        if (isVoiceOnlyCall) {
-            binding!!.callControls.visibility = View.VISIBLE
-        } else {
-            // animateCallControls needs this to be invisible for a check.
-            binding!!.callControls.visibility = View.INVISIBLE
-        }
+        binding!!.callControls.visibility = View.VISIBLE
         initViews()
-        binding!!.callInfosLinearLayout.visibility = View.VISIBLE
         binding!!.selfVideoViewWrapper.visibility = View.VISIBLE
     }
 
@@ -3262,28 +3031,11 @@ class CallActivity : CallBaseActivity() {
         ) ||
             isBreakoutRoom
 
-    private inner class SelfVideoTouchListener : OnTouchListener {
-        @SuppressLint("ClickableViewAccessibility")
-        override fun onTouch(view: View, event: MotionEvent): Boolean {
-            val duration = event.eventTime - event.downTime
-            if (event.actionMasked == MotionEvent.ACTION_MOVE) {
-                val newY = event.rawY - binding!!.selfVideoViewWrapper.height / 2f
-                val newX = event.rawX - binding!!.selfVideoViewWrapper.width / 2f
-                binding!!.selfVideoViewWrapper.y = newY
-                binding!!.selfVideoViewWrapper.x = newX
-            } else if (event.actionMasked == MotionEvent.ACTION_UP && duration < SWITCH_CAMERA_THRESHOLD_DURATION) {
-                switchCamera()
-            }
-            return true
-        }
-    }
-
     companion object {
         var active = false
 
-        // const val VIDEO_STREAM_TYPE_SCREEN = "screen"
         const val VIDEO_STREAM_TYPE_VIDEO = "video"
-        const val TAG = "CallActivity"
+        private val TAG = CallActivity::class.java.simpleName
         private val PERMISSIONS_CAMERA = arrayOf(
             Manifest.permission.CAMERA
         )
@@ -3304,8 +3056,6 @@ class CallActivity : CallBaseActivity() {
         const val CALL_TIME_ONE_HOUR = 3600
         const val CALL_DURATION_EMPTY = "--:--"
         const val API_RETRIES: Long = 3
-
-        const val SWITCH_CAMERA_THRESHOLD_DURATION = 100
 
         private const val SAMPLE_RATE = 8000
         private const val MICROPHONE_VALUE_THRESHOLD = 20
@@ -3328,25 +3078,8 @@ class CallActivity : CallBaseActivity() {
         private const val ANGLE_LANDSCAPE_LEFT_THRESHOLD_MIN = 260
         private const val ANGLE_LANDSCAPE_LEFT_THRESHOLD_MAX = 280
 
-        private const val SELFVIDEO_WIDTH_4_TO_3_RATIO = 80
-        private const val SELFVIDEO_HEIGHT_4_TO_3_RATIO = 104
-        private const val SELFVIDEO_WIDTH_16_TO_9_RATIO = 136
-        private const val SELFVIDEO_HEIGHT_16_TO_9_RATIO = 80
-
-        private const val SELFVIDEO_POSITION_X_LANDSCAPE = 50F
-        private const val SELFVIDEO_POSITION_Y_LANDSCAPE = 50F
-        private const val SELFVIDEO_POSITION_X_PORTRAIT = 300F
-        private const val SELFVIDEO_POSITION_Y_PORTRAIT = 50F
-
-        private const val FIVE_SECONDS: Long = 5000
         private const val CALLING_TIMEOUT: Long = 45000
-        private const val INTRO_ANIMATION_DURATION: Long = 300
-        private const val FADE_IN_ANIMATION_DURATION: Long = 400
         private const val PULSE_ANIMATION_DURATION: Int = 310
-        private const val CALL_CONTROLLS_ANIMATION_DELAY: Long = 7500
-
-        private const val SPOTLIGHT_HEADING_SIZE: Int = 20
-        private const val SPOTLIGHT_SUBHEADING_SIZE: Int = 16
 
         private const val DELAY_ON_ERROR_STOP_THRESHOLD: Int = 16
 

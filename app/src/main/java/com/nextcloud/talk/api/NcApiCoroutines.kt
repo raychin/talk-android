@@ -13,14 +13,18 @@ import com.nextcloud.talk.models.json.autocomplete.AutocompleteOverall
 import com.nextcloud.talk.models.json.chat.ChatOverall
 import com.nextcloud.talk.models.json.chat.ChatOverallSingleMessage
 import com.nextcloud.talk.models.json.conversations.RoomOverall
+import com.nextcloud.talk.models.json.conversations.RoomsOverall
 import com.nextcloud.talk.models.json.generic.GenericOverall
+import com.nextcloud.talk.models.json.invitation.InvitationOverall
 import com.nextcloud.talk.models.json.participants.AddParticipantOverall
 import com.nextcloud.talk.models.json.participants.TalkBan
 import com.nextcloud.talk.models.json.participants.TalkBanOverall
 import com.nextcloud.talk.models.json.profile.ProfileOverall
+import com.nextcloud.talk.models.json.status.StatusOverall
 import com.nextcloud.talk.models.json.testNotification.TestNotificationOverall
 import com.nextcloud.talk.models.json.threads.ThreadOverall
 import com.nextcloud.talk.models.json.threads.ThreadsOverall
+import com.nextcloud.talk.models.json.upcomingEvents.UpcomingEventsOverall
 import com.nextcloud.talk.models.json.userAbsence.UserAbsenceOverall
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -267,6 +271,12 @@ interface NcApiCoroutines {
         @Url url: String
     ): UserAbsenceOverall
 
+    @GET
+    suspend fun getUpcomingEvents(
+        @Header("Authorization") authorization: String,
+        @Url url: String
+    ): UpcomingEventsOverall
+
     @POST
     suspend fun testPushNotifications(
         @Header("Authorization") authorization: String,
@@ -307,4 +317,61 @@ interface NcApiCoroutines {
         @Url url: String,
         @Field("level") level: Int
     ): ThreadOverall
+
+    @GET
+    suspend fun getOpenConversations(
+        @Header("Authorization") authorization: String,
+        @Url url: String,
+        @Query("searchTerm") searchTerm: String?
+    ): RoomsOverall
+
+    @GET
+    suspend fun getInvitations(@Header("Authorization") authorization: String, @Url url: String): InvitationOverall
+
+    @GET
+    suspend fun status(@Header("Authorization") authorization: String, @Url url: String): StatusOverall
+
+    @FormUrlEncoded
+    @POST
+    suspend fun pinMessage(
+        @Header("Authorization") authorization: String,
+        @Url url: String,
+        @Field("pinUntil") pinUntil: Int
+    ): ChatOverallSingleMessage
+
+    @DELETE
+    suspend fun unPinMessage(@Header("Authorization") authorization: String, @Url url: String): ChatOverallSingleMessage
+
+    @DELETE
+    suspend fun hidePinnedMessage(@Header("Authorization") authorization: String, @Url url: String): GenericOverall
+
+    @FormUrlEncoded
+    @POST
+    @Suppress("LongParameterList")
+    suspend fun sendScheduleChatMessage(
+        @Header("Authorization") authorization: String,
+        @Url url: String,
+        @Field("message") message: String,
+        @Field("replyTo") replyTo: Int?,
+        @Field("silent") sendWithoutNotification: Boolean,
+        @Field("threadTitle") threadTitle: String?,
+        @Field("threadId") threadId: Long?,
+        @Field("sendAt") sendAt: Int?
+    ): ChatOverallSingleMessage
+
+    @FormUrlEncoded
+    @POST
+    suspend fun updateScheduledMessage(
+        @Header("Authorization") authorization: String,
+        @Url url: String,
+        @Field("message") message: String,
+        @Field("sendAt") sendAt: Int?,
+        @Field("silent") sendWithoutNotification: Boolean
+    ): ChatOverallSingleMessage
+
+    @DELETE
+    suspend fun deleteScheduleMessage(@Header("Authorization") authorization: String, @Url url: String): GenericOverall
+
+    @GET
+    suspend fun getScheduledMessage(@Header("Authorization") authorization: String, @Url url: String): ChatOverall
 }

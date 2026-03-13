@@ -12,11 +12,8 @@ package com.nextcloud.talk.profile
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.text.Editable
 import android.text.TextUtils
-import android.text.TextWatcher
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -24,6 +21,12 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toFile
@@ -34,14 +37,12 @@ import autodagger.AutoInjector
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.github.dhaval2404.imagepicker.ImagePicker.Companion.getError
 import com.google.android.material.snackbar.Snackbar
-import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
 import com.nextcloud.talk.activities.BaseActivity
 import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ActivityProfileBinding
-import com.nextcloud.talk.databinding.UserInfoDetailsTableItemBinding
 import com.nextcloud.talk.models.json.generic.GenericOverall
 import com.nextcloud.talk.models.json.userprofile.Scope
 import com.nextcloud.talk.models.json.userprofile.UserProfileData
@@ -85,6 +86,7 @@ class ProfileActivity : BaseActivity() {
     private var adapter: UserInfoAdapter? = null
     private var userInfo: UserProfileData? = null
     private var editableFields = ArrayList<String>()
+    private var isProfileEnabled by mutableStateOf(false)
 
     private lateinit var pickImage: PickImage
 
@@ -113,13 +115,30 @@ class ProfileActivity : BaseActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_EDIT_MODE, edit)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         NextcloudTalkApplication.sharedApplication!!.componentApplication.inject(this)
         binding = ActivityProfileBinding.inflate(layoutInflater)
+        edit = savedInstanceState?.getBoolean(KEY_EDIT_MODE) ?: false
         setupActionBar()
         setContentView(binding.root)
         initSystemBars()
+        val colorScheme = viewThemeUtils.getColorScheme(this)
+        binding.profileSettingEnabledProfile.apply {
+            setContent {
+                MaterialTheme(colorScheme = colorScheme) {
+                    ProfileEnabledCard(
+                        isEnabled = isProfileEnabled,
+                        onCheckedChange = { isProfileEnabled = it }
+                    )
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -128,7 +147,7 @@ class ProfileActivity : BaseActivity() {
         adapter = UserInfoAdapter(null, viewThemeUtils, this)
         binding.userinfoList.adapter = adapter
         binding.userinfoList.setItemViewCacheSize(DEFAULT_CACHE_SIZE)
-        currentUser = currentUserProvider.currentUser.blockingGet()
+        currentUser = currentUserProviderOld.currentUser.blockingGet()
         val credentials = ApiUtils.getCredentials(currentUser!!.username, currentUser!!.token)
 
         pickImage = PickImage(this, currentUser)
@@ -171,6 +190,43 @@ class ProfileActivity : BaseActivity() {
                 })
         }
         binding.avatarImage.let { ViewCompat.setTransitionName(it, "userAvatar.transitionTag") }
+
+        if (CapabilitiesUtil.canEditScopes(currentUser!!)) {
+            ncApi.getEditableUserProfileFields(
+                credentials,
+                ApiUtils.getUrlForUserFields(currentUser!!.baseUrl!!)
+            )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(object : Observer<UserProfileFieldsOverall> {
+                    override fun onSubscribe(d: Disposable) {
+                        // unused atm
+                    }
+
+                    override fun onNext(userProfileFieldsOverall: UserProfileFieldsOverall) {
+                        editableFields = userProfileFieldsOverall.ocs!!.data!!
+                        invalidateOptionsMenu()
+                        fetchUserProfile(credentials)
+                    }
+
+                    override fun onError(e: Throwable) {
+                        Log.e(TAG, "Error loading editable user profile from server", e)
+                        edit = false
+                        fetchUserProfile(credentials)
+                    }
+
+                    override fun onComplete() {
+                        // unused atm
+                    }
+                })
+        } else {
+            fetchUserProfile(credentials)
+        }
+
+        colorIcons()
+    }
+
+    private fun fetchUserProfile(credentials: String?) {
         ncApi.getUserProfile(credentials, ApiUtils.getUrlForUserProfile(currentUser!!.baseUrl!!))
             .retry(DEFAULT_RETRIES)
             .subscribeOn(Schedulers.io())
@@ -197,8 +253,6 @@ class ProfileActivity : BaseActivity() {
                     // unused atm
                 }
             })
-
-        colorIcons()
     }
 
     private fun setupActionBar() {
@@ -243,8 +297,9 @@ class ProfileActivity : BaseActivity() {
                 item.icon = ContextCompat.getDrawable(this, R.drawable.ic_check)
                 binding.emptyList.root.visibility = View.GONE
                 binding.userinfoList.visibility = View.VISIBLE
+                binding.profileSettingEnabledProfile.visibility = View.VISIBLE
                 if (CapabilitiesUtil.hasSpreedFeatureCapability(
-                        currentUser!!.capabilities!!.spreedCapability!!,
+                        currentUser?.capabilities?.spreedCapability,
                         SpreedFeatures.TEMP_USER_AVATAR_API
                     )
                 ) {
@@ -280,7 +335,8 @@ class ProfileActivity : BaseActivity() {
                 item.setTitle(R.string.edit)
                 item.icon = ContextCompat.getDrawable(this, R.drawable.ic_edit)
 
-                binding.avatarButtons.visibility = View.INVISIBLE
+                binding.avatarButtons.visibility = View.GONE
+                binding.profileSettingEnabledProfile.visibility = View.GONE
                 if (adapter!!.filteredDisplayList.isEmpty()) {
                     binding.emptyList.root.visibility = View.VISIBLE
                     binding.userinfoList.visibility = View.GONE
@@ -320,6 +376,9 @@ class ProfileActivity : BaseActivity() {
             binding.userinfoFullName.text = userInfo?.displayName
         }
         binding.loadingContent.visibility = View.VISIBLE
+
+        isProfileEnabled = "1" == userInfo?.profileEnabled
+
         adapter!!.setData(createUserInfoDetails(userInfo))
         if (
             isAllEmpty(
@@ -329,11 +388,19 @@ class ProfileActivity : BaseActivity() {
                     userInfo?.email,
                     userInfo?.address,
                     userInfo?.twitter,
-                    userInfo?.website
+                    userInfo?.website,
+                    userInfo?.biography,
+                    userInfo?.bluesky,
+                    userInfo?.fediverse,
+                    userInfo?.headline,
+                    userInfo?.organisation,
+                    userInfo?.pronouns,
+                    userInfo?.role
                 )
             )
         ) {
             binding.userinfoList.visibility = View.GONE
+            binding.profileSettingEnabledProfile.visibility = if (edit) View.VISIBLE else View.GONE
             binding.loadingContent.visibility = View.GONE
             binding.emptyList.root.visibility = View.VISIBLE
             setErrorMessageForMultiList(
@@ -344,37 +411,22 @@ class ProfileActivity : BaseActivity() {
         } else {
             binding.emptyList.root.visibility = View.GONE
             binding.loadingContent.visibility = View.GONE
+            binding.profileSettingEnabledProfile.visibility = if (edit) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
             binding.userinfoList.visibility = View.VISIBLE
         }
-
-        // show edit button
-        if (CapabilitiesUtil.canEditScopes(currentUser!!)) {
-            ncApi.getEditableUserProfileFields(
-                ApiUtils.getCredentials(currentUser!!.username, currentUser!!.token),
-                ApiUtils.getUrlForUserFields(currentUser!!.baseUrl!!)
+        binding.avatarButtons.visibility = if (edit &&
+            CapabilitiesUtil.hasSpreedFeatureCapability(
+                currentUser?.capabilities?.spreedCapability,
+                SpreedFeatures.TEMP_USER_AVATAR_API
             )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(object : Observer<UserProfileFieldsOverall> {
-                    override fun onSubscribe(d: Disposable) {
-                        // unused atm
-                    }
-
-                    override fun onNext(userProfileFieldsOverall: UserProfileFieldsOverall) {
-                        editableFields = userProfileFieldsOverall.ocs!!.data!!
-                        invalidateOptionsMenu()
-                        adapter!!.notifyDataSetChanged()
-                    }
-
-                    override fun onError(e: Throwable) {
-                        Log.e(TAG, "Error loading editable user profile from server", e)
-                        edit = false
-                    }
-
-                    override fun onComplete() {
-                        // unused atm
-                    }
-                })
+        ) {
+            View.VISIBLE
+        } else {
+            View.GONE
         }
     }
 
@@ -385,11 +437,11 @@ class ProfileActivity : BaseActivity() {
         binding.emptyList.emptyListIcon.setImageResource(errorResource)
         binding.emptyList.emptyListIcon.visibility = View.VISIBLE
         binding.emptyList.emptyListViewText.visibility = View.VISIBLE
+        binding.profileSettingEnabledProfile.visibility = View.GONE
         binding.userinfoList.visibility = View.GONE
         binding.loadingContent.visibility = View.GONE
     }
 
-    @Suppress("Detekt.LongMethod")
     private fun createUserInfoDetails(userInfo: UserProfileData?): List<UserInfoDetailsItem> {
         val result: MutableList<UserInfoDetailsItem> = LinkedList()
 
@@ -405,11 +457,11 @@ class ProfileActivity : BaseActivity() {
             )
             result.add(
                 UserInfoDetailsItem(
-                    R.drawable.ic_phone,
-                    userInfo.phone,
-                    resources!!.getString(R.string.user_info_phone),
-                    Field.PHONE,
-                    userInfo.phoneScope
+                    R.drawable.ic_record_voice_over_24px,
+                    userInfo.pronouns,
+                    resources!!.getString(R.string.user_info_pronouns),
+                    Field.PRONOUNS,
+                    userInfo.pronounsScope
                 )
             )
             result.add(
@@ -419,6 +471,15 @@ class ProfileActivity : BaseActivity() {
                     resources!!.getString(R.string.user_info_email),
                     Field.EMAIL,
                     userInfo.emailScope
+                )
+            )
+            result.add(
+                UserInfoDetailsItem(
+                    R.drawable.ic_phone,
+                    userInfo.phone,
+                    resources!!.getString(R.string.user_info_phone),
+                    Field.PHONE,
+                    userInfo.phoneScope
                 )
             )
             result.add(
@@ -433,7 +494,7 @@ class ProfileActivity : BaseActivity() {
             result.add(
                 UserInfoDetailsItem(
                     R.drawable.ic_web,
-                    DisplayUtils.beautifyURL(userInfo.website),
+                    userInfo.website,
                     resources!!.getString(R.string.user_info_website),
                     Field.WEBSITE,
                     userInfo.websiteScope
@@ -442,10 +503,64 @@ class ProfileActivity : BaseActivity() {
             result.add(
                 UserInfoDetailsItem(
                     R.drawable.ic_twitter,
-                    DisplayUtils.beautifyTwitterHandle(userInfo.twitter),
+                    userInfo.twitter,
                     resources!!.getString(R.string.user_info_twitter),
                     Field.TWITTER,
                     userInfo.twitterScope
+                )
+            )
+            result.add(
+                UserInfoDetailsItem(
+                    R.drawable.ic_cloud_24px,
+                    userInfo.bluesky,
+                    resources!!.getString(R.string.user_info_bluesky),
+                    Field.BLUESKY,
+                    userInfo.blueskyScope
+                )
+            )
+            result.add(
+                UserInfoDetailsItem(
+                    R.drawable.ic_fediverse_24px,
+                    userInfo.fediverse,
+                    resources!!.getString(R.string.user_info_fediverse),
+                    Field.FEDIVERSE,
+                    userInfo.fediverseScope
+                )
+            )
+            result.add(
+                UserInfoDetailsItem(
+                    R.drawable.ic_home_work_24px,
+                    userInfo.organisation,
+                    resources!!.getString(R.string.user_info_organisation),
+                    Field.ORGANISATION,
+                    userInfo.organisationScope
+                )
+            )
+            result.add(
+                UserInfoDetailsItem(
+                    R.drawable.ic_work_24px,
+                    userInfo.role,
+                    resources!!.getString(R.string.user_info_role),
+                    Field.ROLE,
+                    userInfo.roleScope
+                )
+            )
+            result.add(
+                UserInfoDetailsItem(
+                    R.drawable.ic_info_24px,
+                    userInfo.headline,
+                    resources!!.getString(R.string.user_info_headline),
+                    Field.HEADLINE,
+                    userInfo.headlineScope
+                )
+            )
+            result.add(
+                UserInfoDetailsItem(
+                    R.drawable.ic_article_24px,
+                    userInfo.biography,
+                    resources!!.getString(R.string.user_info_biography),
+                    Field.BIOGRAPHY,
+                    userInfo.biographyScope
                 )
             )
         }
@@ -490,7 +605,7 @@ class ProfileActivity : BaseActivity() {
                             ).show()
                             adapter!!.updateFilteredList()
                             adapter!!.notifyDataSetChanged()
-                            Log.e(TAG, "Failed to saved: " + item.text + " as " + item.field, e)
+                            Log.e(TAG, "Failed to save: " + item.text + " as " + item.field, e)
                         }
 
                         override fun onComplete() {
@@ -504,6 +619,49 @@ class ProfileActivity : BaseActivity() {
                 saveScope(item, userInfo)
             }
             adapter!!.updateFilteredList()
+        }
+
+        // Profile enabled
+        val originalProfileEnabled = "1" == userInfo?.profileEnabled
+        if (isProfileEnabled != originalProfileEnabled) {
+            val newValue = if (isProfileEnabled) "1" else "0"
+            val credentials = ApiUtils.getCredentials(currentUser!!.username, currentUser!!.token)
+            ncApi.setUserData(
+                credentials,
+                ApiUtils.getUrlForUserData(currentUser!!.baseUrl!!, currentUser!!.userId!!),
+                Field.PROFILE_ENABLED.fieldName,
+                newValue
+            )
+                .retry(DEFAULT_RETRIES)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(object : Observer<GenericOverall> {
+                    override fun onSubscribe(d: Disposable) {
+                        // unused atm
+                    }
+
+                    override fun onNext(genericOverall: GenericOverall) {
+                        Log.d(TAG, "Successfully saved: $newValue as ${Field.PROFILE_ENABLED.fieldName}")
+                        userInfo?.profileEnabled = newValue
+                    }
+
+                    override fun onError(e: Throwable) {
+                        isProfileEnabled = originalProfileEnabled
+                        Snackbar.make(
+                            binding.root,
+                            String.format(
+                                resources!!.getString(R.string.failed_to_save),
+                                Field.PROFILE_ENABLED.fieldName
+                            ),
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                        Log.e(TAG, "Failed to save: $newValue as ${Field.PROFILE_ENABLED.fieldName}", e)
+                    }
+
+                    override fun onComplete() {
+                        // unused atm
+                    }
+                })
         }
     }
 
@@ -587,7 +745,7 @@ class ProfileActivity : BaseActivity() {
             credentials,
             ApiUtils.getUrlForUserData(currentUser!!.baseUrl!!, currentUser!!.userId!!),
             item.field.scopeName,
-            item.scope!!.name
+            item.scope!!.id
         )
             .retry(DEFAULT_RETRIES)
             .subscribeOn(Schedulers.io())
@@ -598,12 +756,12 @@ class ProfileActivity : BaseActivity() {
                 }
 
                 override fun onNext(userProfileOverall: GenericOverall) {
-                    Log.d(TAG, "Successfully saved: " + item.scope + " as " + item.field)
+                    Log.d(TAG, "Successfully saved: " + item.scope!!.id + " as " + item.field.scopeName)
                 }
 
                 override fun onError(e: Throwable) {
                     item.scope = userInfo?.getScopeByField(item.field)
-                    Log.e(TAG, "Failed to saved: " + item.scope + " as " + item.field, e)
+                    Log.e(TAG, "Failed to saved: " + item.scope!!.id + " as " + item.field.scopeName, e)
                 }
 
                 override fun onComplete() {
@@ -629,7 +787,7 @@ class ProfileActivity : BaseActivity() {
         var displayList: List<UserInfoDetailsItem>?
         var filteredDisplayList: MutableList<UserInfoDetailsItem> = LinkedList()
 
-        class ViewHolder(val binding: UserInfoDetailsTableItemBinding) : RecyclerView.ViewHolder(binding.root)
+        class ViewHolder(val composeView: ComposeView) : RecyclerView.ViewHolder(composeView)
 
         init {
             this.displayList = displayList ?: LinkedList()
@@ -653,9 +811,12 @@ class ProfileActivity : BaseActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val itemBinding =
-                UserInfoDetailsTableItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            return ViewHolder(itemBinding)
+            val composeView = ComposeView(parent.context).apply {
+                layoutParams =
+                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool)
+            }
+            return ViewHolder(composeView)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -664,87 +825,61 @@ class ProfileActivity : BaseActivity() {
             } else {
                 filteredDisplayList[position]
             }
-
-            initScopeElements(item, holder)
-
-            holder.binding.icon.setImageResource(item.icon)
-            initUserInfoEditText(holder, item)
-
-            holder.binding.icon.contentDescription = item.hint
-            viewThemeUtils.platform.colorImageView(holder.binding.icon, ColorRole.PRIMARY)
-            if (!TextUtils.isEmpty(item.text) || profileActivity.edit) {
-                holder.binding.userInfoDetailContainer.visibility = View.VISIBLE
-                profileActivity.viewThemeUtils.material.colorTextInputLayout(holder.binding.userInfoInputLayout)
-                if (profileActivity.edit &&
-                    profileActivity.editableFields.contains(item.field.toString().lowercase())
-                ) {
-                    holder.binding.userInfoEditTextEdit.isEnabled = true
-                    holder.binding.userInfoEditTextEdit.isFocusableInTouchMode = true
-                    holder.binding.userInfoEditTextEdit.isEnabled = true
-                    holder.binding.userInfoEditTextEdit.isCursorVisible = true
-                    holder.binding.scope.setOnClickListener {
-                        ScopeDialog(
-                            holder.binding.scope.context,
-                            this,
-                            item.field,
-                            holder.adapterPosition
-                        ).show()
-                    }
-                    holder.binding.scope.alpha = HIGH_EMPHASIS_ALPHA
-                } else {
-                    holder.binding.userInfoEditTextEdit.isEnabled = false
-                    holder.binding.userInfoEditTextEdit.isFocusableInTouchMode = false
-                    holder.binding.userInfoEditTextEdit.isEnabled = false
-                    holder.binding.userInfoEditTextEdit.isCursorVisible = false
-                    holder.binding.scope.setOnClickListener(null)
-                    holder.binding.scope.alpha = MEDIUM_EMPHASIS_ALPHA
-                }
-            } else {
-                holder.binding.userInfoDetailContainer.visibility = View.GONE
+            val colorScheme = viewThemeUtils.getColorScheme(profileActivity)
+            val itemPosition = when (position) {
+                0 -> UserInfoDetailItemPosition.FIRST
+                filteredDisplayList.size - 1 -> UserInfoDetailItemPosition.LAST
+                else -> UserInfoDetailItemPosition.MIDDLE
             }
-        }
 
-        private fun initUserInfoEditText(holder: ViewHolder, item: UserInfoDetailsItem) {
-            holder.binding.userInfoEditTextEdit.setText(item.text)
-            holder.binding.userInfoInputLayout.hint = item.hint
-            holder.binding.userInfoEditTextEdit.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-                    // unused atm
-                }
-
-                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                    if (profileActivity.edit) {
-                        displayList!![holder.adapterPosition].text = holder.binding.userInfoEditTextEdit.text.toString()
-                    } else {
-                        filteredDisplayList[holder.adapterPosition].text =
-                            holder.binding.userInfoEditTextEdit.text.toString()
-                    }
-                }
-
-                override fun afterTextChanged(s: Editable) {
-                    // unused atm
-                }
-            })
-        }
-
-        private fun initScopeElements(item: UserInfoDetailsItem, holder: ViewHolder) {
-            if (item.scope == null) {
-                holder.binding.scope.visibility = View.GONE
-            } else {
-                holder.binding.scope.visibility = View.VISIBLE
-                when (item.scope) {
-                    Scope.PRIVATE -> holder.binding.scope.setImageResource(R.drawable.ic_cellphone)
-                    Scope.LOCAL -> holder.binding.scope.setImageResource(R.drawable.ic_password)
-                    Scope.FEDERATED -> holder.binding.scope.setImageResource(R.drawable.ic_contacts)
-                    Scope.PUBLISHED -> holder.binding.scope.setImageResource(R.drawable.ic_link)
-                    null -> {
-                        // nothing
-                    }
-                }
-                holder.binding.scope.contentDescription = holder.binding.scope.context.getString(
-                    R.string.scope_toggle_description,
-                    item.hint
+            if (profileActivity.edit) {
+                val itemData = UserInfoDetailItemData(
+                    icon = item.icon,
+                    text = item.text.orEmpty(),
+                    hint = item.hint,
+                    scope = item.scope
                 )
+                val listeners = UserInfoDetailListeners(
+                    onTextChange = { newText ->
+                        if (profileActivity.edit) {
+                            displayList!![position].text = newText
+                        } else {
+                            filteredDisplayList[position].text = newText
+                        }
+                    },
+                    onScopeClick = { ScopeDialog(profileActivity, this, item.field, position).show() }
+                )
+                holder.composeView.setContent {
+                    MaterialTheme(colorScheme = colorScheme) {
+                        UserInfoDetailItemEditable(
+                            data = itemData,
+                            listeners = listeners,
+                            position = itemPosition,
+                            enabled = profileActivity.editableFields.contains(item.field.toString().lowercase()),
+                            multiLine = item.field == Field.BIOGRAPHY
+                        )
+                    }
+                }
+            } else {
+                val displayText = when (item.field) {
+                    Field.WEBSITE -> DisplayUtils.beautifyURL(item.text)
+                    Field.TWITTER -> DisplayUtils.beautifyTwitterHandle(item.text)
+                    else -> item.text.orEmpty()
+                }
+                holder.composeView.setContent {
+                    MaterialTheme(colorScheme = colorScheme) {
+                        UserInfoDetailItemViewOnly(
+                            userInfo = UserInfoDetailItemData(
+                                icon = item.icon,
+                                text = displayText,
+                                hint = item.hint,
+                                scope = item.scope
+                            ),
+                            position = itemPosition,
+                            ellipsize = Field.EMAIL == item.field
+                        )
+                    }
+                }
             }
         }
 
@@ -767,14 +902,21 @@ class ProfileActivity : BaseActivity() {
         PHONE("phone", "phoneScope"),
         ADDRESS("address", "addressScope"),
         WEBSITE("website", "websiteScope"),
-        TWITTER("twitter", "twitterScope")
+        TWITTER("twitter", "twitterScope"),
+        BIOGRAPHY("biography", "biographyScope"),
+        FEDIVERSE("fediverse", "fediverseScope"),
+        HEADLINE("headline", "headlineScope"),
+        ORGANISATION("organisation", "organisationScope"),
+        PROFILE_ENABLED("profile_enabled", "profile_enabledScope"),
+        PRONOUNS("pronouns", "pronounsScope"),
+        ROLE("role", "roleScope"),
+        BLUESKY("bluesky", "blueskyScope")
     }
 
     companion object {
         private val TAG = ProfileActivity::class.java.simpleName
         private const val DEFAULT_CACHE_SIZE: Int = 20
         private const val DEFAULT_RETRIES: Long = 3
-        private const val HIGH_EMPHASIS_ALPHA: Float = 0.87f
-        private const val MEDIUM_EMPHASIS_ALPHA: Float = 0.6f
+        private const val KEY_EDIT_MODE = "edit_mode"
     }
 }
