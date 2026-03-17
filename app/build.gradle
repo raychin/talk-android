@@ -46,8 +46,8 @@ android {
 
         // mayor.minor.hotfix.increment (for increment: 01-50=Alpha / 51-89=RC / 90-99=stable)
         // xx   .xxx  .xx    .xx
-        versionCode 230000013
-        versionName "30.4.2-Alpha07"
+        versionCode 230000014
+        versionName "30.4.2-Alpha08"
 
         flavorDimensions "default"
         renderscriptTargetApi = 19
@@ -379,7 +379,7 @@ dependencies {
     implementation "io.noties.markwon:ext-tasklist:$markwonVersion"
     implementation "io.noties.markwon:ext-tables:$markwonVersion"
 
-    compileOnly 'com.github.nextcloud-deps:ImagePicker:2.1.0.2'
+    implementation 'com.github.nextcloud-deps:ImagePicker:2.1.0.2'
 //    implementation project(':image-picker-editor')
     implementation project(':picture-editor')
     implementation project(':picture-selector')
