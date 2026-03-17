@@ -902,4 +902,8 @@ How to translate with transifex:
     <string name="location_permission_denied_msg">請喺應用程式設定度啟用</string>
     <string name="location_services_disabled">位置服務已停用</string>
     <string name="location_services_disabled_msg">請啟用位置服務 (GPS) 嚟用呢個功能</string>
+
+    <string name="clps_select_messages">多選</string>
+    <string name="clps_selector_no_text">選擇訊息</string>
+    <string name="clps_selector_text">已選取 %1$d 則訊息</string>
 </resources>

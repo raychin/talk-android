@@ -162,6 +162,14 @@ class MessageActionsDialog(
                     !(message.isDeletedCommentMessage || message.isDeleted) &&
                     isOnline
             )
+
+            initMenuSelectMessages(
+                // TODO RAY 能顯示多選的消息需要同步
+                ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() &&
+                    !(message.isDeletedCommentMessage || message.isDeleted) &&
+                    isOnline
+            )
+
             initMenuRemindMessage(
                 !message.isDeleted &&
                     hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.REMIND_ME_LATER) &&
@@ -375,6 +383,22 @@ class MessageActionsDialog(
         }
 
         dialogMessageActionsBinding.menuForwardMessage.visibility = getVisibility(visible)
+    }
+
+    /**
+     * 消息多選
+     * add by ray on 2026/02/28
+     */
+    private fun initMenuSelectMessages(visible: Boolean) {
+        if (visible) {
+            dialogMessageActionsBinding.menuSelectMessages.setOnClickListener {
+                // TODO RAY 參照initMenuForwardMessage顯示多選圖標及邏輯
+                chatActivity.selectMessages(message)
+                dismiss()
+            }
+        }
+
+        dialogMessageActionsBinding.menuSelectMessages.visibility = getVisibility(visible)
     }
 
     private fun initMenuRemindMessage(visible: Boolean) {

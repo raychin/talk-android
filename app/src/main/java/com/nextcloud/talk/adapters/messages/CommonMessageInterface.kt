@@ -13,4 +13,6 @@ interface CommonMessageInterface {
     fun onClickReaction(chatMessage: ChatMessage, emoji: String)
     fun onOpenMessageActionsDialog(chatMessage: ChatMessage)
     fun openThread(chatMessage: ChatMessage)
+
+    fun onSelectMessage(chatMessage: ChatMessage)
 }

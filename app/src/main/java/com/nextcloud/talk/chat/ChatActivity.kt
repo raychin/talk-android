@@ -419,6 +419,12 @@ class ChatActivity :
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
+
+            if (selectorMode) {
+                forwardSelectorMode(false)
+                return
+            }
+
             if (!openedViaNotification && isChatThread()) {
                 isEnabled = false
                 onBackPressedDispatcher.onBackPressed()
@@ -1514,7 +1520,12 @@ class ChatActivity :
 
         adapter?.setLoadMoreListener(this)
         adapter?.setDateHeadersFormatter { format(it) }
-        adapter?.setOnMessageViewLongClickListener { view, message -> onMessageViewLongClick(view, message) }
+        adapter?.setOnMessageViewLongClickListener { view, message ->
+            if (selectorMode) {
+                return@setOnMessageViewLongClickListener
+            }
+            onMessageViewLongClick(view, message)
+        }
 
         adapter?.registerViewClickListener(
             R.id.playPauseBtn
@@ -4039,11 +4050,68 @@ class ChatActivity :
         startActivity(intent)
     }
 
+    private var selectorMode = false
+    // ... existing code ...
     fun selectMessages(message: IMessage?) {
-        // TODO RAY adapter顯示多選按鈕
-
         // TODO RAY 多選完成後，參照forwardMessage跳轉到分享頁面
+        toggleMessageSelection(message as ChatMessage, true)
+        forwardSelectorMode(true)
     }
+
+    fun forwardSelectorMode(showForward: Boolean) {
+        selectorMode = showForward
+        adapter?.setSelectionMode(showForward)
+        binding.chatTitleMessagesSelector.root.visibility = if (showForward) View.VISIBLE else View.GONE
+        binding.chatToolbar.visibility = if (showForward) View.GONE else View.VISIBLE
+        binding.chatTitleMessagesSelector.cancelView.setOnClickListener {
+            forwardSelectorMode(false)
+        }
+        // TODO RAY 隐藏底部输入栏，待处理会重置问题
+        binding.fragmentContainerActivityChat.visibility = if (showForward) View.GONE else View.VISIBLE
+    }
+
+    override fun onSelectMessage(chatMessage: ChatMessage) {
+        Log.d("Ray", "onSelectMessage: ${chatMessage.message}")
+        toggleMessageSelection(chatMessage, false)
+    }
+
+    fun toggleMessageSelection(chatMessage: ChatMessage, addMessage: Boolean) {
+        if (addMessage) {
+            adapter?.toggleFirstMessageSelection(chatMessage)
+        } else {
+            adapter?.toggleMessageSelection(chatMessage)
+        }
+
+        binding.chatTitleMessagesSelector.selectorText.text = if (getMessageSelectionCount() > 0) {
+            String.format(
+                context.resources.getString(R.string.clps_selector_text),
+                getMessageSelectionCount()
+            )
+        } else {
+            context.resources.getString(R.string.clps_selector_no_text)
+        }
+    }
+
+    fun getMessageSelectionCount(): Int {
+        return adapter?.getSelectedCount() ?: 0
+    }
+
+    fun getSelectedMessageIds(): Set<String> {
+        return adapter?.getSelectedMessageIds() ?: emptySet()
+    }
+
+    fun clearMessageSelection() {
+        adapter?.clearSelection()
+    }
+
+    fun isMessageSelected(messageId: String): Boolean {
+        return adapter?.isMessageSelected(messageId) == true
+    }
+
+    fun isInSelectionMode(): Boolean {
+        return adapter?.isSelectionMode() == true
+    }
+    // ... existing code ...
 
     fun remindMeLater(message: ChatMessage?) {
         Log.d(TAG, "remindMeLater called")

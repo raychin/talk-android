@@ -2200,6 +2200,10 @@ class CallActivity : CallBaseActivity() {
         unchanged: Collection<Participant>
     ) {
         Log.d(TAG, "handleCallParticipantsChanged")
+        Log.d("Ray", "joined: ${joined.toString()}")
+        Log.d("Ray", "updated: ${updated.toString()}")
+        Log.d("Ray", "left: ${left.toString()}")
+        Log.d("Ray", "unchanged: ${unchanged.toString()}")
 
         Log.d("Ray", "================start=================")
 
