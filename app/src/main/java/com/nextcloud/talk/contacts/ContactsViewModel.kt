@@ -127,9 +127,12 @@ class ContactsViewModel @Inject constructor(private val repository: ContactsRepo
                 if (_portals.value == null) {
                     val lang = DeviceUtils.getDeviceLanguage()
                     Log.e("Ray", lang)
-                    _portals.value = repository.getPortals(
-                        lang
-                    )
+                    // fix: portal 获取失败，不影响使用 by ray on 2026/03/24
+                    try {
+                        _portals.value = repository.getPortals(lang)
+                    } catch (e: Exception) {
+                        Log.e("Ray", "Failed to fetch portals", e)
+                    }
                 }
                 portals = _portals
 
