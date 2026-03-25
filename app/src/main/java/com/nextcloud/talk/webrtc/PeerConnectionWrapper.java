@@ -59,6 +59,8 @@ public class PeerConnectionWrapper {
     private String sessionId;
     private final MediaConstraints mediaConstraints;
     private final Map<String, DataChannel> dataChannels = new HashMap<>();
+    // fix: 存储DataChannelObserver，挂断电话清空，避免异常 by ray on 2026/03/25
+    private final Map<String, DataChannelObserver> dataChannelObservers = new HashMap<>();
     private final List<DataChannelMessage> pendingDataChannelMessages = new ArrayList<>();
     private final SdpObserver sdpObserver;
 
@@ -144,7 +146,9 @@ public class PeerConnectionWrapper {
                 init.negotiated = false;
 
                 DataChannel statusDataChannel = peerConnection.createDataChannel("status", init);
-                statusDataChannel.registerObserver(new DataChannelObserver(statusDataChannel));
+                DataChannelObserver ob = new DataChannelObserver(statusDataChannel);
+                dataChannelObservers.put("status", ob);
+                statusDataChannel.registerObserver(ob);
                 dataChannels.put("status", statusDataChannel);
 
                 if (isMCUPublisher) {
@@ -233,6 +237,13 @@ public class PeerConnectionWrapper {
 
     public synchronized void removePeerConnection() {
         signalingMessageReceiver.removeListener(webRtcMessageListener);
+
+
+        // 先标记所有DataChannelObserver为已处置
+        for (Map.Entry<String, DataChannelObserver> entry : dataChannelObservers.entrySet()) {
+            DataChannelObserver observer = entry.getValue();
+            observer.markAsDisposed();
+        }
 
         for (DataChannel dataChannel: dataChannels.values()) {
             Log.d(TAG, "Disposed DataChannel " + dataChannel.label());
@@ -386,6 +397,7 @@ public class PeerConnectionWrapper {
 
         private final DataChannel dataChannel;
         private final String dataChannelLabel;
+        private volatile boolean isDisposed = false;
 
         public DataChannelObserver(DataChannel dataChannel) {
             this.dataChannel = Objects.requireNonNull(dataChannel);
@@ -394,35 +406,55 @@ public class PeerConnectionWrapper {
 
         @Override
         public void onBufferedAmountChange(long l) {
+            // Check if disposed before accessing
+            if (isDisposed) {
+                return;
+            }
 
         }
 
         @Override
         public void onStateChange() {
+            // 先检查是否已处置
+            if (isDisposed) {
+                return;
+            }
             synchronized (PeerConnectionWrapper.this) {
                 // The PeerConnection could have been removed in parallel even with the synchronization (as just after
                 // "onStateChange" was called "removePeerConnection" could have acquired the lock).
-                if (peerConnection == null) {
+                // 再次检查，防止竞态条件
+                if (isDisposed || peerConnection == null) {
                     return;
                 }
 
-                if (dataChannel.state() == DataChannel.State.OPEN && "status".equals(dataChannelLabel)) {
-                    for (DataChannelMessage dataChannelMessage : pendingDataChannelMessages) {
-                        sendWithoutQueuing(dataChannel, dataChannelMessage);
+                try {
+                    if (dataChannel.state() == DataChannel.State.OPEN && "status".equals(dataChannelLabel)) {
+                        for (DataChannelMessage dataChannelMessage : pendingDataChannelMessages) {
+                            sendWithoutQueuing(dataChannel, dataChannelMessage);
+                        }
+                        pendingDataChannelMessages.clear();
                     }
-                    pendingDataChannelMessages.clear();
+                } catch (IllegalStateException e) {
+                    // DataChannel was disposed during state check
+                    Log.w(TAG, "DataChannel was disposed during state change", e);
+                    isDisposed = true;
                 }
             }
         }
 
         @Override
         public void onMessage(DataChannel.Buffer buffer) {
+            // 先检查是否已处置
+            if (isDisposed) {
+                return;
+            }
             synchronized (PeerConnectionWrapper.this) {
                 // It is assumed that, even if its data channel was disposed, its buffers can be used while there is
                 // a reference to them, so it would not be necessary to check this from a thread-safety point of view.
                 // Nevertheless, if the remote peer connection was removed it would not make sense to notify the
                 // listeners anyway.
-                if (peerConnection == null) {
+                // 再次检查，防止竞态条件
+                if (isDisposed || peerConnection == null) {
                     return;
                 }
             }
@@ -486,6 +518,11 @@ public class PeerConnectionWrapper {
 
                 return;
             }
+        }
+
+        // 提供外部标记为已处置的方法
+        public void markAsDisposed() {
+            this.isDisposed = true;
         }
     }
 
@@ -587,6 +624,8 @@ public class PeerConnectionWrapper {
                     return;
                 }
 
+                DataChannelObserver ob = new DataChannelObserver(dataChannel);
+                dataChannelObservers.put(dataChannel.label(), ob);
                 dataChannel.registerObserver(new DataChannelObserver(dataChannel));
                 dataChannels.put(dataChannel.label(), dataChannel);
             }
