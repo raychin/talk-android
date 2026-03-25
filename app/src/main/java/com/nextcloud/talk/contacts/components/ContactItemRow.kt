@@ -44,6 +44,7 @@ import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.contacts.CompanionClass
 import com.nextcloud.talk.contacts.ContactsViewModel
 import com.nextcloud.talk.contacts.RoomUiState
+import com.nextcloud.talk.contacts.loadImage
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteUser
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import androidx.core.net.toUri
@@ -52,6 +53,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
 
 @OptIn(ExperimentalGlideComposeApi::class)
+@Suppress("LongMethod")
 @Composable
 fun ContactItemRow(contact: AutocompleteUser, contactsViewModel: ContactsViewModel, context: Context) {
     var isSelected by remember { mutableStateOf(contactsViewModel.selectedParticipantsList.value.contains(contact)) }
@@ -146,8 +148,8 @@ fun ContactItemRow(contact: AutocompleteUser, contactsViewModel: ContactsViewMod
         }
     }
     when (roomUiState) {
-        is RoomUiState.Success -> {
-            val conversation = (roomUiState as RoomUiState.Success).conversation
+        is ContactsViewModel.RoomUiState.Success -> {
+            val conversation = (roomUiState as ContactsViewModel.RoomUiState.Success).conversation
             val bundle = Bundle()
             bundle.putString(BundleKeys.KEY_ROOM_TOKEN, conversation?.token)
             val chatIntent = Intent(context, ChatActivity::class.java)
@@ -155,8 +157,8 @@ fun ContactItemRow(contact: AutocompleteUser, contactsViewModel: ContactsViewMod
             chatIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             context.startActivity(chatIntent)
         }
-        is RoomUiState.Error -> {
-            val errorMessage = (roomUiState as RoomUiState.Error).message
+        is ContactsViewModel.RoomUiState.Error -> {
+            val errorMessage = (roomUiState as ContactsViewModel.RoomUiState.Error).message
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -164,6 +166,6 @@ fun ContactItemRow(contact: AutocompleteUser, contactsViewModel: ContactsViewMod
                 Text(text = "Error: $errorMessage", color = Color.Red)
             }
         }
-        is RoomUiState.None -> {}
+        is ContactsViewModel.RoomUiState.None -> {}
     }
 }

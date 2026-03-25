@@ -19,6 +19,8 @@ class SearchViewObservable {
             val subject: PublishSubject<String> = PublishSubject.create()
             searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String): Boolean {
+                    // searchView.clearFocus()
+                    // subject.onComplete()
                     // fix: 清空搜索无法再次搜索问题 by ray on 2026/03/25
                     subject.onNext(query)
                     // subject.onComplete()

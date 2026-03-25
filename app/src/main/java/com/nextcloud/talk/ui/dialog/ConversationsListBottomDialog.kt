@@ -42,7 +42,7 @@ import com.nextcloud.talk.utils.ShareUtils
 import com.nextcloud.talk.utils.SpreedFeatures
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_INTERNAL_USER_ID
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_ROOM_TOKEN
-import com.nextcloud.talk.utils.database.user.CurrentUserProviderNew
+import com.nextcloud.talk.utils.database.user.CurrentUserProviderOld
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -77,7 +77,7 @@ class ConversationsListBottomDialog(
     lateinit var userManager: UserManager
 
     @Inject
-    lateinit var currentUserProvider: CurrentUserProviderNew
+    lateinit var currentUserProvider: CurrentUserProviderOld
 
     lateinit var credentials: String
 
@@ -194,10 +194,12 @@ class ConversationsListBottomDialog(
             dismiss()
         }
 
-        binding.conversationArchiveText.text = if (conversation.hasArchived) {
-            this.activity.resources.getString(R.string.unarchive_conversation)
+        if (conversation.hasArchived) {
+            binding.conversationArchiveText.setText(R.string.unarchive_conversation)
+            binding.conversationArchiveIcon.setImageResource(R.drawable.ic_unarchive_24px)
         } else {
-            this.activity.resources.getString(R.string.archive_conversation)
+            binding.conversationArchiveText.setText(R.string.archive_conversation)
+            binding.conversationArchiveIcon.setImageResource(R.drawable.outline_archive_24)
         }
 
         binding.conversationArchive.setOnClickListener {

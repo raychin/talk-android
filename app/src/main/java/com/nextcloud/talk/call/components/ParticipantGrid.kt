@@ -26,20 +26,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.nextcloud.talk.adapters.ParticipantUiState
+import androidx.compose.ui.unit.isFinite
 import org.webrtc.EglBase
 import kotlin.math.ceil
+import android.util.Log
+import com.nextcloud.talk.activities.ParticipantUiState
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 fun ParticipantGrid(
     modifier: Modifier = Modifier,
     eglBase: EglBase?,
     participantUiStates: List<ParticipantUiState>,
     isVoiceOnlyCall: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onScreenShareIconClick: ((String?) -> Unit?)?
 ) {
+    Log.d("ParticipantGrid", "participantUiStates.size in Grid:" + participantUiStates.size)
+
     val configuration = LocalConfiguration.current
     val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 
@@ -72,24 +77,42 @@ fun ParticipantGrid(
             .fillMaxSize()
             .clickable { onClick() }
     ) {
-        val availableHeight = maxHeight
+        val hasBoundedHeight = constraints.hasBoundedHeight && maxHeight.isFinite
 
-        val gridAvailableHeight = availableHeight - totalVerticalSpacing - totalVerticalPadding
-        val rawItemHeight = gridAvailableHeight / rows
-        val itemHeight = maxOf(rawItemHeight, minItemHeight)
+        val itemHeight = if (hasBoundedHeight) {
+            val gridAvailableHeight = maxHeight - totalVerticalSpacing - totalVerticalPadding
+            val rawItemHeight = gridAvailableHeight / rows
+            maxOf(rawItemHeight, minItemHeight)
+        } else {
+            minItemHeight
+        }
+
+        val gridHeight = if (hasBoundedHeight) {
+            maxHeight
+        } else {
+            (itemHeight * rows) + totalVerticalSpacing + totalVerticalPadding
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(availableHeight),
+                .height(gridHeight),
             verticalArrangement = Arrangement.spacedBy(itemSpacing),
             horizontalArrangement = Arrangement.spacedBy(itemSpacing),
             contentPadding = PaddingValues(vertical = edgePadding, horizontal = edgePadding)
         ) {
             items(
-                participantUiStates,
-                key = { it.sessionKey }
+                items = participantUiStates.sortedWith(
+                    compareBy(
+                        { !it.isScreenStreamEnabled },
+                        { !it.isStreamEnabled },
+                        { !it.isAudioEnabled },
+                        { !it.raisedHand },
+                        { !it.isConnected }
+                    )
+                ),
+                key = { it.sessionKey!! }
             ) { participant ->
                 ParticipantTile(
                     participantUiState = participant,
@@ -97,7 +120,8 @@ fun ParticipantGrid(
                         .height(itemHeight)
                         .fillMaxWidth(),
                     eglBase = eglBase,
-                    isVoiceOnlyCall = isVoiceOnlyCall
+                    isVoiceOnlyCall = isVoiceOnlyCall,
+                    onScreenShareIconClick = onScreenShareIconClick
                 )
             }
         }
@@ -110,8 +134,10 @@ fun ParticipantGridPreview() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(1),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview
@@ -120,8 +146,10 @@ fun TwoParticipants() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(2),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview
@@ -130,8 +158,10 @@ fun ThreeParticipants() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(3),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview
@@ -140,8 +170,10 @@ fun FourParticipants() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(4),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview
@@ -150,8 +182,10 @@ fun FiveParticipants() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(5),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview
@@ -160,8 +194,10 @@ fun SevenParticipants() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(7),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview
@@ -170,8 +206,10 @@ fun FiftyParticipants() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(50),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview(
@@ -184,8 +222,10 @@ fun OneParticipantLandscape() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(1),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview(
@@ -198,8 +238,10 @@ fun TwoParticipantsLandscape() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(2),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview(
@@ -212,8 +254,10 @@ fun ThreeParticipantsLandscape() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(3),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview(
@@ -226,8 +270,10 @@ fun FourParticipantsLandscape() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(4),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview(
@@ -240,8 +286,10 @@ fun SevenParticipantsLandscape() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(7),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 @Preview(
@@ -254,8 +302,10 @@ fun FiftyParticipantsLandscape() {
     ParticipantGrid(
         participantUiStates = getTestParticipants(50),
         eglBase = null,
-        isVoiceOnlyCall = false
-    ) {}
+        isVoiceOnlyCall = false,
+        onClick = {},
+        onScreenShareIconClick = {}
+    )
 }
 
 fun getTestParticipants(numberOfParticipants: Int): List<ParticipantUiState> {
@@ -263,13 +313,18 @@ fun getTestParticipants(numberOfParticipants: Int): List<ParticipantUiState> {
     for (i: Int in 1..numberOfParticipants) {
         val participant = ParticipantUiState(
             sessionKey = i.toString(),
+            baseUrl = "",
+            roomToken = "",
             nick = "test$i user",
             isConnected = true,
             isAudioEnabled = false,
             isStreamEnabled = true,
+            isScreenStreamEnabled = true,
             raisedHand = true,
-            avatarUrl = "",
-            mediaStream = null
+            mediaStream = null,
+            actorType = null,
+            actorId = null,
+            isInternal = false
         )
         participantList.add(participant)
     }

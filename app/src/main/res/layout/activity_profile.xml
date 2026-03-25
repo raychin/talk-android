@@ -76,7 +76,7 @@
             android:layout_below="@id/userinfo_baseurl"
             android:layout_centerInParent="true"
             android:orientation="horizontal"
-            android:visibility="invisible"
+            android:visibility="gone"
             tools:visibility="visible">
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -133,6 +133,16 @@
 
         </LinearLayout>
 
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/profile_setting_enabled_profile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/avatar_buttons"
+            android:layout_marginHorizontal="@dimen/standard_margin"
+            android:layout_marginBottom="@dimen/standard_margin"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
     </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -143,12 +153,12 @@
         android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:itemCount="3"
-        tools:listitem="@layout/user_info_details_table_item"
-        tools:visibility="gone" />
+        tools:visibility="visible" />
 
     <include
         android:id="@+id/emptyList"
-        layout="@layout/empty_list" />
+        layout="@layout/empty_list"
+        tools:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/loading_content"

@@ -30,9 +30,9 @@ import autodagger.AutoInjector
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.nextcloud.talk.R
 import com.nextcloud.talk.account.AccountVerificationActivity
+import com.nextcloud.talk.account.BrowserLoginActivity
 import com.nextcloud.talk.account.ServerSelectionActivity
 import com.nextcloud.talk.account.SwitchAccountActivity
-import com.nextcloud.talk.account.WebViewLoginActivity
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.events.CertificateEvent
@@ -42,7 +42,8 @@ import com.nextcloud.talk.utils.FileViewerUtils
 import com.nextcloud.talk.utils.UriUtils
 import com.nextcloud.talk.utils.adjustUIForAPILevel35
 import com.nextcloud.talk.utils.bundle.BundleKeys
-import com.nextcloud.talk.utils.database.user.CurrentUserProviderNew
+import com.nextcloud.talk.utils.database.user.CurrentUserProvider
+import com.nextcloud.talk.utils.database.user.CurrentUserProviderOld
 import com.nextcloud.talk.utils.preferences.AppPreferences
 import com.nextcloud.talk.utils.ssl.TrustManager
 import org.greenrobot.eventbus.EventBus
@@ -74,8 +75,12 @@ open class BaseActivity : AppCompatActivity() {
     @Inject
     lateinit var context: Context
 
+    @Deprecated("Use CurrentUserProvider instead")
     @Inject
-    lateinit var currentUserProvider: CurrentUserProviderNew
+    lateinit var currentUserProviderOld: CurrentUserProviderOld
+
+    @Inject
+    lateinit var currentUserProvider: CurrentUserProvider
 
     open val appBarLayoutType: AppBarLayoutType
         get() = AppBarLayoutType.TOOLBAR
@@ -241,7 +246,7 @@ open class BaseActivity : AppCompatActivity() {
         val temporaryClassNames: MutableList<String> = ArrayList()
         temporaryClassNames.add(ServerSelectionActivity::class.java.name)
         temporaryClassNames.add(AccountVerificationActivity::class.java.name)
-        temporaryClassNames.add(WebViewLoginActivity::class.java.name)
+        temporaryClassNames.add(BrowserLoginActivity::class.java.name)
         temporaryClassNames.add(SwitchAccountActivity::class.java.name)
         if (!temporaryClassNames.contains(javaClass.name)) {
             appPreferences.removeTemporaryClientCertAlias()
@@ -254,7 +259,7 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     override fun startActivity(intent: Intent) {
-        val user = currentUserProvider.currentUser.blockingGet()
+        val user = currentUserProviderOld.currentUser.blockingGet()
         if (intent.data != null && TextUtils.equals(intent.action, Intent.ACTION_VIEW)) {
             val uri = intent.data.toString()
             if (user?.baseUrl != null && uri.startsWith(user.baseUrl!!)) {

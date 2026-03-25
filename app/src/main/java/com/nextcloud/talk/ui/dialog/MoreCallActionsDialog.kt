@@ -118,6 +118,7 @@ class MoreCallActionsDialog(private val callActivity: CallActivity) : BottomShee
         }
     }
 
+    @Suppress("LongMethod")
     private fun initObservers() {
         callActivity.callRecordingViewModel?.viewState?.observe(this) { state ->
             when (state) {

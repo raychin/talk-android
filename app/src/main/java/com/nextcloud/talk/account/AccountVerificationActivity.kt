@@ -158,7 +158,7 @@ class AccountVerificationActivity : BaseActivity() {
                         bundle.putString(KEY_USERNAME, username)
                         bundle.putString(KEY_PASSWORD, "")
 
-                        val intent = Intent(context, WebViewLoginActivity::class.java)
+                        val intent = Intent(context, BrowserLoginActivity::class.java)
                         intent.putExtras(bundle)
                         startActivity(intent)
                     } else {
@@ -416,7 +416,7 @@ class AccountVerificationActivity : BaseActivity() {
         cookieManager.cookieStore.removeAll()
 
         if (userManager.users.blockingGet().size == 1 ||
-            currentUserProvider.currentUser.blockingGet().id != internalAccountId
+            currentUserProviderOld.currentUser.blockingGet().id != internalAccountId
         ) {
             val userToSetAsActive = userManager.getUserWithId(internalAccountId).blockingGet()
             Log.d(TAG, "userToSetAsActive: " + userToSetAsActive.username)
