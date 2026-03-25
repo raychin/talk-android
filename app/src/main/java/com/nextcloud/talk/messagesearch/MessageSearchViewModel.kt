@@ -57,7 +57,7 @@ class MessageSearchViewModel @Inject constructor(private val unifiedSearchReposi
 
     @SuppressLint("CheckResult") // handled by helper
     fun onQueryTextChange(newText: String) {
-        if (newText.length >= MIN_CHARS_FOR_SEARCH || newText.contains(MessageFilterType.IMAGE.value)) {
+        if (newText.length > MIN_CHARS_FOR_SEARCH || newText.contains(MessageFilterType.IMAGE.value)) {
             _state.value = LoadingState
             messageSearchHelper.cancelSearch()
             messageSearchHelper.startMessageSearch(newText)
@@ -101,6 +101,6 @@ class MessageSearchViewModel @Inject constructor(private val unifiedSearchReposi
 
     companion object {
         private val TAG = MessageSearchViewModel::class.simpleName
-        private const val MIN_CHARS_FOR_SEARCH = 2
+        private const val MIN_CHARS_FOR_SEARCH = 0
     }
 }
