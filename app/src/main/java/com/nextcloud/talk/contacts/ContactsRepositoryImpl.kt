@@ -25,7 +25,6 @@ class ContactsRepositoryImpl @Inject constructor(private val ncApiCoroutines: Nc
     override suspend fun getContacts(user: User, searchQuery: String?, shareTypes: List<String>): AutocompleteOverall {
         val credentials = ApiUtils.getCredentials(user.username, user.token)
 
-    override suspend fun getContacts(searchQuery: String?, shareTypes: List<String>): AutocompleteOverall {
         val retrofitBucket: RetrofitBucket = ApiUtils.getRetrofitBucketForContactsSearchFor14(
             user.baseUrl!!,
             searchQuery
@@ -41,11 +40,6 @@ class ContactsRepositoryImpl @Inject constructor(private val ncApiCoroutines: Nc
             modifiedQueryMap
         )
         return response
-    }
-
-    override suspend fun getPortals(lang: String?): PortalOCS {
-        val url = ApiUtils.getUrlForPortals(currentUser.baseUrl!!,)
-        return ncApiCoroutines.getPortals(credentials, url, lang)
     }
 
     override suspend fun createRoom(
@@ -104,6 +98,11 @@ class ContactsRepositoryImpl @Inject constructor(private val ncApiCoroutines: Nc
 
             emit(response.ocs?.data.orEmpty())
         }
+
+    override suspend fun getPortals(user: User, lang: String?): PortalOCS {
+        val url = ApiUtils.getUrlForPortals(user.baseUrl!!,)
+        val credentials = ApiUtils.getCredentials(user.username, user.token)
+        return ncApiCoroutines.getPortals(credentials, url, lang)
     }
 
     companion object {

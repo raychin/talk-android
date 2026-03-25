@@ -38,13 +38,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.nextcloud.talk.R
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.contacts.CompanionClass
 import com.nextcloud.talk.contacts.ContactsViewModel
-import com.nextcloud.talk.contacts.RoomUiState
-import com.nextcloud.talk.contacts.loadImage
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteUser
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import androidx.core.net.toUri

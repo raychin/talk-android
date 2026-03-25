@@ -136,7 +136,7 @@ class ContactsViewModel @Inject constructor(
                     Log.e("Ray", lang)
                     // fix: portal 获取失败，不影响使用 by ray on 2026/03/24
                     try {
-                        _portals.value = repository.getPortals(lang)
+                        _portals.value = repository.getPortals(currentUser, lang)
                     } catch (e: Exception) {
                         Log.e("Ray", "Failed to fetch portals", e)
                     }

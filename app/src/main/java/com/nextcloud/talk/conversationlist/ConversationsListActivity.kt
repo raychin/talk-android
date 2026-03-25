@@ -89,7 +89,6 @@ import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.contacts.ContactsActivity
 import com.nextcloud.talk.contacts.ContactsViewModel
 import com.nextcloud.talk.contextchat.ContextChatView
-import com.nextcloud.talk.contextchat.ContextChatViewModel
 import com.nextcloud.talk.conversationlist.viewmodels.ConversationsListViewModel
 import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
@@ -111,9 +110,6 @@ import com.nextcloud.talk.threadsoverview.ThreadsOverviewActivity
 import com.nextcloud.talk.ui.BackgroundVoiceMessageCard
 import com.nextcloud.talk.ui.dialog.ChooseAccountDialogCompose
 import com.nextcloud.talk.ui.chooseaccount.ChooseAccountShareToDialogFragment
-import com.nextcloud.talk.ui.dialog.ChooseAccountDialogFragment
-import com.nextcloud.talk.ui.dialog.ChooseAccountShareToDialogFragment
-import com.nextcloud.talk.contextchat.ContextChatView
 import com.nextcloud.talk.contextchat.ContextChatViewModel
 import com.nextcloud.talk.extensions.generateImageUrl
 import com.nextcloud.talk.ui.dialog.ConversationsListBottomDialog
