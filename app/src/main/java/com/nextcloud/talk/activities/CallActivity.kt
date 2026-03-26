@@ -489,6 +489,14 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun processExtras(extras: Bundle) {
+        /**
+         * 判断是否通话发起人方法总结 add by ray on 2026/03/24
+         * 判断需求	                        方法
+         * 在 CallActivity 中判断当前角色	    isIncomingCallFromNotification — true = 接收人，false = 发起人
+         * 在全局判断是否正在拨号	            ApplicationWideCurrentRoomHolder.getInstance().isDialing
+         * 构造调用方是否为通知	检查 Bundle       是否包含 KEY_FROM_NOTIFICATION_START_CALL 键且值为 true
+         * 如果你需要在某些场景下做区分处理，直接使用 isIncomingCallFromNotification 即可。
+         */
         roomId = extras.getString(KEY_ROOM_ID, "")
         roomToken = extras.getString(KEY_ROOM_TOKEN, "")
         conversationPassword = extras.getString(KEY_CONVERSATION_PASSWORD, "")
@@ -498,6 +506,13 @@ class CallActivity : CallBaseActivity() {
         canPublishAudioStream = extras.getBoolean(KEY_PARTICIPANT_PERMISSION_CAN_PUBLISH_AUDIO)
         canPublishVideoStream = extras.getBoolean(KEY_PARTICIPANT_PERMISSION_CAN_PUBLISH_VIDEO)
         isModerator = extras.getBoolean(KEY_IS_MODERATOR, false)
+        /**
+         * 判断单人通话 add by ray on 2026/03/24
+         * 场景	                        判断方式
+         * 有 currentConversation 对象	currentConversation.type == ROOM_TYPE_ONE_TO_ONE_CALL
+         * 从 Bundle 恢复	            extras.getBoolean(KEY_ROOM_ONE_TO_ONE, false)
+         * 工具方法	                    ConversationUtils.isLockedOneToOne() 判断是否锁定的单人会话
+         */
         isOneToOneConversation = extras.getBoolean(KEY_ROOM_ONE_TO_ONE, false)
 
         if (extras.containsKey(KEY_FROM_NOTIFICATION_START_CALL)) {
@@ -2247,7 +2262,7 @@ class CallActivity : CallBaseActivity() {
                 }
             }
         }
-        Log.d(TAG, "   currentSessionId is $currentSessionId")
+        Log.d("Ray", "   currentSessionId is $currentSessionId")
 
         val participantsInCall: MutableList<Participant> = ArrayList()
         participantsInCall.addAll(joined)
@@ -2288,6 +2303,15 @@ class CallActivity : CallBaseActivity() {
             ApplicationWideCurrentRoomHolder.getInstance().isInCall
         ) {
             Log.d(TAG, "Most probably a moderator ended the call for all.")
+            hangup(shutDownView = true, endCallForAll = false)
+            return
+        }
+
+        /**
+         * feat: 一对一通话，对方挂断后自动挂断 add by ray on 2026/03/24
+         */
+        if (isOneToOneConversation && left.isNotEmpty()) {
+            Log.d("Ray", "isOneToOneConversation left hangup call")
             hangup(shutDownView = true, endCallForAll = false)
             return
         }

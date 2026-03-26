@@ -385,6 +385,10 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         val user = signatureVerification.user
 
         // see https://github.com/nextcloud/notifications/blob/master/docs/ocs-endpoint-v2.md
+        Log.e("Ray", ApiUtils.getUrlForNcNotificationWithId(
+            user!!.baseUrl!!,
+            (pushMessage.notificationId!!).toString()
+        ))
         ncApi.getNcNotification(
             credentials,
             ApiUtils.getUrlForNcNotificationWithId(
