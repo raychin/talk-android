@@ -18,16 +18,20 @@ import android.text.Spanned
 import android.text.TextUtils
 import android.text.format.DateUtils
 import android.text.style.ImageSpan
+import android.util.Log
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import coil.dispose
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.ConversationItem.ConversationItemViewHolder
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.chat.data.model.ChatMessage.MessageType
+import com.nextcloud.talk.chat.data.model.clps.MultiMessage
 import com.nextcloud.talk.data.database.mappers.asModel
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.RvItemConversationWithLastMessageBinding
@@ -356,6 +360,12 @@ class ConversationItem(
 
     private val lastMessageDisplayText: CharSequence
         get() {
+            // 检查是否为 MultiMessage 消息
+            val multiMessageText = parseMultiMessageIfNeeded()
+            if (multiMessageText != null) {
+                return multiMessageText
+            }
+
             if (chatMessage?.getCalculateMessageType() == MessageType.REGULAR_TEXT_MESSAGE ||
                 chatMessage?.getCalculateMessageType() == MessageType.SYSTEM_MESSAGE ||
                 chatMessage?.getCalculateMessageType() == MessageType.SINGLE_LINK_MESSAGE
@@ -496,6 +506,126 @@ class ConversationItem(
         }
     }
 
+
+    /**
+     * 检查消息是否需要解析为 MultiMessage
+     *
+     * @return 如果是 MultiMessage 则返回格式化文本，否则返回 null
+     */
+    private fun parseMultiMessageIfNeeded(): CharSequence? {
+        if (chatMessage?.message.isNullOrBlank()) {
+            return null
+        }
+
+        val messageContent = chatMessage!!.message!!.trim()
+
+        // 快速检查：JSON 对象应该以 { 开始
+        if (!messageContent.startsWith("{")) {
+            return null
+        }
+
+        return try {
+            val gson = Gson()
+            val multiMessage = gson.fromJson(messageContent, MultiMessage::class.java)
+
+            // 验证解析结果是否有效
+            if (multiMessage == null || (multiMessage.title == null && multiMessage.message.isNullOrEmpty())) {
+                return null
+            }
+
+            // 构建 MultiMessage 的显示文本
+            formatMultiMessageDisplayText(multiMessage)
+        } catch (e: JsonSyntaxException) {
+            // 解析失败，说明不是有效的 JSON 格式
+            Log.d(TAG, "Message cannot be parsed as MultiMessage: ${e.message}")
+            null
+        } catch (e: Exception) {
+            // 其他异常也视为不可解析
+            Log.d(TAG, "Error parsing message as MultiMessage: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * 格式化 MultiMessage 显示文本
+     *
+     * @param multiMessage 多消息对象
+     * @return 格式化后的文本
+     */
+    private fun formatMultiMessageDisplayText(multiMessage: MultiMessage): CharSequence {
+        val builder = StringBuilder()
+
+        builder.append("[")
+        // 添加标题（如果有）
+        if (!multiMessage.title.isNullOrBlank()) {
+            builder.append(multiMessage.title)
+        } else {
+            builder.append("共 ${multiMessage.message!!.size} 条消息")
+        }
+        builder.append("]")
+
+        /**
+         * <!-- MultiMessage -->
+         *     <plurals name="nc_multi_message_count">
+         *         <item quantity="other">%d 条消息</item>
+         *     </plurals>
+         *     <plurals name="nc_multi_message_others">
+         *         <item quantity="other">等 %d 人</item>
+         *     </plurals>
+         */
+        // 添加消息数量提示
+        // val messageCount = multiMessage.message?.size ?: 0
+        // if (messageCount > 0) {
+        //     if (builder.isNotEmpty()) {
+        //         builder.append(" ")
+        //     }
+        //     builder.append("[")
+        //     builder.append(sharedApplication!!.resources.getQuantityString(
+        //         R.plurals.nc_multi_message_count,
+        //         messageCount,
+        //         messageCount
+        //     ))
+        //     builder.append("]")
+        //
+        //     // 如果只有 1 条消息，显示第一条消息的预览
+        //     if (messageCount == 1) {
+        //         val firstMsg = multiMessage.message!![0]
+        //         val msgText = firstMsg.message?.take(30) ?: ""
+        //         if (msgText.isNotEmpty()) {
+        //             builder.append(": ")
+        //             builder.append(msgText)
+        //             if (firstMsg.message?.length ?: 0 > 30) {
+        //                 builder.append("…")
+        //             }
+        //         }
+        //     } else if (messageCount > 1) {
+        //         // 多条消息，显示前两条的发送者
+        //         val previewLimit = minOf(messageCount, 2)
+        //         builder.append(" ")
+        //         for (i in 0 until previewLimit) {
+        //             val msg = multiMessage.message!![i]
+        //             val actorName = msg.actorDisplayName ?: sharedApplication!!.getString(R.string.nc_guest)
+        //             builder.append(actorName)
+        //             if (i < previewLimit - 1 && messageCount > 2) {
+        //                 builder.append(", ")
+        //             } else if (i < previewLimit - 1) {
+        //                 builder.append(" ")
+        //             }
+        //         }
+        //         if (messageCount > 2) {
+        //             builder.append(" ")
+        //             builder.append(sharedApplication!!.resources.getQuantityString(
+        //                 R.plurals.nc_multi_message_others,
+        //                 messageCount - 2,
+        //                 messageCount - 2
+        //             ))
+        //         }
+        //     }
+        // }
+
+        return builder.toString()
+    }
+
     companion object {
         const val VIEW_TYPE = FlexibleItemViewType.CONVERSATION_ITEM
         private const val MILLIES = 1000L
@@ -503,5 +633,7 @@ class ConversationItem(
         private const val UNREAD_BUBBLE_STROKE_WIDTH = 6.0f
         private const val UNREAD_MESSAGES_TRESHOLD = 1000
         private const val IMAGE_SCALE_FACTOR = 0.7f
+
+        private const val TAG = "Ray"
     }
 }

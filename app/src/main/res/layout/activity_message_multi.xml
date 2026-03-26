@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <!--
+      ~ Nextcloud Talk - Android Client
+      ~
+      ~ SPDX-FileCopyrightText: 2026 Your Name <your.email@example.com>
+      ~ SPDX-License-Identifier: GPL-3.0-or-later
+    -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:fitsSystemWindows="true"
+    android:background="@color/bg_default"
+    tools:context=".chat.clps.MultiMessageDetailActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/appbar"
+            android:theme="?attr/actionBarPopupTheme"
+            app:navigationIconTint="@color/fontAppbar"
+            app:popupTheme="@style/appActionBarPopupMenu"
+            app:titleTextColor="@color/fontAppbar"
+            app:title="@string/clps_multi_message_detail_title" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- 消息数量统计 -->
+        <TextView
+            android:id="@+id/messageCountText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/standard_margin"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textColor="@color/high_emphasis_menu_icon"
+            android:background="@color/bg_default" />
+
+        <!-- 消息列表 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/standard_padding" />
+
+        <!-- 错误提示 -->
+        <TextView
+            android:id="@+id/errorText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/clps_multi_message_load_error"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

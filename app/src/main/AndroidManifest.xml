@@ -194,6 +194,10 @@
             android:theme="@style/AppTheme" />
 
         <activity
+            android:name=".chat.clps.MultiMessageDetailActivity"
+            android:theme="@style/AppTheme" />
+
+        <activity
             android:name=".activities.CallActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:excludeFromRecents="true"
