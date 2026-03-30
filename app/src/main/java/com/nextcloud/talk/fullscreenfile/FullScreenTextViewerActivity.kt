@@ -9,12 +9,16 @@
 package com.nextcloud.talk.fullscreenfile
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
 import autodagger.AutoInjector
 import com.nextcloud.talk.BuildConfig
@@ -90,6 +94,22 @@ class FullScreenTextViewerActivity : AppCompatActivity() {
 
         binding = ActivityFullScreenTextBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // fix: 处理状态栏和导航栏 insets，避免内容被遮挡
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            WindowCompat.setDecorFitsSystemWindows(window, true)
+
+            ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                view.setPadding(
+                    view.paddingLeft,
+                    systemBars.top,
+                    view.paddingRight,
+                    systemBars.bottom
+                )
+                insets
+            }
+        }
 
         setSupportActionBar(binding.textviewToolbar)
 
