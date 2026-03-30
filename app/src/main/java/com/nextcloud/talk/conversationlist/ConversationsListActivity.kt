@@ -846,7 +846,8 @@ class ConversationsListActivity :
                 imeOptions = imeOptions or EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
             }
             searchView!!.imeOptions = imeOptions
-            searchView!!.queryHint = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+            // searchView!!.queryHint = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+            searchView!!.queryHint = getString(R.string.nc_search)
             if (searchManager != null) {
                 searchView!!.setSearchableInfo(searchManager.getSearchableInfo(componentName))
             }
@@ -1021,7 +1022,8 @@ class ConversationsListActivity :
     private fun showSearchBar() {
         val layoutParams = binding.searchToolbar.layoutParams as AppBarLayout.LayoutParams
         binding.searchToolbar.visibility = View.VISIBLE
-        binding.searchText.text = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+        // binding.searchText.text = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+        binding.searchText.text = getString(R.string.nc_search)
         binding.conversationListToolbar.visibility = View.GONE
         // layoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout
         // .LayoutParams.SCROLL_FLAG_SNAP | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);

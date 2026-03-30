@@ -4,6 +4,6 @@
 -->
 <resources>
     <string name="nc_app_name">CLPS Talk</string>
-    <string name="nc_app_product_name">Nextcloud Talk CLPS</string>
-    <string name="nc_server_product_name">NextcloudCLPS</string>
+    <string name="nc_app_product_name">CLPS Talk</string>
+    <string name="nc_server_product_name">CLPS Talk</string>
 </resources>
