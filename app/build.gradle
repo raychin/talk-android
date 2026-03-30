@@ -46,7 +46,7 @@ android {
 
         // mayor.minor.hotfix.increment (for increment: 01-50=Alpha / 51-89=RC / 90-99=stable)
         // xx   .xxx  .xx    .xx
-        versionCode 230000020
+        versionCode 230000019
         versionName "30.4.2 Alpha 10"
 
         flavorDimensions "default"
