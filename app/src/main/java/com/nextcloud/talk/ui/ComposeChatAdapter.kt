@@ -9,10 +9,12 @@ package com.nextcloud.talk.ui
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.util.Log
 import android.view.View.TEXT_ALIGNMENT_VIEW_START
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.LinearEasing
@@ -23,6 +25,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,11 +59,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,6 +88,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.ColorUtils
+import androidx.core.net.toUri
 import androidx.emoji2.widget.EmojiTextView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -108,10 +115,12 @@ import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.users.UserManager
 import com.nextcloud.talk.utils.DateUtils
 import com.nextcloud.talk.utils.DrawableUtils.getDrawableResourceIdForMimeType
+import com.nextcloud.talk.utils.FileViewerUtils
 import com.nextcloud.talk.utils.message.MessageUtils
 import com.nextcloud.talk.utils.preview.ComposePreviewUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -351,6 +360,167 @@ class ComposeChatAdapter(
             }
         }
     }
+
+    /**
+     * 消息按照日期格式化后进行分组，并显示格式化后的日期时间
+     */
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    fun GetViewFixed() {
+        val listState = rememberLazyListState()
+        val isBlinkingState = remember { mutableStateOf(true) }
+
+        // 获取 LazyColumn 的布局信息
+        val lazyListLayoutInfo = listState.layoutInfo
+
+        // 按日期分组消息
+        // val groupedMessages = remember(items) {
+        //     items.groupBy { message ->
+        //         formatTime(message.timestamp * LONG_1000)
+        //     }
+        // }
+        // 按日期分组消息 - 使用 derivedStateOf 避免不必要的重组
+        // val groupedMessages by rememberUpdatedState(items.groupBy { message ->
+        //     formatTime(message.timestamp * LONG_1000)
+        // })
+        // 按日期分组消息 - 使用 derivedStateOf 避免不必要的重组
+        val groupedMessages by remember {
+            derivedStateOf {
+                items.groupBy { message ->
+                    formatTime(message.timestamp * LONG_1000)
+                }
+            }
+        }
+        Log.d("Ray", groupedMessages.toString())
+
+        // Box(
+        //     modifier = Modifier
+        //         .fillMaxSize()
+        //         .padding(16.dp)
+        // ) {
+            // 消息列表
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                state = listState,
+                modifier = Modifier.padding(16.dp)
+            ) {
+                if (this@ComposeChatAdapter.items.isEmpty()) {
+                    item {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            ShimmerGroup()
+                        }
+                    }
+                } else {
+                    // 遍历每个分组
+                    groupedMessages.forEach { (dateString, messagesInGroup) ->
+                        Log.d("Ray", "------------------------")
+                        Log.d("Ray", dateString)
+                        Log.d("Ray", messagesInGroup.toString())
+                        // 每组的日期头部
+                        item {
+                            val color = Color(highEmphasisColorInt)
+                            val backgroundColor =
+                                LocalContext.current.resources.getColor(R.color.bg_message_list_incoming_bubble, null)
+                            Row(
+                                horizontalArrangement = Arrangement.Absolute.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            ) {
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    dateString,
+                                    fontSize = AUTHOR_TEXT_SIZE,
+                                    color = color,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .shadow(
+                                            16.dp,
+                                            spotColor = colorScheme.primary,
+                                            ambientColor = colorScheme.primary
+                                        )
+                                        .background(color = Color(backgroundColor), shape = RoundedCornerShape(8.dp))
+                                        .padding(8.dp)
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+
+                        // 该组的所有消息
+                        items(messagesInGroup) { message ->
+                            message.activeUser = currentUser
+                            when (val type = message.getCalculateMessageType()) {
+                                ChatMessage.MessageType.SYSTEM_MESSAGE -> {
+                                    if (!message.shouldFilter()) {
+                                        SystemMessage(message)
+                                    }
+                                }
+
+                                ChatMessage.MessageType.VOICE_MESSAGE -> {
+                                    VoiceMessage(message, isBlinkingState)
+                                }
+
+                                ChatMessage.MessageType.SINGLE_NC_ATTACHMENT_MESSAGE -> {
+                                    ImageMessage(message, isBlinkingState)
+                                }
+
+                                ChatMessage.MessageType.SINGLE_NC_GEOLOCATION_MESSAGE -> {
+                                    GeolocationMessage(message, isBlinkingState)
+                                }
+
+                                ChatMessage.MessageType.POLL_MESSAGE -> {
+                                    PollMessage(message, isBlinkingState)
+                                }
+
+                                ChatMessage.MessageType.DECK_CARD -> {
+                                    DeckMessage(message, isBlinkingState)
+                                }
+
+                                ChatMessage.MessageType.REGULAR_TEXT_MESSAGE -> {
+                                    if (message.isLinkPreview()) {
+                                        LinkMessage(message, isBlinkingState)
+                                    } else {
+                                        TextMessage(message, isBlinkingState)
+                                    }
+                                }
+
+                                else -> {
+                                    Log.d(TAG, "Unknown message type: $type")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        // }
+
+        if (messageId != null && items.size > 0) {
+            LaunchedEffect(Dispatchers.Main) {
+                delay(SCROLL_DELAY)
+                val pos = searchMessages(messageId!!)
+                if (pos > 0) {
+                    // 等待布局完成
+                    snapshotFlow { listState.layoutInfo.viewportSize.height }.first { it > 0 }
+
+                    // 计算屏幕中间位置的偏移量
+                    val viewportHeight = lazyListLayoutInfo.viewportEndOffset - lazyListLayoutInfo.viewportStartOffset
+                    val scrollOffset = (viewportHeight / 2).coerceAtLeast(0)
+
+                    // 先快速滚动到目标位置附近
+                    listState.scrollToItem(pos, scrollOffset)
+                    // listState.scrollToItem(pos)
+                    // listState.animateScrollToItem(pos)
+                }
+                delay(ANIMATION_DURATION)
+                isBlinkingState.value = false
+            }
+        }
+    }
+    // ... ray add code ...
+
 
     private fun ChatMessage.shouldFilter(): Boolean =
         this.isReaction() ||
@@ -796,7 +966,10 @@ class ComposeChatAdapter(
                     model = loadedImage,
                     contentDescription = stringResource(R.string.nc_sent_an_image),
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .clickable {
+                            handleImageOrFileClickLikeChat(message)
+                        },
                     contentScale = ContentScale.FillWidth
                 )
 
@@ -843,6 +1016,48 @@ class ComposeChatAdapter(
             }
         }
     }
+
+    // ... ray add code ...
+    private fun handleImageOrFileClickLikeChat(message: ChatMessage) {
+        val context = viewModel.context
+        message.activeUser = currentUser
+
+        when {
+            // 如果是附件消息（文件、图片等），使用 FileViewerUtils 打开
+            message.getCalculateMessageType() === ChatMessage.MessageType.SINGLE_NC_ATTACHMENT_MESSAGE -> {
+                val fileViewerUtils = FileViewerUtils(context, message.activeUser!!)
+
+                if (message.activeUser != null &&
+                    message.activeUser!!.username != null &&
+                    message.activeUser!!.baseUrl != null
+                ) {
+                    // 创建 ProgressUi 对象（由于是 Compose UI，这里传入 null）
+                    val progressUi = FileViewerUtils.ProgressUi(
+                        progressBar = null,
+                        messageText = null,
+                        previewImage = ImageView(context)
+                    )
+
+                    fileViewerUtils.openFile(message, progressUi)
+                }
+            }
+            // 如果是普通图片链接消息
+            message.messageType == ChatMessage.MessageType.SINGLE_LINK_IMAGE_MESSAGE.name -> {
+                message.imageUrl?.let { url ->
+                    val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
+                    browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(browserIntent)
+                }
+            }
+            // 其他类型的消息，尝试直接打开图片
+            message.imageUrl != null -> {
+                val browserIntent = Intent(Intent.ACTION_VIEW, message.imageUrl!!.toUri())
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(browserIntent)
+            }
+        }
+    }
+    // ... ray add code ...
 
     @Composable
     private fun VoiceMessage(message: ChatMessage, state: MutableState<Boolean>) {
@@ -1129,7 +1344,10 @@ fun AllMessageTypesPreview() {
         // Use the (potentially faked) color scheme
         Box(modifier = Modifier.fillMaxSize()) {
             // Provide a container
+            // 悬浮显示日期时间在消息列表
             adapter.GetView() // Call the main Composable
+            // // 固定显示日期在消息列表
+            // adapter.GetViewFixed()
         }
     }
 }

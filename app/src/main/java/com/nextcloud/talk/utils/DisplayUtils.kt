@@ -535,4 +535,47 @@ object DisplayUtils {
         } else {
             text
         }
+
+    // ... ray add code ...
+    /**
+     * 获取屏幕宽度（像素）
+     * @param context 上下文
+     * @return 屏幕宽度像素值
+     */
+    @JvmStatic
+    fun getScreenWidth(context: Context): Int {
+        return context.resources.displayMetrics.widthPixels
+    }
+
+    /**
+     * 获取屏幕高度（像素）
+     * @param context 上下文
+     * @return 屏幕高度像素值
+     */
+    @JvmStatic
+    fun getScreenHeight(context: Context): Int {
+        return context.resources.displayMetrics.heightPixels
+    }
+
+    /**
+     * 获取屏幕密度
+     * @param context 上下文
+     * @return 屏幕密度（0.75/1.0/1.5/2.0/3.0/4.0）
+     */
+    @JvmStatic
+    fun getScreenDensity(context: Context): Float {
+        return context.resources.displayMetrics.density
+    }
+
+    /**
+     * 获取屏幕密度 DPI
+     * @param context 上下文
+     * @return 屏幕密度 DPI 值
+     */
+    @JvmStatic
+    fun getScreenDensityDpi(context: Context): Int {
+        return context.resources.displayMetrics.densityDpi
+    }
+
+    // ... ray add code ...
 }

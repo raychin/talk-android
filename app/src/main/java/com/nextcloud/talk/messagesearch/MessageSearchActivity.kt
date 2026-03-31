@@ -318,6 +318,30 @@ class MessageSearchActivity : BaseActivity() {
     private fun setupSearchView() {
         searchView.queryHint = getString(R.string.message_search_hint)
         editInput = searchView.findViewById(androidx.appcompat.R.id.search_src_text)
+
+        // 设置键盘搜索按钮/回车键监听
+        editInput.setOnEditorActionListener { textView, actionId, event ->
+            when {
+                actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH ||
+                    actionId == android.view.inputmethod.EditorInfo.TYPE_NULL -> {
+                    // 执行搜索逻辑
+                    val newText = searchView.query.toString()
+                    if (!TextUtils.isEmpty(newText) || !TextUtils.isEmpty(filterItemChoose.filterType.value)) {
+                        // 以下逻辑使用防抖功能实现，observeSearchView已经实时实现
+                        // highlightText(editInput, newText)
+                        val processedText = processedSearchText(newText)
+                        viewModel.onQueryTextChange("$processedText${filterItemChoose.filterType.value}")
+
+                        // 隐藏键盘
+                        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                        imm.hideSoftInputFromWindow(editInput.windowToken, 0)
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+
         searchViewDisposable = observeSearchView(searchView)
             .debounce { query ->
                 when {

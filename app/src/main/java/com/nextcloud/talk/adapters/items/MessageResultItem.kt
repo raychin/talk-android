@@ -123,18 +123,18 @@ data class MessageResultItem(
         private const val MILLIES = 1000L
     }
 
-    override fun getHeader(): GenericTextHeaderItem =
-        MessagesTextHeaderItem(context, viewThemeUtils)
-            .apply {
-                // FlexibleAdapter needs this hack for some reason
-                isHidden  = if (context is MessageSearchActivity) {
-                    // 如果是 MessageSearchActivity，不显示头部
-                    true
-                } else {
-                    // 否则使用 showHeader 的值
-                    showHeader
-                }
-            }
+    override fun getHeader(): GenericTextHeaderItem? = null
+        // MessagesTextHeaderItem(context, viewThemeUtils)
+        //     .apply {
+        //         // FlexibleAdapter needs this hack for some reason
+        //         isHidden  = if (context is MessageSearchActivity) {
+        //             // 如果是 MessageSearchActivity，不显示头部
+        //             true
+        //         } else {
+        //             // 否则使用 showHeader 的值
+        //             showHeader
+        //         }
+        //     }
 
     override fun setHeader(header: GenericTextHeaderItem?) {
         // nothing, header is always the same
