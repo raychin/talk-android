@@ -16,6 +16,8 @@ import android.util.Log
 import android.view.View
 import androidx.core.text.toSpanned
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
+import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.FlexibleItemViewType
 import com.nextcloud.talk.adapters.items.GenericTextHeaderItem
@@ -49,10 +51,7 @@ data class MessageMultiItem(
     IFilterable<String>,
     ISectionable<MessageMultiItem.ViewHolder, GenericTextHeaderItem> {
     class ViewHolder(view: View, adapter: FlexibleAdapter<*>) : FlexibleViewHolder(view, adapter) {
-        var binding: RvItemMultiMessageBinding
-        init {
-            binding = RvItemMultiMessageBinding.bind(view)
-        }
+        var binding: RvItemMultiMessageBinding = RvItemMultiMessageBinding.bind(view)
     }
 
     override fun getLayoutRes(): Int = R.layout.rv_item_multi_message
@@ -69,6 +68,12 @@ data class MessageMultiItem(
         payloads: MutableList<Any>?
     ) {
 
+        // 确保 activeUser 已设置，这对 mention 处理至关重要
+        if (messageEntry.activeUser == null) {
+            messageEntry.activeUser = currentUser
+            Log.d("RAY", "Set activeUser to currentUser")
+        }
+
         val messageUtils = MessageUtils(context)
         var processedMessageText = messageUtils.enrichChatMessageText(
             holder.binding.messageExcerpt.context,
@@ -79,20 +84,29 @@ data class MessageMultiItem(
 
         holder.binding.conversationTitle.text = messageEntry.actorDisplayName
 
-        messageEntry.actorId?.let {
-            val url = ApiUtils.getUrlForAvatar(currentUser.baseUrl, it,false)
-            // holder.binding.thumbnail.loadThumbnail(url, currentUser)
-            holder.binding.thumbnail.loadAvatarOrImagePreview(url, currentUser, null)
+        // 判断是否是连续消息（同一个发送人）
+        val isConsecutiveMessage = isConsecutiveSameSender(adapter, position)
+
+        // 如果是连续消息且不是第一条，隐藏头像和发送者名称
+        if (isConsecutiveMessage) {
+            holder.binding.thumbnail.visibility = View.INVISIBLE
+        } else {
+            holder.binding.thumbnail.visibility = View.VISIBLE
+
+            messageEntry.actorId?.let {
+                val url = ApiUtils.getUrlForAvatar(currentUser.baseUrl, it, false)
+                holder.binding.thumbnail.loadAvatarOrImagePreview(url, currentUser, null)
+            }
+
+            // ChatMessageUtils().setAvatarOnMessage(holder.binding.thumbnail, messageEntry, viewThemeUtils)
         }
 
-        ChatMessageUtils().setAvatarOnMessage(holder.binding.thumbnail, messageEntry, viewThemeUtils)
-
-        // // val thumbnailURL = if (TextUtils.isEmpty(messageEntry.thumbnailURL)) {
-        // //     null
-        // // } else {
-        // //     generateImageUrl(messageEntry.thumbnailURL!!)
-        // // }
-        // // thumbnailURL?.let { holder.binding.thumbnail.loadThumbnail(it, currentUser) }
+        // // // val thumbnailURL = if (TextUtils.isEmpty(messageEntry.thumbnailURL)) {
+        // // //     null
+        // // // } else {
+        // // //     generateImageUrl(messageEntry.thumbnailURL!!)
+        // // // }
+        // // // thumbnailURL?.let { holder.binding.thumbnail.loadThumbnail(it, currentUser) }
 
         // fix: 时间显示问题
         holder.binding.conversationTime.text = DateUtils.getRelativeTimeSpanString(
@@ -108,8 +122,69 @@ data class MessageMultiItem(
         // "message": "{file}"
         if (messageEntry.message == "{file}") {
             holder.binding.thumbnailImg.visibility = View.VISIBLE
-            holder.binding.thumbnailImg.loadImage(messageEntry.messageParameters?.get("file")?.get("path")!!,
-                    currentUser, null)
+
+            val fileParams = messageEntry.messageParameters?.get("file")
+            if (fileParams != null) {
+                val fileId = fileParams["id"]
+                val fileName = fileParams["name"]
+                val fileSize = fileParams["size"]
+                val mimetype = fileParams["mimetype"]
+
+                Log.d("Ray", "File params: id=$fileId, name=$fileName, size=$fileSize, mimetype=$mimetype")
+
+                // 确保 activeUser 已设置（参考 PreviewMessageViewHolder）
+                if (messageEntry.activeUser == null) {
+                    messageEntry.activeUser = currentUser
+                    Log.d("Ray", "Set activeUser to currentUser")
+                }
+
+                // 参照 PreviewMessageViewHolder 的加载方式
+                if (!fileId.isNullOrEmpty() &&
+                    messageEntry.activeUser != null &&
+                    messageEntry.activeUser!!.baseUrl != null
+                ) {
+                    // 使用 ChatMessage.getImageUrl() 相同的逻辑拼接预览 URL
+                    val previewUrl = ApiUtils.getUrlForFilePreviewWithFileId(
+                        messageEntry.activeUser!!.baseUrl!!,
+                        fileId,
+                        context.resources.getDimensionPixelSize(R.dimen.maximum_file_preview_size)
+                    )
+
+                    Log.d("Ray", "Generated preview URL: $previewUrl")
+                    Log.d("Ray", messageEntry.imageUrl!!)
+
+                    // 显示并加载图片
+                    holder.binding.thumbnailImg.visibility = View.VISIBLE
+
+                    // 使用 loadImage 扩展方法（会自动添加认证头）
+                    holder.binding.thumbnailImg.loadAvatarOrImagePreview(generateImageUrl(messageEntry.imageUrl!!),
+                        messageEntry
+                        .activeUser!!)
+                } else {
+                    Log.e("Ray", "Cannot load image: fileId or baseUrl is null!")
+                    holder.binding.thumbnailImg.visibility = View.GONE
+                }
+            }
+
+            // val previewUrlFromPath = ApiUtils.getUrlForFilePreviewWithRemotePath(
+            //     currentUser.baseUrl!!,
+            //     messageEntry.messageParameters!!["file"]!!["id"]!!,
+            //     context.resources.getDimensionPixelSize(R.dimen.maximum_file_preview_size)
+            // )
+            // holder.binding.thumbnailImg.loadImage(previewUrlFromPath,
+            //     currentUser,
+            //     null)
+            // // messageEntry.imageUrl?.let {
+            // //     holder.binding.thumbnailImg.visibility = View.VISIBLE
+            // //     holder.binding.thumbnailImg.load(it) {
+            // //         addHeader(
+            // //             "Authorization",
+            // //             ApiUtils.getCredentials(messageEntry.activeUser!!.username, messageEntry.activeUser!!.token)!!
+            // //         )
+            // //     }
+            // // } ?: run {
+            // //     holder.binding.thumbnailImg.visibility = View.GONE
+            // // }
             holder.binding.messageExcerpt.visibility = View.VISIBLE
             holder.binding.messageExcerpt.text = messageEntry.messageParameters?.get("file")?.get("name")
             holder.binding.thumbnailSize.visibility = View.VISIBLE
@@ -117,7 +192,11 @@ data class MessageMultiItem(
                     ("size")!!)
         } else {
             holder.binding.messageExcerpt.visibility = View.VISIBLE
+            val layoutParams = holder.binding.messageExcerpt.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+            layoutParams.marginStart = (48 * context.resources.displayMetrics.density).toInt()
+            holder.binding.messageExcerpt.layoutParams = layoutParams
             // holder.binding.messageExcerpt.text = messageEntry.message
+
             processedMessageText = messageUtils.processMessageParameters(
                 holder.binding.messageExcerpt.context,
                 viewThemeUtils,
@@ -125,6 +204,7 @@ data class MessageMultiItem(
                 messageEntry,
                 holder.itemView
             )
+            Log.d("RAY", processedMessageText.toString())
             holder.binding.messageExcerpt.text = processedMessageText
         }
         // if (TextUtils.isEmpty(messageEntry.thumbnail)) {
@@ -136,6 +216,16 @@ data class MessageMultiItem(
         //     holder.binding.thumbnailSize.visibility = View.VISIBLE
         //     holder.binding.thumbnailSize.text = formatFileSize(messageEntry.thumbnailSize!!)
         // }
+    }
+
+    fun generateImageUrl(url: String): String {
+        if (url.isEmpty()) {
+            return ""
+        }
+        if (!url.endsWith(".png") && !url.endsWith(".jpg") && !url.endsWith(".jpeg")) {
+            return "${url}.png"
+        }
+        return url
     }
 
     private fun formatFileSize(sizeInKBStr: String): String {
@@ -163,5 +253,28 @@ data class MessageMultiItem(
 
     override fun setHeader(header: GenericTextHeaderItem?) {
         // nothing, header is always the same
+    }
+
+    /**
+     * 判断当前消息是否与前一条消息来自同一个发送人
+     */
+    private fun isConsecutiveSameSender(
+        adapter: FlexibleAdapter<IFlexible<RecyclerView.ViewHolder>>,
+        position: Int
+    ): Boolean {
+        if (position <= 0) return false
+
+        val currentItem = adapter.getItem(position)
+        val previousItem = adapter.getItem(position - 1)
+
+        if (currentItem !is MessageMultiItem || previousItem !is MessageMultiItem) {
+            return false
+        }
+
+        val currentActorId = currentItem.messageEntry.actorId
+        val previousActorId = previousItem.messageEntry.actorId
+
+        // 如果发送人 ID 相同，认为是连续消息
+        return currentActorId != null && currentActorId == previousActorId
     }
 }
