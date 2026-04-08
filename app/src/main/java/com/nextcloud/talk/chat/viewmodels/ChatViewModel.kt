@@ -265,6 +265,14 @@ class ChatViewModel @Inject constructor(
     val deleteChatMessageViewState: LiveData<ViewState>
         get() = _deleteChatMessageViewState
 
+    object HideChatMessageStartState : ViewState
+    class HideChatMessageSuccessState(val msg: ChatOverallSingleMessage) : ViewState
+    object HideChatMessageErrorState : ViewState
+
+    private val _hideChatMessageViewState: MutableLiveData<ViewState> = MutableLiveData(HideChatMessageStartState)
+    val hideChatMessageViewState: LiveData<ViewState>
+        get() = _hideChatMessageViewState
+
     object CreateRoomStartState : ViewState
     object CreateRoomErrorState : ViewState
     class CreateRoomSuccessState(val roomOverall: RoomOverall) : ViewState
@@ -546,6 +554,35 @@ class ChatViewModel @Inject constructor(
 
                 override fun onNext(t: ChatOverallSingleMessage) {
                     _deleteChatMessageViewState.value = DeleteChatMessageSuccessState(t)
+                }
+            })
+    }
+
+    fun hideChatMessages(credentials: String, url: String, messageId: String) {
+        chatNetworkDataSource.hideChatMessage(credentials, url)
+            .subscribeOn(Schedulers.io())
+            ?.observeOn(AndroidSchedulers.mainThread())
+            ?.subscribe(object : Observer<ChatOverallSingleMessage> {
+                override fun onSubscribe(d: Disposable) {
+                    disposableSet.add(d)
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.e(
+                        TAG,
+                        "Something went wrong when trying to delete message with id " +
+                            messageId,
+                        e
+                    )
+                    _hideChatMessageViewState.value = HideChatMessageErrorState
+                }
+
+                override fun onComplete() {
+                    // unused atm
+                }
+
+                override fun onNext(t: ChatOverallSingleMessage) {
+                    _hideChatMessageViewState.value = HideChatMessageSuccessState(t)
                 }
             })
     }

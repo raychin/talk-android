@@ -949,6 +949,24 @@ class ChatActivity :
             }
         }
 
+        chatViewModel.hideChatMessageViewState.observe(this) { state ->
+            when (state) {
+                is ChatViewModel.HideChatMessageSuccessState -> {
+                    val id = state.msg.ocs!!.data!!.parentMessage!!.id.toString()
+                    val index = adapter?.getMessagePositionById(id) ?: 0
+                    val message = adapter?.items?.get(index)?.item as ChatMessage
+                    setMessageAsHidden(message)
+                }
+
+                is ChatViewModel.HideChatMessageErrorState -> {
+                    Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
+                }
+
+                else -> {}
+            }
+        }
+
+
         chatViewModel.createRoomViewState.observe(this) { state ->
             when (state) {
                 is ChatViewModel.CreateRoomSuccessState -> {
@@ -3986,6 +4004,7 @@ class ChatActivity :
                 conversationUser,
                 currentConversation,
                 isShowMessageDeletionButton(message),
+                isShowMessageRecallButton(message),
                 participantPermissions.hasChatPermission(),
                 spreedCapabilities
             ).show()
@@ -3996,6 +4015,40 @@ class ChatActivity :
         ChatMessage.MessageType.SYSTEM_MESSAGE == message.getCalculateMessageType()
 
     fun deleteMessage(message: IMessage) {
+        if (!participantPermissions.hasChatPermission()) {
+            Log.w(
+                TAG,
+                "Deletion of message is skipped because of restrictions by permissions. " +
+                    "This method should not have been called!"
+            )
+            Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
+        } else {
+            var apiVersion = 1
+            // FIXME Fix API checking with guests?
+            if (conversationUser != null) {
+                apiVersion = ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(1))
+            }
+
+            // TODO RAY 刪除按鈕修改為hide
+            chatViewModel.hideChatMessages(
+                credentials!!,
+                ApiUtils.getUrlForChatHideMessage(
+                    apiVersion,
+                    conversationUser?.baseUrl!!,
+                    roomToken,
+                    message.id!!
+                ),
+                message.id!!
+            )
+        }
+    }
+
+    // ... ray add code ...
+    /**
+     * TODO RAY 消息撤回
+     * add by ray on 2026/04/02
+     */
+    fun recallMessage(message: IMessage) {
         if (!participantPermissions.hasChatPermission()) {
             Log.w(
                 TAG,
@@ -4022,6 +4075,7 @@ class ChatActivity :
             )
         }
     }
+    // ... ray add code ...
 
     fun replyPrivately(message: IMessage?) {
         val apiVersion =
@@ -4388,6 +4442,8 @@ class ChatActivity :
             currentConversation?.type != ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL ||
             isShowMessageDeletionButton(message) ||
             // delete
+            isShowMessageRecallButton(message) ||
+            // recall add by ray on 2026/04/02
             ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() ||
             // forward
             message.previousMessageId > NO_PREVIOUS_MESSAGE_ID &&
@@ -4397,6 +4453,19 @@ class ChatActivity :
 
     private fun setMessageAsDeleted(message: IMessage?) {
         val messageTemp = message as ChatMessage
+        messageTemp.isDeleted = true
+        messageTemp.message = getString(R.string.message_hidden_by_you)
+
+        messageTemp.isOneToOneConversation =
+            currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
+        messageTemp.activeUser = conversationUser
+
+        adapter?.update(messageTemp)
+    }
+
+    private fun setMessageAsHidden(message: IMessage?) {
+        val messageTemp = message as ChatMessage
+        messageTemp.isHidden = true
         messageTemp.isDeleted = true
         messageTemp.message = getString(R.string.message_deleted_by_you)
 
@@ -4499,6 +4568,38 @@ class ChatActivity :
             else -> true
         }
     }
+
+    // ... ray add code ...
+    /**
+     * 是否顯示撤回菜單
+     * add by ray on 2026/04/02
+     */
+    private fun isShowMessageRecallButton(message: ChatMessage): Boolean {
+        val isUserAllowedByPrivileges = userAllowedByPrivilages(message)
+
+        val isOlderThanSixHours = message
+            .createdAt
+            .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_DELETE_MESSAGE))
+        val hasDeleteMessagesUnlimitedCapability = hasSpreedFeatureCapability(
+            spreedCapabilities,
+            // TODO RAY 這裏狀態是什麽
+            SpreedFeatures.DELETE_MESSAGES_UNLIMITED
+        )
+
+        return when {
+            !isUserAllowedByPrivileges -> false
+            !hasDeleteMessagesUnlimitedCapability && isOlderThanSixHours -> false
+            message.systemMessageType != ChatMessage.SystemMessageType.DUMMY -> false
+            // TODO RAY 這裏狀態是什麽
+            message.isDeleted -> false
+            // TODO RAY 這裏狀態是什麽
+            !hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.DELETE_MESSAGES) -> false
+            !participantPermissions.hasChatPermission() -> false
+            hasDeleteMessagesUnlimitedCapability -> true
+            else -> true
+        }
+    }
+    // ... ray add code ...
 
     fun userAllowedByPrivilages(message: ChatMessage): Boolean {
         if (conversationUser == null) return false

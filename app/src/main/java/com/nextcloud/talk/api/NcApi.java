@@ -428,6 +428,11 @@ public interface NcApi {
     Observable<ChatOverallSingleMessage> deleteChatMessage(@Header("Authorization") String authorization,
                                                            @Url String url);
 
+    // 消息刪除，deleteReaction變爲撤回
+    @POST
+    Observable<ChatOverallSingleMessage> hideMessage(@Header("Authorization") String authorization,
+                                           @Url String url);
+
     @DELETE
     Observable<GenericOverall> deleteAvatar(@Header("Authorization") String authorization, @Url String url);
 

@@ -169,6 +169,11 @@ class RetrofitChatNetwork(private val ncApi: NcApi, private val ncApiCoroutines:
             it
         }
 
+    override fun hideChatMessage(credentials: String, url: String): Observable<ChatOverallSingleMessage> =
+        ncApi.hideMessage(credentials, url).map {
+            it
+        }
+
     override fun createRoom(credentials: String, url: String, map: Map<String, String>): Observable<RoomOverall> =
         ncApi.createRoom(credentials, url, map).map {
             it

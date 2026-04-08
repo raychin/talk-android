@@ -38,6 +38,7 @@ data class ChatMessage(
     var selectedIndividualHashMap: Map<String?, String?>? = null,
 
     var isDeleted: Boolean = false,
+    var isHidden: Boolean = false,
 
     var jsonMessageId: Int = 0,
 
@@ -346,8 +347,9 @@ data class ChatMessage(
         get() = "voice-message" == messageType
     val isCommandMessage: Boolean
         get() = "command" == messageType
+    // TODO RAY 这里是不是要单独添加hide
     val isDeletedCommentMessage: Boolean
-        get() = "comment_deleted" == messageType
+        get() = "comment_deleted" == messageType || "comment_hidden" == messageType
 
     enum class MessageType {
         REGULAR_TEXT_MESSAGE,

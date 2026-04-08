@@ -239,6 +239,9 @@ object ApiUtils {
     fun getUrlForChatMessage(version: Int, baseUrl: String?, token: String, messageId: String): String =
         getUrlForChat(version, baseUrl, token) + "/" + messageId
 
+    fun getUrlForChatHideMessage(version: Int, baseUrl: String?, token: String, messageId: String): String =
+        getUrlForChat(version, baseUrl, token) + "/" + messageId + "/hide"
+
     fun getUrlForChatSharedItems(version: Int, baseUrl: String?, token: String): String =
         getUrlForChat(version, baseUrl, token) + "/share"
 

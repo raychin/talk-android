@@ -66,6 +66,7 @@ class MessageActionsDialog(
     private val user: User?,
     private val currentConversation: ConversationModel?,
     private val showMessageDeletionButton: Boolean,
+    private val showMessageRecallButton: Boolean,
     private val hasChatPermission: Boolean,
     private val spreedCapabilities: SpreedCapability
 ) : BottomSheetDialog(chatActivity) {
@@ -157,6 +158,13 @@ class MessageActionsDialog(
             initMenuOpenThread(message.isThread && chatActivity.conversationThreadId == null)
             initMenuEditMessage(isMessageEditable)
             initMenuDeleteMessage(showMessageDeletionButton && isOnline)
+
+            /**
+             * 撤回消息
+             * add by ray on 2026/04/02
+             */
+            initMenuRecallMessage(showMessageRecallButton && isOnline)
+
             initMenuForwardMessage(
                 ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() &&
                     !(message.isDeletedCommentMessage || message.isDeleted) &&
@@ -451,6 +459,54 @@ class MessageActionsDialog(
         }
         dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(visible)
     }
+
+    // ... ray add code ...
+    /**
+     * 消息撤回菜單功能，參考消息刪除
+     * add by ray on 2026/04/02
+     */
+    private fun initMenuRecallMessage(visible: Boolean) {
+        if (visible) {
+            dialogMessageActionsBinding.menuRecallMessage.setOnClickListener {
+                chatActivity.recallMessage(message)
+                dismiss()
+                // val areYouSure = context.resources.getString(R.string.message_delete_are_you_sure)
+                // val deleteMessage = context.resources.getString(R.string.nc_delete_message)
+                // val delete = context.resources.getString(R.string.nc_delete)
+                // val cancel = context.resources.getString(R.string.nc_cancel)
+                // val builder = MaterialAlertDialogBuilder(context)
+                // builder
+                //     .setIcon(
+                //         viewThemeUtils.dialog
+                //             .colorMaterialAlertDialogIcon(context, R.drawable.ic_delete_black_24dp)
+                //     )
+                //     .setMessage(areYouSure)
+                //     .setTitle(deleteMessage)
+                //     .setPositiveButton(delete) { dialog, which ->
+                //         chatActivity.deleteMessage(message)
+                //         dismiss()
+                //     }
+                //     .setNegativeButton(cancel) { dialog, which ->
+                //         // unused atm
+                //     }
+                //     .let { dialogBuilder ->
+                //         viewThemeUtils.dialog
+                //             .colorMaterialAlertDialogBackground(context, dialogBuilder)
+                //     }
+                //
+                // val dialog: AlertDialog = builder.create()
+                // dialog.setOnShowListener {
+                //     viewThemeUtils.platform.colorTextButtons(
+                //         dialog.getButton(BUTTON_POSITIVE),
+                //         dialog.getButton(BUTTON_NEGATIVE)
+                //     )
+                // }
+                // dialog.show()
+            }
+        }
+        dialogMessageActionsBinding.menuRecallMessage.visibility = getVisibility(visible)
+    }
+    // ... ray add code ...
 
     private fun initMenuEditMessage(visible: Boolean) {
         dialogMessageActionsBinding.menuEditMessage.setOnClickListener {
