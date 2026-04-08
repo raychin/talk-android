@@ -504,6 +504,12 @@ class CallActivity : CallBaseActivity() {
         isVoiceOnlyCall = extras.getBoolean(KEY_CALL_VOICE_ONLY, false)
         isCallWithoutNotification = extras.getBoolean(KEY_CALL_WITHOUT_NOTIFICATION, false)
         canPublishAudioStream = extras.getBoolean(KEY_PARTICIPANT_PERMISSION_CAN_PUBLISH_AUDIO)
+        // // 根据通话类型初始化麦克风状态 --- 1
+        // // 发起通话时默认开启麦克风，来电时也默认开启
+        // microphoneOn = canPublishAudioStream
+        // Log.d("Ray", "canPublishAudioStream = ${canPublishAudioStream}")
+        // Log.d("Ray", "microphoneOn = ${microphoneOn}")
+
         canPublishVideoStream = extras.getBoolean(KEY_PARTICIPANT_PERMISSION_CAN_PUBLISH_VIDEO)
         isModerator = extras.getBoolean(KEY_IS_MODERATOR, false)
         /**
@@ -672,6 +678,13 @@ class CallActivity : CallBaseActivity() {
                 onMicrophoneClick()
                 true
             }
+
+            // // 确保发起通话时默认打开麦克风 --- 1
+            // if (microphoneOn && localStream != null && localStream!!.audioTracks.isNotEmpty()) {
+            //     localStream!!.audioTracks[0].setEnabled(true)
+            //     localCallParticipantModel.isAudioEnabled = true
+            //     binding!!.microphoneButton.setImageResource(R.drawable.ic_mic_white_24px)
+            // }
         } else {
             binding!!.microphoneButton.setOnClickListener {
                 Snackbar.make(binding!!.root, R.string.nc_not_allowed_to_activate_audio, Snackbar.LENGTH_SHORT).show()
@@ -805,6 +818,7 @@ class CallActivity : CallBaseActivity() {
         audioConstraints = MediaConstraints()
         videoConstraints = MediaConstraints()
         localStream = peerConnectionFactory!!.createLocalMediaStream("NCMS")
+        Log.d("Ray", "localStream initialized...")
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
@@ -980,7 +994,7 @@ class CallActivity : CallBaseActivity() {
         val permissionsToRequest: MutableList<String> = ArrayList()
         val rationaleList: MutableList<String> = ArrayList()
         if (permissionUtil!!.isMicrophonePermissionGranted()) {
-            Log.d(TAG, "Microphone permission already granted")
+            Log.d("Ray", "Microphone permission already granted")
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
             permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
             rationaleList.add(resources.getString(R.string.nc_microphone_permission_hint))
@@ -990,7 +1004,7 @@ class CallActivity : CallBaseActivity() {
 
         if (!isVoiceOnlyCall) {
             if (permissionUtil!!.isCameraPermissionGranted()) {
-                Log.d(TAG, "Camera permission already granted")
+                Log.d("Ray", "Camera permission already granted")
             } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
                 permissionsToRequest.add(Manifest.permission.CAMERA)
                 rationaleList.add(resources.getString(R.string.nc_camera_permission_hint))
@@ -1026,10 +1040,23 @@ class CallActivity : CallBaseActivity() {
         updateSelfVideoViewPosition(true)
         checkRecordingConsentAndInitiateCall()
 
+        // if (permissionUtil!!.isMicrophonePermissionGranted()) {
+        //     if (!microphoneOn) {
+        //         onMicrophoneClick()
+        //     }
+        // }
         if (permissionUtil!!.isMicrophonePermissionGranted()) {
+            Log.d("Ray", "Microphone permission granted, checking if need to enable")
+
             if (!microphoneOn) {
+                Log.d("Ray", "Microphone is off, calling onMicrophoneClick to enable")
                 onMicrophoneClick()
+            } else {
+                Log.d("Ray", "Microphone already on")
+                toggleMedia(true, false)
             }
+        } else {
+            Log.w("Ray", "Microphone permission not granted in prepareCall")
         }
 
         if (isVoiceOnlyCall) {
@@ -1044,6 +1071,7 @@ class CallActivity : CallBaseActivity() {
                 binding!!.switchSelfVideoButton.visibility = View.VISIBLE
             }
         }
+        Log.d("Ray", "prepareCall completed: microphoneOn=$microphoneOn, videoOn=$videoOn")
     }
 
     private fun showRationaleDialog(permissionToRequest: String, rationale: String) {
@@ -1139,11 +1167,13 @@ class CallActivity : CallBaseActivity() {
         localAudioTrack = peerConnectionFactory!!.createAudioTrack("NCa0", audioSource)
         localAudioTrack!!.setEnabled(false)
         localStream!!.addTrack(localAudioTrack)
+        Log.d("Ray", "microphoneInitialization...")
         localCallParticipantModel.isAudioEnabled = false
     }
 
     @SuppressLint("MissingPermission")
     private fun startMicInputDetection() {
+        Log.d("Ray", "111==micInputAudioRecorder")
         if (permissionUtil!!.isMicrophonePermissionGranted() && micInputAudioRecordThread == null) {
             micInputAudioRecorder = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
@@ -1169,6 +1199,7 @@ class CallActivity : CallBaseActivity() {
             )
             micInputAudioRecordThread!!.start()
         }
+        Log.d("Ray", "micInputAudioRecorder = ${micInputAudioRecorder.state}")
     }
 
     private fun createCameraCapturer(enumerator: CameraEnumerator?): VideoCapturer? {
@@ -1359,6 +1390,7 @@ class CallActivity : CallBaseActivity() {
             if (localStream != null && localStream!!.audioTracks.size > 0) {
                 localStream!!.audioTracks[0].setEnabled(enable)
                 localCallParticipantModel.isAudioEnabled = enable
+                Log.d("Ray", "Toggle audio: $enable")
             }
         }
     }
@@ -1708,6 +1740,9 @@ class CallActivity : CallBaseActivity() {
                         if (currentCallStatus !== CallStatus.LEAVING) {
                             if (currentCallStatus !== CallStatus.IN_CONVERSATION) {
                                 setCallState(CallStatus.JOINED)
+
+                                // // 确保加入通话后启用麦克风 --- 1
+                                // enableMicrophoneIfNeeded()
                             }
                             ApplicationWideCurrentRoomHolder.getInstance().isInCall = true
                             ApplicationWideCurrentRoomHolder.getInstance().isDialing = false
@@ -1784,6 +1819,27 @@ class CallActivity : CallBaseActivity() {
                 }
             })
     }
+
+    /**
+     * 在成功加入通话后检查并启用麦克风
+     */
+    private fun enableMicrophoneIfNeeded() {
+        if (canPublishAudioStream && permissionUtil!!.isMicrophonePermissionGranted()) {
+            // 如果是发起通话（非来电），默认应该开启麦克风
+            if (!isIncomingCallFromNotification) {
+                microphoneOn = true
+
+                if (localStream != null && localStream!!.audioTracks.isNotEmpty()) {
+                    localStream!!.audioTracks[0].setEnabled(true)
+                    localCallParticipantModel.isAudioEnabled = true
+                    binding!!.microphoneButton.setImageResource(R.drawable.ic_mic_white_24px)
+
+                    Log.d(TAG, "Microphone automatically enabled for outgoing call")
+                }
+            }
+        }
+    }
+    // ... ray add code ...
 
     private fun setInitialApplicationWideCurrentRoomHolderValues(conversation: Conversation) {
         ApplicationWideCurrentRoomHolder.getInstance().userInRoom = conversationUser
@@ -2235,6 +2291,8 @@ class CallActivity : CallBaseActivity() {
             currentSessionId = webSocketClient!!.sessionId
         }
         else {
+            Log.d("Ray", "isIncomingCallFromNotification = ${isIncomingCallFromNotification}")
+            Log.d("Ray", "isOneToOneConversation = ${isOneToOneConversation}")
             /**
              * fix: 修复独立通讯信用服务器接通通话自动退出通话问题问题
              * TODO RAY 待优化加上信令服务器判断逻辑
@@ -2261,6 +2319,7 @@ class CallActivity : CallBaseActivity() {
                     Log.d("Ray", "   unchanged: ${it.sessionId}")
                 }
             }
+            Log.d("Ray", "---------------------------------------------")
         }
         Log.d("Ray", "   currentSessionId is $currentSessionId")
 
