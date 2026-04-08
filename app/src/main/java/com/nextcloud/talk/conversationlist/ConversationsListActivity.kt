@@ -22,6 +22,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.text.InputType
 import android.text.TextUtils
@@ -297,6 +298,71 @@ class ConversationsListActivity :
         }
     }
 
+    // ... ray add code ...
+    private var autoRefreshHandler: Handler? = null
+    private var autoRefreshRunnable: Runnable? = null
+    private val AUTO_REFRESH_INTERVAL_MS: Long = 30 * 1000 // 30 秒自动刷新一次
+
+
+    private fun scrollToNextUnreadConversation() {
+        if (nextUnreadConversationScrollPosition > -1) {
+            layoutManager?.scrollToPositionWithOffset(nextUnreadConversationScrollPosition, 0)
+        }
+    }
+
+    /**
+     * 启动自动静默刷新功能
+     * 每隔一定时间自动从服务器获取最新的会话列表，但不显示刷新动画
+     */
+    private fun startAutoRefresh() {
+        autoRefreshHandler = Handler(Looper.getMainLooper())
+
+        autoRefreshRunnable = Runnable {
+            // 静默刷新，不显示刷新动画
+            fetchRoomsSilently()
+            // 延迟执行下一次刷新
+            autoRefreshHandler?.postDelayed(autoRefreshRunnable!!, AUTO_REFRESH_INTERVAL_MS)
+        }
+
+        // 首次延迟启动
+        autoRefreshHandler?.postDelayed(autoRefreshRunnable!!, AUTO_REFRESH_INTERVAL_MS)
+
+        Log.d(TAG, "Auto refresh started with interval: $AUTO_REFRESH_INTERVAL_MS ms")
+    }
+
+    /**
+     * 停止自动刷新
+     */
+    private fun stopAutoRefresh() {
+        autoRefreshHandler?.removeCallbacksAndMessages(null)
+        Log.d(TAG, "Auto refresh stopped")
+    }
+
+    /**
+     * 静默获取会话列表（不显示刷新动画）
+     */
+    private fun fetchRoomsSilently() {
+        if (currentUser == null || !networkMonitor.isOnline.value) {
+            Log.d(TAG, "Skip silent fetch: currentUser is null or device is offline")
+            return
+        }
+
+        // 标记为静默刷新模式
+        isRefreshing = false
+
+        // 调用 ViewModel 获取数据
+        conversationsListViewModel.getRooms()
+
+        Log.d(TAG, "Silent fetch of conversations triggered")
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: ConversationsListFetchDataEvent) {
+        fetchRooms()
+    }
+    // ... ray add code ...
+
+
     override fun onResume() {
         super.onResume()
         if (adapter == null) {
@@ -341,6 +407,9 @@ class ConversationsListActivity :
             searchBehaviorSubject.onNext(false)
             fetchRooms()
             fetchPendingInvitations()
+
+            // 启动自动静默刷新
+            startAutoRefresh()
         } else {
             Log.e(TAG, "currentUser was null")
             Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
@@ -358,6 +427,9 @@ class ConversationsListActivity :
         val firstOffset = firstTop?.minus(CONVERSATION_ITEM_HEIGHT) ?: 0
 
         appPreferences.setConversationListPositionAndOffset(firstVisible, firstOffset)
+
+        // 停止自动刷新
+        stopAutoRefresh()
     }
 
     // if edge to edge is used, add an empty item at the bottom of the list
@@ -1077,7 +1149,41 @@ class ConversationsListActivity :
     }
 
     fun fetchRooms() {
+        // 原始逻辑
+        // conversationsListViewModel.getRooms()
+
+        // 新增30S自动刷新后，调整
+        if (currentUser == null) {
+            return
+        }
+
+        // 如果不是静默模式，显示刷新动画
+        if (!isRefreshing) {
+            binding.swipeRefreshLayoutView.isRefreshing = true
+        }
+
+        dispose(null)
         conversationsListViewModel.getRooms()
+        // 同上一行代码类似
+        // val includeStatus = CapabilitiesUtil.isUserStatusAvailable(currentUser!!)
+        //
+        // roomsQueryDisposable =
+        //     ncApi.getRooms(
+        //         credentials,
+        //         ApiUtils.getUrlForRooms(
+        //             currentUser!!.baseUrl!!,
+        //             includeStatus
+        //         )
+        //     )
+        //         .subscribeOn(Schedulers.io())
+        //         .observeOn(AndroidSchedulers.mainThread())
+        //         .subscribe({ roomsOverall ->
+        //             handleRoomsResponse(roomsOverall)
+        //         }) { throwable ->
+        //             handleHttpException(throwable)
+        //             binding.swipeRefreshLayoutView.isRefreshing = false
+        //             isRefreshing = false
+        //         }
     }
 
     private fun fetchPendingInvitations() {
@@ -1443,6 +1549,28 @@ class ConversationsListActivity :
         if (searchViewDisposable != null && !searchViewDisposable!!.isDisposed) {
             searchViewDisposable!!.dispose()
         }
+
+        // 清理资源 add by ray on 2026/04/02
+        openConversationsQueryDisposable = null
+        roomsQueryDisposable = null
+        searchViewDisposable = null
+
+        // 清理自动刷新相关资源
+        stopAutoRefresh()
+        autoRefreshHandler = null
+        autoRefreshRunnable = null
+
+        if (this::binding.isInitialized) {
+            binding.recyclerView.adapter = null
+        }
+        conversationItems.clear()
+        conversationItemsWithHeader.clear()
+        searchableConversationItems.clear()
+        filterableConversationItems.clear()
+        nearFutureEventConversationItems.clear()
+        callHeaderItems.clear()
+        adapter = null
+        eventBus.unregister(this)
     }
 
     private fun onQueryTextChange(newText: String?) {
