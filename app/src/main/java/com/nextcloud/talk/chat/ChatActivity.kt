@@ -4030,9 +4030,11 @@ class ChatActivity :
             }
 
             // TODO RAY 刪除按鈕修改為hide
-            chatViewModel.hideChatMessages(
+            // chatViewModel.hideChatMessages(
+            chatViewModel.deleteChatMessages(
                 credentials!!,
-                ApiUtils.getUrlForChatHideMessage(
+                // ApiUtils.getUrlForChatHideMessage(
+                ApiUtils.getUrlForChatMessage(
                     apiVersion,
                     conversationUser?.baseUrl!!,
                     roomToken,
@@ -4454,7 +4456,8 @@ class ChatActivity :
     private fun setMessageAsDeleted(message: IMessage?) {
         val messageTemp = message as ChatMessage
         messageTemp.isDeleted = true
-        messageTemp.message = getString(R.string.message_hidden_by_you)
+        // messageTemp.message = getString(R.string.message_hidden_by_you)
+        messageTemp.message = getString(R.string.message_deleted_by_you)
 
         messageTemp.isOneToOneConversation =
             currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
