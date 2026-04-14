@@ -99,6 +99,14 @@ class MultiMessageDetailActivity : BaseActivity() {
                 return
             }
 
+
+            // binding.genericComposeView.apply {
+            //     setContent {
+            //         MultiChatView(context, multiMessage.message!!)
+            //     }
+            // }
+
+
             // 添加消息列表项
             multiMessage.message?.forEach { chatMessage ->
                 itemsList.add(MessageMultiItem(this, user, chatMessage, false, viewThemeUtils))

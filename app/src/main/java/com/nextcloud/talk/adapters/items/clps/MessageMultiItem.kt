@@ -10,29 +10,27 @@
 package com.nextcloud.talk.adapters.items.clps
 
 import android.content.Context
-import android.text.TextUtils
+import android.content.Intent
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
+import android.widget.ProgressBar
+import androidx.core.net.toUri
 import androidx.core.text.toSpanned
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
-import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.FlexibleItemViewType
 import com.nextcloud.talk.adapters.items.GenericTextHeaderItem
+import com.nextcloud.talk.adapters.messages.PreviewMessageViewHolder.Companion.KEY_MIMETYPE
 import com.nextcloud.talk.chat.data.model.ChatMessage
-import com.nextcloud.talk.data.message.model.MessageFilterType
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.RvItemMultiMessageBinding
-import com.nextcloud.talk.databinding.RvItemSearchMessageBinding
 import com.nextcloud.talk.extensions.loadAvatarOrImagePreview
-import com.nextcloud.talk.extensions.loadFirstLetterAvatar
-import com.nextcloud.talk.extensions.loadImage
-import com.nextcloud.talk.extensions.loadThumbnail
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.utils.ApiUtils
-import com.nextcloud.talk.utils.ChatMessageUtils
+import com.nextcloud.talk.utils.DrawableUtils.getDrawableResourceIdForMimeType
+import com.nextcloud.talk.utils.FileViewerUtils
 import com.nextcloud.talk.utils.message.MessageUtils
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
@@ -81,6 +79,10 @@ data class MessageMultiItem(
             true,
             viewThemeUtils
         )
+
+        if (processedMessageText == null) {
+            processedMessageText = "".toSpanned()
+        }
 
         holder.binding.conversationTitle.text = messageEntry.actorDisplayName
 
@@ -156,10 +158,14 @@ data class MessageMultiItem(
                     // 显示并加载图片
                     holder.binding.thumbnailImg.visibility = View.VISIBLE
 
+                    val mimetype = messageEntry.selectedIndividualHashMap!![KEY_MIMETYPE]
+                    val drawableResourceId = getDrawableResourceIdForMimeType(mimetype)
+                    val placeholderDrawable = androidx.core.content.ContextCompat.getDrawable(context, drawableResourceId)
                     // 使用 loadImage 扩展方法（会自动添加认证头）
-                    holder.binding.thumbnailImg.loadAvatarOrImagePreview(generateImageUrl(messageEntry.imageUrl!!),
-                        messageEntry
-                        .activeUser!!)
+                    holder.binding.thumbnailImg.loadAvatarOrImagePreview(messageEntry.imageUrl!!, currentUser, placeholderDrawable)
+                    holder.binding.thumbnailImg.setOnClickListener { view ->
+                        handleImageOrFileClickLikeChat(messageEntry, holder.binding.progressBar)
+                    }
                 } else {
                     Log.e("Ray", "Cannot load image: fileId or baseUrl is null!")
                     holder.binding.thumbnailImg.visibility = View.GONE
@@ -204,7 +210,7 @@ data class MessageMultiItem(
                 messageEntry,
                 holder.itemView
             )
-            Log.d("RAY", processedMessageText.toString())
+            Log.e("Ray", "multi || $processedMessageText")
             holder.binding.messageExcerpt.text = processedMessageText
         }
         // if (TextUtils.isEmpty(messageEntry.thumbnail)) {
@@ -277,4 +283,45 @@ data class MessageMultiItem(
         // 如果发送人 ID 相同，认为是连续消息
         return currentActorId != null && currentActorId == previousActorId
     }
+
+    // ... ray add code ...
+    private fun handleImageOrFileClickLikeChat(message: ChatMessage, progressBar: ProgressBar) {
+        message.activeUser = currentUser
+
+        when {
+            // 如果是附件消息（文件、图片等），使用 FileViewerUtils 打开
+            message.getCalculateMessageType() === ChatMessage.MessageType.SINGLE_NC_ATTACHMENT_MESSAGE -> {
+                val fileViewerUtils = FileViewerUtils(context, message.activeUser!!)
+
+                if (message.activeUser != null &&
+                    message.activeUser!!.username != null &&
+                    message.activeUser!!.baseUrl != null
+                ) {
+                    // 创建 ProgressUi 对象（由于是 Compose UI，这里传入 null）
+                    val progressUi = FileViewerUtils.ProgressUi(
+                        progressBar = progressBar,
+                        messageText = null,
+                        previewImage = ImageView(context)
+                    )
+
+                    fileViewerUtils.openFile(message, progressUi)
+                }
+            }
+            // 如果是普通图片链接消息
+            message.messageType == ChatMessage.MessageType.SINGLE_LINK_IMAGE_MESSAGE.name -> {
+                message.imageUrl?.let { url ->
+                    val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
+                    browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(browserIntent)
+                }
+            }
+            // 其他类型的消息，尝试直接打开图片
+            message.imageUrl != null -> {
+                val browserIntent = Intent(Intent.ACTION_VIEW, message.imageUrl!!.toUri())
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(browserIntent)
+            }
+        }
+    }
+    // ... ray add code ...
 }

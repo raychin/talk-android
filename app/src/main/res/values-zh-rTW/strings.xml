@@ -909,4 +909,22 @@ How to translate with transifex:
 
     <string name="clps_recall_messages">撤回</string>
     <string name="message_hidden_by_you">您已撤回此訊息</string>
+
+    <!-- MultiMessage Detail -->
+    <string name="clps_multi_message_detail_title">%d 則轉發的訊息</string>
+    <string name="clps_multi_message_total_count">共 %d 則訊息</string>
+    <string name="clps_multi_message_load_error">載入訊息失敗，請稍後再試</string>
+    <string name="clps_multi_message_navigate_hint">點擊檢視完整訊息列表</string>
+
+    <!-- Message type display text -->
+    <string name="clps_voice_message">[語音訊息]</string>
+    <string name="clps_file_attachment">[檔案]</string>
+    <string name="clps_location_message">[位置]</string>
+    <string name="clps_poll_message">[投票]</string>
+    <string name="clps_deck_card">[Deck 卡片]</string>
+    <string name="clps_gif_message">[GIF]</string>
+    <string name="clps_image_message">[圖片]</string>
+    <string name="clps_video_message">[影片]</string>
+    <string name="clps_audio_message">[音訊]</string>
+    <string name="clps_link_message">[連結]</string>
 </resources>

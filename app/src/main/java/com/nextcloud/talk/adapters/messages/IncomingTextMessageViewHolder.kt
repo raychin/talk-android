@@ -170,10 +170,6 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
             }
 
             /**
-             * TODO RAY 判断 message.message 是否可以转为MultiMessage消息
-             */
-
-            /**
              * 判断 message.message 是否可以转为 MultiMessage 消息
              * 如果 message.message 是 JSON 格式且包含 title 和 message 数组字段，则尝试解析为 MultiMessage
              */
@@ -181,24 +177,36 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
                 processedMessageText = parseAndDisplayMultiMessage(message).toSpanned()
                 // 为 MultiMessage 文本添加点击跳转功能
                 val multiMessage = Gson().fromJson(message.message, MultiMessage::class.java)
+
+                val mergedParameters = HashMap<String?, HashMap<String?, String?>>()
+                multiMessage.message?.forEachIndexed { index, item ->
+                    Log.d("Ray", "-------------item $index")
+                    item.messageParameters?.forEach { (key, value) ->
+                        // 只保留特殊类型的参数（用户、群组等）
+                        when (value["type"]) {
+                            "user", "guest", "call", "user-group", "email", "circle" -> {
+                                mergedParameters[key] = value
+                            }
+                        }
+                    }
+                }
+                // 将合并后的参数设置到外层消息
+                if (mergedParameters.isNotEmpty()) {
+                    message.messageParameters = mergedParameters
+                }
+
                 addClickToNavigateToMultiMessageDetail(processedMessageText, message, multiMessage)
-            } else {
-                // 原始逻辑：处理普通消息
-                processedMessageText = messageUtils.processMessageParameters(
-                    binding.messageText.context,
-                    viewThemeUtils,
-                    processedMessageText,
-                    message,
-                    itemView
-                )
             }
-            // processedMessageText = messageUtils.processMessageParameters(
-            //     binding.messageText.context,
-            //     viewThemeUtils,
-            //     processedMessageText,
-            //     message,
-            //     itemView
-            // )
+
+            // 原始逻辑：处理普通消息
+            processedMessageText = messageUtils.processMessageParameters(
+                binding.messageText.context,
+                viewThemeUtils,
+                processedMessageText,
+                message,
+                itemView
+            )
+            Log.e("Ray", "inComing || $processedMessageText")
 
             val messageParameters = message.messageParameters
             if (
@@ -334,7 +342,8 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
                 for (i in 0 until previewLimit) {
                     val msg = multiMessage.message!![i]
                     val actorName = msg.actorDisplayName ?: "未知"
-                    val msgText = msg.message?.take(50) ?: ""
+                    // val msgText = msg.message?.take(50) ?: ""
+                    val msgText = msg.getWeChatStyleDisplayText().toString()
 
                     displayText.append("- $actorName: $msgText")
                     if (msg.message?.length ?: 0 > 50) {

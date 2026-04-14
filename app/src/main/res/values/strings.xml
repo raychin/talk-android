@@ -911,9 +911,21 @@ How to translate with transifex:
     <string name="message_hidden_by_you">Message recalled by you</string>
 
     <!-- MultiMessage Detail -->
-    <string name="clps_multi_message_detail_title">%d 条转发的消息</string>
-    <string name="clps_multi_message_total_count">共 %d 条消息</string>
-    <string name="clps_multi_message_load_error">加载消息失败，请稍后重试</string>
-    <string name="clps_multi_message_navigate_hint">点击查看完整消息列表</string>
+    <string name="clps_multi_message_detail_title">%d forwarded messages</string>
+    <string name="clps_multi_message_total_count">Total %d messages</string>
+    <string name="clps_multi_message_load_error">Failed to load messages, please try again later</string>
+    <string name="clps_multi_message_navigate_hint">Tap to view complete message list</string>
+
+    <!-- Message type display text  -->
+    <string name="clps_voice_message">[Voice Message]</string>
+    <string name="clps_file_attachment">[File]</string>
+    <string name="clps_location_message">[Location]</string>
+    <string name="clps_poll_message">[Poll]</string>
+    <string name="clps_deck_card">[Deck Card]</string>
+    <string name="clps_gif_message">[GIF]</string>
+    <string name="clps_image_message">[Image]</string>
+    <string name="clps_video_message">[Video]</string>
+    <string name="clps_audio_message">[Audio]</string>
+    <string name="clps_link_message">[Link]</string>
 
 </resources>
