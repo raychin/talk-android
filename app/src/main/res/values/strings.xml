@@ -917,6 +917,7 @@ How to translate with transifex:
     <string name="clps_multi_message_navigate_hint">Tap to view complete message list</string>
 
     <!-- Message type display text  -->
+    <string name="clps_chat_history">[Chat History]</string>
     <string name="clps_voice_message">[Voice Message]</string>
     <string name="clps_file_attachment">[File]</string>
     <string name="clps_location_message">[Location]</string>

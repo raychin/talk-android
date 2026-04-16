@@ -19,11 +19,22 @@ import android.widget.ProgressBar
 import androidx.core.net.toUri
 import androidx.core.text.toSpanned
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.FlexibleItemViewType
 import com.nextcloud.talk.adapters.items.GenericTextHeaderItem
 import com.nextcloud.talk.adapters.messages.PreviewMessageViewHolder.Companion.KEY_MIMETYPE
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_COUNT
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_ID
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MULTI_MESSAGE_JSON
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_ROOM_TOKEN
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_TITLE
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.chat.data.model.clps.MultiMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
+import com.nextcloud.talk.chat.data.model.clps.multiMessage
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessage
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.RvItemMultiMessageBinding
 import com.nextcloud.talk.extensions.loadAvatarOrImagePreview
@@ -203,6 +214,16 @@ data class MessageMultiItem(
             holder.binding.messageExcerpt.layoutParams = layoutParams
             // holder.binding.messageExcerpt.text = messageEntry.message
 
+            /**
+             * 判断 message.message 是否可以转为 MultiMessage 消息
+             * 如果 message.message 是 JSON 格式且包含 title 和 message 数组字段，则尝试解析为 MultiMessage
+             */
+            if (messageEntry.isMultiMessage()) {
+                processedMessageText = messageEntry.parseAndDisplayMultiMessage().toSpanned()
+                addClickToNavigateToMultiMessageDetail(holder.binding.messageExcerpt, processedMessageText,
+                messageEntry, messageEntry.multiMessage())
+            }
+
             processedMessageText = messageUtils.processMessageParameters(
                 holder.binding.messageExcerpt.context,
                 viewThemeUtils,
@@ -222,6 +243,62 @@ data class MessageMultiItem(
         //     holder.binding.thumbnailSize.visibility = View.VISIBLE
         //     holder.binding.thumbnailSize.text = formatFileSize(messageEntry.thumbnailSize!!)
         // }
+    }
+
+    /**
+     * 为 MultiMessage 文本添加点击事件，跳转到消息详情页面
+     *
+     * @param text 已处理的文本
+     * @param chatMessage 当前聊天消息
+     * @param multiMessage 解析后的多消息对象
+     * @return 带点击事件的文本
+     */
+    private fun addClickToNavigateToMultiMessageDetail(
+        view: View,
+        text: CharSequence,
+        chatMessage: ChatMessage,
+        multiMessage: MultiMessage
+    ): CharSequence {
+        // 将整个消息项设置为可点击，跳转到消息列表查看完整内容
+        view.setOnClickListener {
+            navigateToMultiMessageDetail(chatMessage, multiMessage)
+        }
+
+        return text
+    }
+
+    /**
+     * 跳转到 MultiMessage 详情页面，显示完整的消息列表
+     *
+     * @param chatMessage 当前聊天消息
+     * @param multiMessage 多消息对象
+     */
+    private fun navigateToMultiMessageDetail(chatMessage: ChatMessage, multiMessage: MultiMessage) {
+        try {
+            val activity = context as? MultiMessageDetailActivity
+            if (activity == null) {
+                Log.w("Ray", "context is not a MultiMessageDetailActivity, cannot navigate")
+                return
+            }
+
+            // MultiMessageDetailActivity 来显示完整的消息列表
+            val intent = Intent(context, MultiMessageDetailActivity::class.java).apply {
+                putExtra(KEY_ROOM_TOKEN, activity.roomToken ?: "")
+                putExtra(KEY_MESSAGE_ID, chatMessage.jsonMessageId)
+                // putParcelableArrayListExtra(KEY_MULTI_MESSAGE_JSON, multiMessage.message as ArrayList<out Parcelable?>?)
+                putExtra(KEY_MULTI_MESSAGE_JSON, chatMessage.message)
+                putExtra(KEY_TITLE, multiMessage.title ?: "")
+                putExtra(KEY_MESSAGE_COUNT, multiMessage.message?.size ?: 0)
+            }
+
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("Ray", "Error navigating to MultiMessage detail", e)
+            val activity = context as? MultiMessageDetailActivity
+            activity?.rootView?.let {
+                Snackbar.make(it, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
+            }
+        }
     }
 
     fun generateImageUrl(url: String): String {

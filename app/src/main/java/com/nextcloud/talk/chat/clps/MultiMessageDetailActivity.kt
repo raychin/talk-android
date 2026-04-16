@@ -33,19 +33,21 @@ class MultiMessageDetailActivity : BaseActivity() {
     private lateinit var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>
     private val itemsList = mutableListOf<AbstractFlexibleItem<*>>()
 
-    private var roomToken: String? = null
+    var roomToken: String? = null
     private var messageId: Int = 0
     private var multiMessageJson: String? = null
     private var title: String? = null
     private var messageCount: Int = 0
 
     private lateinit var user: User
+    var rootView: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMessageMultiBinding.inflate(layoutInflater)
         setSupportActionBar(binding.toolbar)
         setContentView(binding.root)
+        rootView= binding.root
 
         user = currentUserProvider.currentUser.blockingGet()
 
