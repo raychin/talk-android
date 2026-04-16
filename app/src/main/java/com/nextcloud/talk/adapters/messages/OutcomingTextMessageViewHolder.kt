@@ -10,6 +10,7 @@
 package com.nextcloud.talk.adapters.messages
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
@@ -27,8 +28,18 @@ import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.ChatActivity
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_COUNT
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_ID
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MULTI_MESSAGE_JSON
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_ROOM_TOKEN
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_TITLE
 import com.nextcloud.talk.chat.data.ChatMessageRepository
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.chat.data.model.clps.MultiMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
+import com.nextcloud.talk.chat.data.model.clps.multiMessage
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessage
 import com.nextcloud.talk.data.database.model.SendStatus
 import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
@@ -139,6 +150,16 @@ class OutcomingTextMessageViewHolder(itemView: View) :
                 }
             }
 
+            /**
+             * 判断 message.message 是否可以转为 MultiMessage 消息
+             * 如果 message.message 是 JSON 格式且包含 title 和 message 数组字段，则尝试解析为 MultiMessage
+             */
+            Log.e("Ray", "1111------messageType ${message.getCalculateMessageType()}")
+            if (message.isMultiMessage()) {
+                processedMessageText = message.parseAndDisplayMultiMessage().toSpanned()
+                addClickToNavigateToMultiMessageDetail(processedMessageText, message, message.multiMessage())
+            }
+
             processedMessageText = messageUtils.processMessageParameters(
                 binding.messageText.context,
                 viewThemeUtils,
@@ -146,6 +167,7 @@ class OutcomingTextMessageViewHolder(itemView: View) :
                 message,
                 itemView
             )
+            Log.e("Ray", "outComing || $processedMessageText")
 
             if (
                 (message.messageParameters == null || message.messageParameters!!.size <= 0) &&
@@ -239,6 +261,66 @@ class OutcomingTextMessageViewHolder(itemView: View) :
             isBubbled
         )
     }
+
+    // ... existing code ...
+
+    /**
+     * 为 MultiMessage 文本添加点击事件，跳转到消息详情页面
+     *
+     * @param text 已处理的文本
+     * @param chatMessage 当前聊天消息
+     * @param multiMessage 解析后的多消息对象
+     * @return 带点击事件的文本
+     */
+    private fun addClickToNavigateToMultiMessageDetail(
+        text: CharSequence,
+        chatMessage: ChatMessage,
+        multiMessage: MultiMessage
+    ): CharSequence {
+        // 将整个消息项设置为可点击，跳转到消息列表查看完整内容
+        binding.messageText.setOnClickListener {
+            navigateToMultiMessageDetail(chatMessage, multiMessage)
+        }
+
+        return text
+    }
+
+    /**
+     * 跳转到 MultiMessage 详情页面，显示完整的消息列表
+     *
+     * @param chatMessage 当前聊天消息
+     * @param multiMessage 多消息对象
+     */
+    private fun navigateToMultiMessageDetail(chatMessage: ChatMessage, multiMessage: MultiMessage) {
+        try {
+            val chatActivity = commonMessageInterface as? ChatActivity
+            if (chatActivity == null) {
+                Log.w(TAG, "commonMessageInterface is not a ChatActivity, cannot navigate")
+                return
+            }
+
+            // MultiMessageDetailActivity 来显示完整的消息列表
+            val intent = Intent(binding.messageText.context, MultiMessageDetailActivity::class.java).apply {
+                putExtra(KEY_ROOM_TOKEN, chatActivity.roomToken)
+                putExtra(KEY_MESSAGE_ID, chatMessage.jsonMessageId)
+                // putParcelableArrayListExtra(KEY_MULTI_MESSAGE_JSON, multiMessage.message as ArrayList<out Parcelable?>?)
+                putExtra(KEY_MULTI_MESSAGE_JSON, chatMessage.message)
+                putExtra(KEY_TITLE, multiMessage.title ?: "")
+                putExtra(KEY_MESSAGE_COUNT, multiMessage.message?.size ?: 0)
+            }
+
+            binding.messageText.context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error navigating to MultiMessage detail", e)
+            Snackbar.make(
+                binding.root,
+                R.string.nc_common_error_sorry,
+                Snackbar.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    // ... existing code ...
 
     private fun processCheckboxes(chatMessage: ChatMessage, user: User): Boolean {
         val chatActivity = commonMessageInterface as ChatActivity
