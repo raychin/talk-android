@@ -1657,6 +1657,8 @@ class CallActivity : CallBaseActivity() {
 
     private fun joinRoomAndCall() {
         callSession = ApplicationWideCurrentRoomHolder.getInstance().session
+        Log.e("Ray", "ApplicationWideCurrentRoomHolder.getInstance().session = ${ApplicationWideCurrentRoomHolder
+            .getInstance().session}")
         val apiVersion = ApiUtils.getConversationApiVersion(conversationUser, intArrayOf(ApiUtils.API_V4, 1))
         Log.d(TAG, "joinRoomAndCall")
         Log.d(TAG, "   baseUrl= $baseUrl")
@@ -1680,7 +1682,7 @@ class CallActivity : CallBaseActivity() {
                         val conversation = roomOverall.ocs!!.data
                         callRecordingViewModel!!.setRecordingState(conversation!!.callRecording)
                         callSession = conversation.sessionId
-                        Log.d(TAG, " new callSession by joinRoom= $callSession")
+                        Log.d("Ray", "joinRoomAndCall new callSession by joinRoom= $callSession")
 
                         setInitialApplicationWideCurrentRoomHolderValues(conversation)
 
@@ -1732,6 +1734,7 @@ class CallActivity : CallBaseActivity() {
                         val conversation = roomOverall.ocs!!.data
                         callRecordingViewModel!!.setRecordingState(conversation!!.callRecording)
                         callSession = conversation.sessionId
+                        Log.e("Ray", "performCall conversation.sessionId = ${conversation.sessionId}", )
 
                         setInitialApplicationWideCurrentRoomHolderValues(conversation)
 
@@ -1789,6 +1792,7 @@ class CallActivity : CallBaseActivity() {
         }
 
         val apiVersion = ApiUtils.getCallApiVersion(conversationUser, intArrayOf(ApiUtils.API_V4, 1))
+        Log.e("Ray", "performCall joinCall= ${ApiUtils.getUrlForCall(apiVersion, baseUrl, roomToken!!)}")
         ncApi!!.joinCall(
             credentials,
             ApiUtils.getUrlForCall(apiVersion, baseUrl, roomToken!!),
@@ -2287,39 +2291,50 @@ class CallActivity : CallBaseActivity() {
 
         // The signaling session is the same as the Nextcloud session only when the MCU is not used.
         var currentSessionId = callSession
+        Log.e("Ray", "webSocketClient!!.sessionId = ${webSocketClient!!.sessionId}")
+        Log.e("Ray", "isOneToOneConversation = $isOneToOneConversation")
+        Log.e("Ray", "hasExternalSignalingServer = $hasExternalSignalingServer")
+
         if (hasMCU) {
             currentSessionId = webSocketClient!!.sessionId
         }
-        else {
-            Log.d("Ray", "isIncomingCallFromNotification = ${isIncomingCallFromNotification}")
-            Log.d("Ray", "isOneToOneConversation = ${isOneToOneConversation}")
-            /**
-             * fix: 修复独立通讯信用服务器接通通话自动退出通话问题问题
-             * TODO RAY 待优化加上信令服务器判断逻辑
-             * add by ray on 2026/03/03
-             */
-            joined.forEach {
-                Log.d("Ray", "   joined: ${it.userId}")
-                if (it.userId == conversationUser.userId) {
-                    it.sessionId = currentSessionId
-                    Log.d("Ray", "   joined: ${it.sessionId}")
+
+        // 另一种方案，判断账户环境conversationUser.baseUrl.toUri().host == "talk.clpsgroup.com.cn"
+        if (hasExternalSignalingServer) {
+            if (isOneToOneConversation) {
+                // 生产环境有信令服务，单人通话需要改为当前webSocketClient的sessionId，保证加入通话正常
+                currentSessionId = webSocketClient!!.sessionId
+            } else {
+                // 多人通话
+                Log.d("Ray", "isIncomingCallFromNotification = ${isIncomingCallFromNotification}")
+                Log.d("Ray", "isOneToOneConversation = ${isOneToOneConversation}")
+                /**
+                 * fix: 修复独立通讯信用服务器接通通话自动退出通话问题问题
+                 * add by ray on 2026/03/03
+                 */
+                joined.forEach {
+                    Log.d("Ray", "   joined: ${it.userId}")
+                    if (it.userId == conversationUser.userId) {
+                        it.sessionId = currentSessionId
+                        Log.d("Ray", "   joined: ${it.sessionId}")
+                    }
                 }
-            }
-            updated.forEach {
-                Log.d("Ray", "   updated: ${it.userId}")
-                if (it.userId == conversationUser.userId) {
-                    it.sessionId = currentSessionId
-                    Log.d("Ray", "   updated: ${it.sessionId}")
+                updated.forEach {
+                    Log.d("Ray", "   updated: ${it.userId}")
+                    if (it.userId == conversationUser.userId) {
+                        it.sessionId = currentSessionId
+                        Log.d("Ray", "   updated: ${it.sessionId}")
+                    }
                 }
-            }
-            unchanged.forEach {
-                Log.d("Ray", "   unchanged: ${it.userId}")
-                if (it.userId == conversationUser.userId) {
-                    it.sessionId = currentSessionId
-                    Log.d("Ray", "   unchanged: ${it.sessionId}")
+                unchanged.forEach {
+                    Log.d("Ray", "   unchanged: ${it.userId}")
+                    if (it.userId == conversationUser.userId) {
+                        it.sessionId = currentSessionId
+                        Log.d("Ray", "   unchanged: ${it.sessionId}")
+                    }
                 }
+                Log.d("Ray", "---------------------------------------------")
             }
-            Log.d("Ray", "---------------------------------------------")
         }
         Log.d("Ray", "   currentSessionId is $currentSessionId")
 

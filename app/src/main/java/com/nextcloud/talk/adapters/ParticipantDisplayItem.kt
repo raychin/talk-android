@@ -133,7 +133,8 @@ class ParticipantDisplayItem(
         } else {
             iceConnectionState = callParticipantModel.iceConnectionState
             mediaStream = callParticipantModel.mediaStream
-            isAudioEnabled = callParticipantModel.isAudioAvailable ?: false
+            // fix: 默认显示修改
+            isAudioEnabled = callParticipantModel.isAudioAvailable ?: true
             isStreamEnabled = callParticipantModel.isVideoAvailable ?: false
         }
 

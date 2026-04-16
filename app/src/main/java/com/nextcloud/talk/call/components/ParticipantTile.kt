@@ -87,10 +87,13 @@ fun ParticipantTile(
                 )
             }
 
+            // 暂未修改
             if (!participantUiState.isAudioEnabled) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_mic_off_white_24px),
+                    // painter = painterResource(id = R.drawable.ic_mic_white_24px),
                     contentDescription = "Mic Off",
+                    // contentDescription = "Mic On",
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(6.dp)
