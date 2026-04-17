@@ -406,8 +406,7 @@ class MessageActionsDialog(
             }
         }
 
-        // dialogMessageActionsBinding.menuSelectMessages.visibility = getVisibility(visible)
-        dialogMessageActionsBinding.menuSelectMessages.visibility = View.GONE
+        dialogMessageActionsBinding.menuSelectMessages.visibility = getVisibility(visible)
     }
 
     private fun initMenuRemindMessage(visible: Boolean) {

@@ -23,6 +23,7 @@ import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
+import com.nextcloud.talk.adapters.messages.clps.MessageCheckboxHelper
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.ChatActivity
@@ -141,7 +142,15 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
         }
     }
     private fun processMessage(message: ChatMessage, hasCheckboxes: Boolean) {
-        initMessageCheckbox(message)
+
+        // 消息多选功能
+        MessageCheckboxHelper.initMessageCheckbox(
+            messageCheckbox = binding.messageCheckbox,
+            rootView = itemView,
+            message = message,
+            commonMessageInterface = commonMessageInterface
+        )
+
         var textSize = context.resources!!.getDimension(R.dimen.chat_text_size)
         if (!hasCheckboxes) {
             binding.messageText.visibility = View.VISIBLE
