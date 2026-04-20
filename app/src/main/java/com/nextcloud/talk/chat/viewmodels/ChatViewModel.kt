@@ -582,6 +582,23 @@ class ChatViewModel @Inject constructor(
                 }
 
                 override fun onNext(t: ChatOverallSingleMessage) {
+                    // 根据id删除本地数据库ChatMessages中的消息
+                    viewModelScope.launch {
+                        try {
+                            val messageId = t.ocs?.data?.id?.toLong()
+                            val currentUser = userProvider.currentUser.blockingGet()
+                            val internalConversationId = "${currentUser.id}@$chatRoomToken"
+
+                            if (messageId != null) {
+                                chatRepository.deleteChatMessageById(internalConversationId, messageId)
+                                Log.d("Ray", "Successfully deleted message with id: $messageId from local database")
+                            } else {
+                                Log.e("Ray", "Message ID is null, cannot delete from database")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("Ray", "Error deleting message from local database", e)
+                        }
+                    }
                     _hideChatMessageViewState.value = HideChatMessageSuccessState(t)
                 }
             })

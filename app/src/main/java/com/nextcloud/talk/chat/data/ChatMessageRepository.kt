@@ -116,4 +116,6 @@ interface ChatMessageRepository : LifecycleAwareManager {
     suspend fun sendUnsentChatMessages(credentials: String, url: String)
 
     suspend fun deleteTempMessage(chatMessage: ChatMessage)
+
+    suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long)
 }

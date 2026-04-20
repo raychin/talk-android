@@ -4664,7 +4664,7 @@ class ChatActivity :
             !isUserAllowedByPrivileges -> false
             !hasDeleteMessagesUnlimitedCapability && isOlderThanSixHours -> false
             message.systemMessageType != ChatMessage.SystemMessageType.DUMMY -> false
-            message.isDeleted -> false
+            message.isHidden -> false
             !hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.DELETE_MESSAGES) -> false
             !participantPermissions.hasChatPermission() -> false
             hasDeleteMessagesUnlimitedCapability -> true

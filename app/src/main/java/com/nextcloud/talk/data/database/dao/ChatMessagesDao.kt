@@ -107,6 +107,15 @@ interface ChatMessagesDao {
     )
     fun deleteTempChatMessages(internalConversationId: String, referenceIds: List<String>)
 
+    @Query(
+        value = """
+            DELETE FROM ChatMessages
+            WHERE internalConversationId = :internalConversationId
+            AND id = :messageId
+        """
+    )
+    suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long)
+
     @Update
     fun updateChatMessage(message: ChatMessageEntity)
 

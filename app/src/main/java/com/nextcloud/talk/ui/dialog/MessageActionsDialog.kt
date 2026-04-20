@@ -457,8 +457,7 @@ class MessageActionsDialog(
                 dialog.show()
             }
         }
-        // dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(visible)
-        dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(false)
+        dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(visible)
     }
 
     // ... ray add code ...

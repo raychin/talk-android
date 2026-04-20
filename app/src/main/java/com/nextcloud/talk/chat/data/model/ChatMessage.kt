@@ -351,9 +351,11 @@ data class ChatMessage(
         get() = "voice-message" == messageType
     val isCommandMessage: Boolean
         get() = "command" == messageType
-    // TODO RAY 这里是不是要单独添加hide
     val isDeletedCommentMessage: Boolean
-        get() = "comment_deleted" == messageType || "comment_hidden" == messageType
+        get() = "comment_deleted" == messageType
+    // 单独添加hide
+    val isHiddenCommentMessage: Boolean
+        get() = "comment_hidden" == messageType
 
     enum class MessageType {
         REGULAR_TEXT_MESSAGE,
@@ -411,6 +413,7 @@ data class ChatMessage(
         GUEST_MODERATOR_PROMOTED,
         GUEST_MODERATOR_DEMOTED,
         MESSAGE_DELETED,
+        MESSAGE_HIDDEN,
         MESSAGE_EDITED,
         FILE_SHARED,
         OBJECT_SHARED,

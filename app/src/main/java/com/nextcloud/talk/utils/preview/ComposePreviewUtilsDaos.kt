@@ -55,6 +55,8 @@ class DummyChatMessagesDaoImpl : ChatMessagesDao {
 
     override fun deleteTempChatMessages(internalConversationId: String, referenceIds: List<String>) { /* */ }
 
+    override suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long) { /* */ }
+
     override fun updateChatMessage(message: ChatMessageEntity) { /* */ }
 
     override fun getMessagesFromIds(messageIds: List<Long>): Flow<List<ChatMessageEntity>> = flowOf()

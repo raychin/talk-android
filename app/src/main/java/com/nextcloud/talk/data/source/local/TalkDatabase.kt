@@ -48,12 +48,13 @@ import java.util.Locale
         ChatMessageEntity::class,
         ChatBlockEntity::class
     ],
-    version = 21,
+    version = 22,
     autoMigrations = [
         AutoMigration(from = 9, to = 10),
         AutoMigration(from = 16, to = 17, spec = AutoMigration16To17::class),
         AutoMigration(from = 19, to = 20),
-        AutoMigration(from = 20, to = 21)
+        AutoMigration(from = 20, to = 21),
+        AutoMigration(from = 21, to = 22)
     ],
     exportSchema = true
 )
@@ -123,7 +124,8 @@ abstract class TalkDatabase : RoomDatabase() {
             return Room
                 .databaseBuilder(context.applicationContext, TalkDatabase::class.java, dbName)
                 // comment out openHelperFactory to view the database entries in Android Studio for debugging
-                .openHelperFactory(factory)
+                // SQLCipher 加密库
+                // .openHelperFactory(factory)
                 .fallbackToDestructiveMigrationFrom(true, 18)
                 .addMigrations(*MIGRATIONS) // * converts migrations to vararg
                 .allowMainThreadQueries()
