@@ -909,6 +909,7 @@ How to translate with transifex:
 
     <string name="clps_recall_messages">撤回</string>
     <string name="message_hidden_by_you">您已撤回此訊息</string>
+    <string name="clps_recall_message_leaked_to_matterbridge">訊息已成功撤回，但可能已外洩至其他服務</string>
 
     <!-- MultiMessage Detail -->
     <string name="clps_multi_message_detail_title">%d 則轉發的訊息</string>
@@ -928,4 +929,22 @@ How to translate with transifex:
     <string name="clps_video_message">[影片]</string>
     <string name="clps_audio_message">[音訊]</string>
     <string name="clps_link_message">[連結]</string>
+
+    <!-- Forward Menu -->
+    <string name="clps_forward_sequential">逐條轉發</string>
+    <string name="clps_forward_merged">合併轉發</string>
+
+    <string name="nc_send">傳送</string>
+    <string name="nc_common_contact">聯絡人</string>
+
+    <!-- Forward confirm bottom sheet -->
+    <string name="forward_send_to">傳送至</string>
+    <string name="forward_comment_hint">新增評論</string>
+    <string name="forward_merged_message">合併訊息</string>
+    <string name="forward_multiple_messages">%d 則訊息</string>
+
+    <!-- Forward confirmation -->
+    <string name="forward_confirm_title">轉發訊息</string>
+    <string name="forward_confirm_send_sequential">將這些訊息逐條轉發至 %1$s？</string>
+    <string name="forward_confirm_send_merged">將這些訊息合併轉發至 %1$s？</string>
 </resources>

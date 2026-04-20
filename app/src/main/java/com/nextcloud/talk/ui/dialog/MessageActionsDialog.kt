@@ -457,7 +457,8 @@ class MessageActionsDialog(
                 dialog.show()
             }
         }
-        dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(visible)
+        // dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(visible)
+        dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(false)
     }
 
     // ... ray add code ...
@@ -504,8 +505,7 @@ class MessageActionsDialog(
                 // dialog.show()
             }
         }
-        // dialogMessageActionsBinding.menuRecallMessage.visibility = getVisibility(visible)
-        dialogMessageActionsBinding.menuRecallMessage.visibility = View.GONE
+        dialogMessageActionsBinding.menuRecallMessage.visibility = getVisibility(visible)
     }
     // ... ray add code ...
 

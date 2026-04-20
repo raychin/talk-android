@@ -37,8 +37,12 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -130,6 +134,7 @@ import com.nextcloud.talk.utils.CapabilitiesUtil.isServerEOL
 import com.nextcloud.talk.utils.CapabilitiesUtil.isUnifiedSearchAvailable
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
 import com.nextcloud.talk.utils.ConversationUtils
+import com.nextcloud.talk.extensions.loadAvatarOrImagePreviewGlide
 import com.nextcloud.talk.utils.FileUtils
 import com.nextcloud.talk.utils.Mimetype
 import com.nextcloud.talk.utils.NotificationUtils
@@ -141,9 +146,13 @@ import com.nextcloud.talk.utils.bundle.BundleKeys.ADD_ADDITIONAL_ACCOUNT
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MSG_FLAG
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MSG_TEXT
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MESSAGE_IDS
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_COMMENT
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_INTERNAL_USER_ID
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_ROOM_TOKEN
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SCROLL_TO_NOTIFICATION_CATEGORY
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SHARED_MESSAGE_IDS
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SHARED_TEXT
 import com.nextcloud.talk.utils.permissions.PlatformPermissionUtil
 import com.nextcloud.talk.utils.power.PowerManagerUtils
@@ -232,6 +241,8 @@ class ConversationsListActivity :
     private var textToPaste: String? = ""
     private var selectedMessageId: String? = null
     private var forwardMessage: Boolean = false
+    private var forwardMessageIds: ArrayList<String>? = null
+    private var forwardSequentialMode: Boolean = false
     private var nextUnreadConversationScrollPosition = 0
     private var layoutManager: SmoothScrollLinearLayoutManager? = null
     private val callHeaderItems = HashMap<String, GenericTextHeaderItem>()
@@ -278,6 +289,8 @@ class ConversationsListActivity :
         viewThemeUtils.platform.colorTextView(binding.searchText, ColorRole.ON_SURFACE_VARIANT)
 
         forwardMessage = intent.getBooleanExtra(KEY_FORWARD_MSG_FLAG, false)
+        forwardMessageIds = intent.getStringArrayListExtra(KEY_FORWARD_MESSAGE_IDS)
+        forwardSequentialMode = intent.getBooleanExtra(KEY_FORWARD_SEQUENTIAL_MODE, false)
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
 
         initObservers()
@@ -1736,8 +1749,13 @@ class ConversationsListActivity :
                 }
             } else if (forwardMessage) {
                 if (hasChatPermission && !isReadOnlyConversation(selectedConversation!!)) {
-                    openConversation(intent.getStringExtra(KEY_FORWARD_MSG_TEXT))
-                    forwardMessage = false
+                    if (forwardMessageIds != null && forwardMessageIds!!.isNotEmpty()) {
+                        showForwardConfirmDialog()
+                    } else {
+                        openConversation(intent.getStringExtra(KEY_FORWARD_MSG_TEXT))
+                    }
+                    // TODO RAY 这里为何要改为false
+                    // forwardMessage = false
                 } else {
                     Snackbar.make(binding.root, R.string.send_to_forbidden, Snackbar.LENGTH_LONG).show()
                 }
@@ -1815,6 +1833,55 @@ class ConversationsListActivity :
             }
         } else {
             UploadAndShareFilesWorker.requestStoragePermission(this)
+        }
+    }
+
+    private fun showForwardConfirmDialog() {
+        val bottomSheetView = layoutInflater.inflate(R.layout.bottom_sheet_forward_confirm, null)
+
+        // 设置接收者信息
+        val avatarImageView = bottomSheetView.findViewById<ImageView>(R.id.iv_avatar)
+        val receiverNameTextView = bottomSheetView.findViewById<TextView>(R.id.tv_receiver_name)
+        val messageInfoTextView = bottomSheetView.findViewById<TextView>(R.id.tv_message_info)
+
+        // 加载头像和名称
+        selectedConversation?.let { conversation ->
+            receiverNameTextView.text = conversation.displayName
+            // viewThemeUtils.material.themeAvatar(avatarImageView)
+            // avatarImageView.loadAvatarOrImagePreviewGlide(
+            //     conversation.avatarUrl,
+            //     conversation.displayName,
+            //     conversation.name,
+            //     currentUser!!,
+            //     context
+            // )
+        }
+
+        // 设置消息信息
+        val messageCount = forwardMessageIds!!.size
+        messageInfoTextView.text = if (forwardSequentialMode) {
+            String.format(resources!!.getString(R.string.forward_multiple_messages), messageCount)
+        } else {
+            resources!!.getString(R.string.forward_merged_message)
+        }
+
+        // 创建底部弹窗
+        val dialog = BottomSheetDialog(this, R.style.ThemeOverlay_App_BottomSheetDialog)
+        dialog.setContentView(bottomSheetView)
+        dialog.show()
+
+        // 设置按钮事件
+        bottomSheetView.findViewById<Button>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+            Log.d(TAG, "forwarding messages cancelled")
+        }
+
+        bottomSheetView.findViewById<Button>(R.id.btn_send).setOnClickListener {
+            val comment = bottomSheetView.findViewById<com.google.android.material.textfield.TextInputEditText>(
+                R.id.et_comment
+            ).text?.toString() ?: ""
+            dialog.dismiss()
+            openConversationWithMessageIds(forwardMessageIds!!, forwardSequentialMode, comment)
         }
     }
 
@@ -2061,6 +2128,35 @@ class ConversationsListActivity :
         val count = appPreferences.getNotificationCount() - selectedConversation!!.unreadMessages
         appPreferences.setNotificationCount(count)
         Log.e("Ray", "openConversation count = $count")
+        val intent = Intent(context, ChatActivity::class.java)
+        intent.putExtras(bundle)
+        startActivity(intent)
+
+        clearIntentAction()
+    }
+
+    private fun openConversationWithMessageIds(messageIds: ArrayList<String>, isSequential: Boolean, comment: String = "") {
+        if (CallActivity.active &&
+            selectedConversation!!.token != ApplicationWideCurrentRoomHolder.getInstance().currentRoomToken
+        ) {
+            Snackbar.make(
+                binding.root,
+                context.getString(R.string.restrict_join_other_room_while_call),
+                Snackbar.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        val bundle = Bundle()
+        bundle.putString(KEY_ROOM_TOKEN, selectedConversation!!.token)
+        bundle.putStringArrayList(KEY_SHARED_MESSAGE_IDS, messageIds)
+        bundle.putBoolean(KEY_FORWARD_SEQUENTIAL_MODE, isSequential)
+        bundle.putString(KEY_FORWARD_COMMENT, comment)
+
+        // 减去角标数量
+        val count = appPreferences.getNotificationCount() - selectedConversation!!.unreadMessages
+        appPreferences.setNotificationCount(count)
+        Log.e("Ray", "openConversationWithMessageIds count = $count, sequential = $isSequential, comment = $comment")
         val intent = Intent(context, ChatActivity::class.java)
         intent.putExtras(bundle)
         startActivity(intent)

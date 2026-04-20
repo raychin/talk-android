@@ -59,6 +59,7 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.cardview.widget.CardView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -930,7 +931,7 @@ class ChatActivity :
                     if (state.msg.ocs!!.meta!!.statusCode == HttpURLConnection.HTTP_ACCEPTED) {
                         Snackbar.make(
                             binding.root,
-                            R.string.nc_delete_message_leaked_to_matterbridge,
+                            R.string.clps_recall_message_leaked_to_matterbridge,
                             Snackbar.LENGTH_LONG
                         ).show()
                     }
@@ -950,9 +951,19 @@ class ChatActivity :
         }
 
         chatViewModel.hideChatMessageViewState.observe(this) { state ->
+            Log.e("Ray", "hideChatMessageViewState = ${state.toString()}")
             when (state) {
                 is ChatViewModel.HideChatMessageSuccessState -> {
-                    val id = state.msg.ocs!!.data!!.parentMessage!!.id.toString()
+                    if (state.msg.ocs!!.meta!!.statusCode == HttpURLConnection.HTTP_ACCEPTED) {
+                        Snackbar.make(
+                            binding.root,
+                            R.string.nc_delete_message_leaked_to_matterbridge,
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+
+                    // val id = state.msg.ocs!!.data!!.parentMessage!!.id.toString()
+                    val id = state.msg.ocs!!.data!!.id.toString()
                     val index = adapter?.getMessagePositionById(id) ?: 0
                     val message = adapter?.items?.get(index)?.item as ChatMessage
                     setMessageAsHidden(message)
@@ -1485,12 +1496,22 @@ class ChatActivity :
                         }
                     }
                 }
+
+                Log.e("Ray", "onResume scroll selectorMode = $selectorMode")
+                if (selectorMode) {
+                    forwardSelectorMode(selectorMode)
+                }
             }
         })
 
         loadAvatarForStatusBar()
         setActionBarTitle()
         viewThemeUtils.material.colorToolbarOverflowIcon(binding.chatToolbar)
+
+        Log.e("Ray", "onResume selectorMode = $selectorMode")
+        if (selectorMode) {
+            forwardSelectorMode(selectorMode)
+        }
     }
 
     // private fun getLastAdapterId(): Int {
@@ -4030,11 +4051,9 @@ class ChatActivity :
             }
 
             // TODO RAY 刪除按鈕修改為hide
-            // chatViewModel.hideChatMessages(
-            chatViewModel.deleteChatMessages(
+            chatViewModel.hideChatMessages(
                 credentials!!,
-                // ApiUtils.getUrlForChatHideMessage(
-                ApiUtils.getUrlForChatMessage(
+                ApiUtils.getUrlForChatHideMessage(
                     apiVersion,
                     conversationUser?.baseUrl!!,
                     roomToken,
@@ -4106,6 +4125,77 @@ class ChatActivity :
         startActivity(intent)
     }
 
+    /**
+     * 处理选中消息的分享
+     */
+    private fun onShareSelectedMessages() {
+        val selectedIds = getSelectedMessageIds()
+        if (selectedIds.isEmpty()) {
+            Toast.makeText(this, R.string.clps_selector_no_text, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        showForwardMenuBottomSheet(selectedIds)
+    }
+
+    /**
+     * 显示转发菜单底部弹窗
+     */
+    private fun showForwardMenuBottomSheet(messageIds: Set<String>) {
+        val bottomSheetView = layoutInflater.inflate(R.layout.bottom_sheet_forward_menu, null)
+
+        val dialog = BottomSheetDialog(this, R.style.ThemeOverlay_App_BottomSheetDialog)
+        dialog.setContentView(bottomSheetView)
+        dialog.show()
+
+        bottomSheetView.findViewById<TextView>(R.id.btn_forward_sequential).setOnClickListener {
+            // 逐一转发
+            forwardMessagesSequentially(messageIds)
+            dialog.dismiss()
+        }
+
+        bottomSheetView.findViewById<TextView>(R.id.btn_forward_merged).setOnClickListener {
+            // 合并转发
+            forwardMessagesMerged(messageIds)
+            dialog.dismiss()
+        }
+
+        bottomSheetView.findViewById<TextView>(R.id.btn_cancel).setOnClickListener {
+            // 取消
+            dialog.dismiss()
+        }
+    }
+
+    /**
+     * 逐一转发消息
+     */
+    private fun forwardMessagesSequentially(messageIds: Set<String>) {
+        val bundle = Bundle()
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
+        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
+        bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, true)
+
+        val intent = Intent(this, ConversationsListActivity::class.java)
+        intent.putExtras(bundle)
+        startActivity(intent)
+    }
+
+    /**
+     * 合并转发消息
+     */
+    private fun forwardMessagesMerged(messageIds: Set<String>) {
+        val bundle = Bundle()
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
+        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
+        bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false)
+
+        val intent = Intent(this, ConversationsListActivity::class.java)
+        intent.putExtras(bundle)
+        startActivity(intent)
+    }
+
     private var selectorMode = false
     // ... existing code ...
     fun selectMessages(message: IMessage?) {
@@ -4122,6 +4212,15 @@ class ChatActivity :
         binding.chatTitleMessagesSelector.cancelView.setOnClickListener {
             forwardSelectorMode(false)
         }
+
+        // 显示/隐藏底部菜单
+        binding.chatBottomMessageMenu.root.visibility = if (showForward) View.VISIBLE else View.GONE
+
+        // 处理分享按钮点击事件
+        binding.chatBottomMessageMenu.menuShare.setOnClickListener {
+            onShareSelectedMessages()
+        }
+
         // TODO RAY 隐藏底部输入栏，待处理会重置问题
         binding.fragmentContainerActivityChat.visibility = if (showForward) View.GONE else View.VISIBLE
     }
@@ -4456,8 +4555,7 @@ class ChatActivity :
     private fun setMessageAsDeleted(message: IMessage?) {
         val messageTemp = message as ChatMessage
         messageTemp.isDeleted = true
-        // messageTemp.message = getString(R.string.message_hidden_by_you)
-        messageTemp.message = getString(R.string.message_deleted_by_you)
+        messageTemp.message = getString(R.string.message_hidden_by_you)
 
         messageTemp.isOneToOneConversation =
             currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
@@ -4468,13 +4566,15 @@ class ChatActivity :
 
     private fun setMessageAsHidden(message: IMessage?) {
         val messageTemp = message as ChatMessage
+        Log.e("Ray", "setMessageAsHidden message = ${messageTemp.message}")
         messageTemp.isHidden = true
-        messageTemp.isDeleted = true
         messageTemp.message = getString(R.string.message_deleted_by_you)
 
         messageTemp.isOneToOneConversation =
             currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
         messageTemp.activeUser = conversationUser
+
+        Log.e("Ray", "setMessageAsHidden messageTemp = ${messageTemp.message}")
 
         adapter?.update(messageTemp)
     }
