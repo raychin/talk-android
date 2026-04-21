@@ -2119,6 +2119,7 @@ class ConversationsListActivity :
         val bundle = Bundle()
         bundle.putString(KEY_ROOM_TOKEN, selectedConversation!!.token)
         bundle.putString(KEY_SHARED_TEXT, textToPaste)
+        // TODO RAY，添加一个判断直接发送
         if (selectedMessageId != null) {
             bundle.putString(BundleKeys.KEY_MESSAGE_ID, selectedMessageId)
             selectedMessageId = null

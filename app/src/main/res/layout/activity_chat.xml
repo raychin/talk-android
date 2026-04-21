@@ -286,12 +286,6 @@
 
     </RelativeLayout>
 
-    <include
-        android:id="@+id/chat_bottom_message_menu"
-        layout="@layout/chat_bottom_message_menu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container_activity_chat"
         android:layout_width="match_parent"

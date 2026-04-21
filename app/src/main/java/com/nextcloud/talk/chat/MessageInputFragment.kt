@@ -438,6 +438,7 @@ class MessageInputFragment : Fragment() {
         }
 
         binding.fragmentMessageInputView.button?.setOnClickListener {
+            // 发送按钮点击发送消息 add by ray on 2026/04/20
             submitMessage(false)
         }
 
@@ -469,6 +470,7 @@ class MessageInputFragment : Fragment() {
         }
 
         if (CapabilitiesUtil.hasSpreedFeatureCapability(chatActivity.spreedCapabilities, SpreedFeatures.SILENT_SEND)) {
+            // 长按发送按钮显示菜单 add by ray on 2026/04/20
             binding.fragmentMessageInputView.button?.setOnLongClickListener {
                 showSendButtonMenu()
                 true
@@ -904,7 +906,8 @@ class MessageInputFragment : Fragment() {
         }
     }
 
-    private fun sendMessage(message: String, sendWithoutNotification: Boolean) {
+    fun sendMessage(message: String, sendWithoutNotification: Boolean) {
+        // 发送文本消息 add by ray on 2026/04/20
         chatActivity.messageInputViewModel.sendChatMessage(
             credentials = chatActivity.conversationUser!!.getCredentials(),
             url = ApiUtils.getUrlForChat(

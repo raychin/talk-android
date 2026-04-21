@@ -139,6 +139,7 @@ import com.nextcloud.talk.adapters.messages.UnreadNoticeMessageViewHolder
 import com.nextcloud.talk.adapters.messages.VoiceMessageInterface
 import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
+import com.nextcloud.talk.chat.clps.ChatBottomMessageMenuFragment
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.chat.viewmodels.MessageInputViewModel
@@ -411,6 +412,10 @@ class ChatActivity :
 
     private val filesToUpload: MutableList<String> = ArrayList()
     lateinit var sharedText: String
+    private var sharedMessageIds: ArrayList<String>? = null
+    private var isSequentialMode: Boolean = false
+    private var forwardComment: String? = null
+    private var hasHandledSharedMessages: Boolean = false
 
     lateinit var participantPermissions: ParticipantPermissions
 
@@ -437,6 +442,7 @@ class ChatActivity :
     }
 
     private lateinit var messageInputFragment: MessageInputFragment
+    private lateinit var chatBottomMessageMenuFragment: ChatBottomMessageMenuFragment
 
     val typingParticipants = HashMap<String, TypingParticipant>()
 
@@ -553,6 +559,7 @@ class ChatActivity :
         }
 
         messageInputFragment = getMessageInputFragment()
+        chatBottomMessageMenuFragment = getChatBottomMessageMenuFragment()
         messageInputViewModel = ViewModelProvider(this, viewModelFactory)[MessageInputViewModel::class.java]
         messageInputViewModel.setData(chatViewModel.getChatRepository())
 
@@ -573,8 +580,23 @@ class ChatActivity :
 
     private fun getMessageInputFragment(): MessageInputFragment {
         val internalId = conversationUser!!.id.toString() + "@" + roomToken
+
+        // TODO RAY 判断转发消息，直接发送，不需要到输入框
         return MessageInputFragment().apply {
             arguments = Bundle().apply {
+                putString(CONVERSATION_INTERNAL_ID, internalId)
+                putString(BundleKeys.KEY_SHARED_TEXT, sharedText)
+            }
+        }
+    }
+
+    private fun getChatBottomMessageMenuFragment(): ChatBottomMessageMenuFragment {
+        val internalId = conversationUser!!.id.toString() + "@" + roomToken
+
+        // TODO RAY 判断转发消息，直接发送，不需要到输入框
+        return ChatBottomMessageMenuFragment().apply {
+            arguments = Bundle().apply {
+                putString(BundleKeys.KEY_ROOM_TOKEN, roomToken)
                 putString(CONVERSATION_INTERNAL_ID, internalId)
                 putString(BundleKeys.KEY_SHARED_TEXT, sharedText)
             }
@@ -615,6 +637,12 @@ class ChatActivity :
 
         sharedText = extras?.getString(BundleKeys.KEY_SHARED_TEXT).orEmpty()
 
+        sharedMessageIds = extras?.getStringArrayList(BundleKeys.KEY_SHARED_MESSAGE_IDS)
+        isSequentialMode = extras?.getBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false) == true
+        forwardComment = extras?.getString(BundleKeys.KEY_FORWARD_COMMENT)
+        // 重置防抖标志，允许处理新的共享消息
+        hasHandledSharedMessages = sharedMessageIds.isNullOrEmpty()
+
         Log.d(TAG, "   roomToken = $roomToken")
         if (roomToken.isEmpty()) {
             Log.d(TAG, "   roomToken was null or empty!")
@@ -654,6 +682,32 @@ class ChatActivity :
         adapter = null
         this.lifecycle.removeObserver(AudioUtils)
         this.lifecycle.removeObserver(chatViewModel)
+    }
+
+    private fun handleSharedMessageIdsIfNeeded() {
+        // 防抖检查：如果已经处理过或没有消息ID，直接返回
+        if (hasHandledSharedMessages) {
+            Log.d(TAG, "handleSharedMessageIdsIfNeeded already executed, skipping")
+            return
+        }
+
+        if (sharedMessageIds.isNullOrEmpty()) {
+            Log.d(TAG, "No shared message IDs to handle")
+            hasHandledSharedMessages = true
+            return
+        }
+
+        // 立即设置标志位，防止重复调用
+        hasHandledSharedMessages = true
+
+        // 保存引用并清空原变量
+        val messagesToSend = ArrayList(sharedMessageIds!!)
+        sharedMessageIds = null
+
+        runOnUiThread {
+            messageInputFragment.sendMessage(messagesToSend.toString(), false)
+            Snackbar.make(binding.root, sharedMessageIds.toString(), Snackbar.LENGTH_LONG).show()
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged", "SetTextI18n", "ResourceAsColor")
@@ -722,11 +776,16 @@ class ChatActivity :
                         chatApiVersion = ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(1))
                         participantPermissions = ParticipantPermissions(spreedCapabilities, currentConversation!!)
 
+                        val bottomFragment = if (selectorMode) {
+                            chatBottomMessageMenuFragment
+                        } else {
+                            messageInputFragment
+                        }
                         supportFragmentManager.commit {
                             setReorderingAllowed(true) // optimizes out redundant replace operations
-                            replace(R.id.fragment_container_activity_chat, messageInputFragment)
+                            replace(R.id.fragment_container_activity_chat, bottomFragment)
                             runOnCommit {
-                                if (focusInput) {
+                                if (!selectorMode && focusInput) {
                                     // fix: ANR问题，将焦点请求移到下一个消息循环，避免阻塞当前操作 fix by ray on 2026/02/25
                                     binding.root.post {
                                         messageInputFragment.binding.fragmentMessageInputView.requestFocus()
@@ -1009,6 +1068,9 @@ class ChatActivity :
                     binding.offline.root.visibility = View.GONE
                     binding.messagesListView.visibility = View.VISIBLE
                     collapseSystemMessages()
+
+                    // 页面加载完成后，处理分享的消息IDs
+                    handleSharedMessageIdsIfNeeded()
                 }
 
                 is ChatViewModel.ChatMessageUpdateState -> {
@@ -1195,9 +1257,16 @@ class ChatActivity :
                     replace(R.id.fragment_container_activity_chat, MessageInputVoiceRecordingFragment())
                 }
             } else {
-                supportFragmentManager.commit {
-                    setReorderingAllowed(true)
-                    replace(R.id.fragment_container_activity_chat, getMessageInputFragment())
+                if (selectorMode) {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace(R.id.fragment_container_activity_chat, getChatBottomMessageMenuFragment())
+                    }
+                } else {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace(R.id.fragment_container_activity_chat, getMessageInputFragment())
+                    }
                 }
             }
         }
@@ -4125,77 +4194,6 @@ class ChatActivity :
         startActivity(intent)
     }
 
-    /**
-     * 处理选中消息的分享
-     */
-    private fun onShareSelectedMessages() {
-        val selectedIds = getSelectedMessageIds()
-        if (selectedIds.isEmpty()) {
-            Toast.makeText(this, R.string.clps_selector_no_text, Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        showForwardMenuBottomSheet(selectedIds)
-    }
-
-    /**
-     * 显示转发菜单底部弹窗
-     */
-    private fun showForwardMenuBottomSheet(messageIds: Set<String>) {
-        val bottomSheetView = layoutInflater.inflate(R.layout.bottom_sheet_forward_menu, null)
-
-        val dialog = BottomSheetDialog(this, R.style.ThemeOverlay_App_BottomSheetDialog)
-        dialog.setContentView(bottomSheetView)
-        dialog.show()
-
-        bottomSheetView.findViewById<TextView>(R.id.btn_forward_sequential).setOnClickListener {
-            // 逐一转发
-            forwardMessagesSequentially(messageIds)
-            dialog.dismiss()
-        }
-
-        bottomSheetView.findViewById<TextView>(R.id.btn_forward_merged).setOnClickListener {
-            // 合并转发
-            forwardMessagesMerged(messageIds)
-            dialog.dismiss()
-        }
-
-        bottomSheetView.findViewById<TextView>(R.id.btn_cancel).setOnClickListener {
-            // 取消
-            dialog.dismiss()
-        }
-    }
-
-    /**
-     * 逐一转发消息
-     */
-    private fun forwardMessagesSequentially(messageIds: Set<String>) {
-        val bundle = Bundle()
-        bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
-        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
-        bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
-        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, true)
-
-        val intent = Intent(this, ConversationsListActivity::class.java)
-        intent.putExtras(bundle)
-        startActivity(intent)
-    }
-
-    /**
-     * 合并转发消息
-     */
-    private fun forwardMessagesMerged(messageIds: Set<String>) {
-        val bundle = Bundle()
-        bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
-        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
-        bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
-        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false)
-
-        val intent = Intent(this, ConversationsListActivity::class.java)
-        intent.putExtras(bundle)
-        startActivity(intent)
-    }
-
     private var selectorMode = false
     // ... existing code ...
     fun selectMessages(message: IMessage?) {
@@ -4213,16 +4211,23 @@ class ChatActivity :
             forwardSelectorMode(false)
         }
 
-        // 显示/隐藏底部菜单
-        binding.chatBottomMessageMenu.root.visibility = if (showForward) View.VISIBLE else View.GONE
-
-        // 处理分享按钮点击事件
-        binding.chatBottomMessageMenu.menuShare.setOnClickListener {
-            onShareSelectedMessages()
+        val bottomFragment = if (selectorMode) {
+            chatBottomMessageMenuFragment
+        } else {
+            messageInputFragment
         }
-
-        // TODO RAY 隐藏底部输入栏，待处理会重置问题
-        binding.fragmentContainerActivityChat.visibility = if (showForward) View.GONE else View.VISIBLE
+        supportFragmentManager.commit {
+            setReorderingAllowed(true) // optimizes out redundant replace operations
+            replace(R.id.fragment_container_activity_chat, bottomFragment)
+            runOnCommit {
+                if (!selectorMode && focusInput) {
+                    // fix: ANR问题，将焦点请求移到下一个消息循环，避免阻塞当前操作 fix by ray on 2026/02/25
+                    binding.root.post {
+                        messageInputFragment.binding.fragmentMessageInputView.requestFocus()
+                    }
+                }
+            }
+        }
     }
 
     override fun onSelectMessage(chatMessage: ChatMessage) {
