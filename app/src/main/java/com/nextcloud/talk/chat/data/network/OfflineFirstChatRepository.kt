@@ -684,6 +684,7 @@ class OfflineFirstChatRepository @Inject constructor(
                 ChatMessage.SystemMessageType.REACTION_REVOKED,
                 ChatMessage.SystemMessageType.REACTION_DELETED,
                 ChatMessage.SystemMessageType.MESSAGE_DELETED,
+                ChatMessage.SystemMessageType.MESSAGE_HIDDEN,
                 ChatMessage.SystemMessageType.POLL_VOTED,
                 ChatMessage.SystemMessageType.MESSAGE_EDITED -> {
                     // the parent message is always the newest state, no matter how old the system message is.
@@ -1021,6 +1022,11 @@ class OfflineFirstChatRepository @Inject constructor(
         _removeMessageFlow.emit(chatMessage)
     }
 
+    override suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long) {
+        chatDao.deleteChatMessageById(internalConversationId, messageId)
+        Log.d("Ray", "Deleted chat message with id: $messageId from internalConversation: $internalConversationId")
+    }
+
     @Suppress("Detekt.TooGenericExceptionCaught")
     override suspend fun addTemporaryMessage(
         message: CharSequence,
@@ -1092,7 +1098,8 @@ class OfflineFirstChatRepository @Inject constructor(
             referenceId = referenceId,
             isTemporary = true,
             sendStatus = SendStatus.PENDING,
-            silent = sendWithoutNotification
+            silent = sendWithoutNotification,
+            hidden = false
         )
         return entity
     }
