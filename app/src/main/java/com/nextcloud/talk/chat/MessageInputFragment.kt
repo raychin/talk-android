@@ -906,7 +906,7 @@ class MessageInputFragment : Fragment() {
         }
     }
 
-    fun sendMessage(message: String, sendWithoutNotification: Boolean) {
+    private fun sendMessage(message: String, sendWithoutNotification: Boolean) {
         // 发送文本消息 add by ray on 2026/04/20
         chatActivity.messageInputViewModel.sendChatMessage(
             credentials = chatActivity.conversationUser!!.getCredentials(),

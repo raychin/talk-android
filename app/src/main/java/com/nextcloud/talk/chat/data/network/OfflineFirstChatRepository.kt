@@ -355,7 +355,6 @@ class OfflineFirstChatRepository @Inject constructor(
                     ).toInt()
 
                     // update field map vars for next cycle
-                    // TODO RAY 改变读取状态轮询时间现在是30S
                     fieldMap = getFieldMap(
                         lookIntoFuture = true,
                         timeout = 30,

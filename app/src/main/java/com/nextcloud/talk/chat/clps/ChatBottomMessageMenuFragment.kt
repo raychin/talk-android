@@ -17,11 +17,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.gson.Gson
 import com.nextcloud.talk.R
 // import autodagger.AutoInjector
 // import com.nextcloud.talk.application.NextcloudTalkApplication
 // import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.ChatActivity
+import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.conversationlist.ConversationsListActivity
 import com.nextcloud.talk.databinding.ChatBottomMessageMenuBinding
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
@@ -68,11 +70,15 @@ class ChatBottomMessageMenuFragment : Fragment() {
         }
     }
 
+    private lateinit var selectedIds: Set<String>
+    private lateinit var selectedMessages: ArrayList<ChatMessage>
     /**
      * 处理选中消息的分享
      */
     private fun onShareSelectedMessages() {
-        val selectedIds = chatActivity.getSelectedMessageIds()
+        // val selectedIds = chatActivity.getSelectedMessageIds()
+        selectedIds = chatActivity.selectedMessageIds as Set<String>
+        selectedMessages = chatActivity.selectedMessages as ArrayList<ChatMessage>
         if (selectedIds.isEmpty()) {
             Toast.makeText(chatActivity, R.string.clps_selector_no_text, Toast.LENGTH_SHORT).show()
             return
@@ -128,9 +134,46 @@ class ChatBottomMessageMenuFragment : Fragment() {
      * 合并转发消息
      */
     private fun forwardMessagesMerged(messageIds: Set<String>) {
+        // val multiMessage = MultiMessage()
+        // multiMessage.title = "[合并转发消息]"
+        // multiMessage.message = selectedMessages
+        //     .sortedBy { it.timestamp }
+        //     .map { message ->
+        //     // 创建副本并清除 activeUser
+        //     message.copy().apply {
+        //         activeUser = null
+        //     }
+        // }.toCollection(ArrayList())
+
+        val multiMessage = SimplifiedMultiMessage()
+        multiMessage.title = chatActivity.multiMessageTitle()
+        // 转换为简化版本
+        val simplifiedMessages = selectedMessages
+            .sortedBy { it.timestamp }
+            .map { msg ->
+                SimplifiedChatMessage(
+                    jsonMessageId = msg.jsonMessageId,
+                    timestamp = msg.timestamp,
+                    message = msg.message,
+                    actorDisplayName = msg.actorDisplayName,
+                    actorType = msg.actorType,
+                    actorId = msg.actorId,
+                    messageType = msg.messageType,
+                    messageParameters = msg.messageParameters,
+                    parentMessageId = msg.parentMessageId,
+                    reactions = msg.reactions,
+                    isTemporary = msg.isTemporary,
+                    referenceId = msg.referenceId
+                )
+            }
+            .toCollection(ArrayList())
+        multiMessage.message = simplifiedMessages
+        val jsonString = (Gson()).toJson(multiMessage)
+
         val bundle = Bundle()
         bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
         bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
+        bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, jsonString)
         bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
         bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false)
 
@@ -158,5 +201,27 @@ class ChatBottomMessageMenuFragment : Fragment() {
             return ChatBottomMessageMenuFragment()
         }
     }
+
+    data class SimplifiedMultiMessage(
+        var title: String? = null,
+        var message: ArrayList<SimplifiedChatMessage>? = null,
+    ) {
+
+    }
+    // 在 ChatBottomMessageMenuFragment.kt 中添加内部类
+    data class SimplifiedChatMessage(
+        val jsonMessageId: Int,
+        val timestamp: Long,
+        val message: String?,
+        val actorDisplayName: String?,
+        val actorType: String?,
+        val actorId: String?,
+        val messageType: String?,
+        val messageParameters: HashMap<String?, HashMap<String?, String?>>?,
+        val parentMessageId: Long?,
+        val reactions: LinkedHashMap<String, Int>?,
+        val isTemporary: Boolean,
+        val referenceId: String?
+    )
 }
 

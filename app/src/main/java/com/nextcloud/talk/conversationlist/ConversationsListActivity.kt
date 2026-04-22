@@ -149,6 +149,7 @@ import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MSG_TEXT
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MESSAGE_IDS
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_COMMENT
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MESSAGES_JSON
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_INTERNAL_USER_ID
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_ROOM_TOKEN
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SCROLL_TO_NOTIFICATION_CATEGORY
@@ -242,6 +243,7 @@ class ConversationsListActivity :
     private var selectedMessageId: String? = null
     private var forwardMessage: Boolean = false
     private var forwardMessageIds: ArrayList<String>? = null
+    private var forwardMessagesJson: String? = null
     private var forwardSequentialMode: Boolean = false
     private var nextUnreadConversationScrollPosition = 0
     private var layoutManager: SmoothScrollLinearLayoutManager? = null
@@ -290,6 +292,7 @@ class ConversationsListActivity :
 
         forwardMessage = intent.getBooleanExtra(KEY_FORWARD_MSG_FLAG, false)
         forwardMessageIds = intent.getStringArrayListExtra(KEY_FORWARD_MESSAGE_IDS)
+        forwardMessagesJson = intent.getStringExtra(KEY_FORWARD_MESSAGES_JSON)
         forwardSequentialMode = intent.getBooleanExtra(KEY_FORWARD_SEQUENTIAL_MODE, false)
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
 
@@ -2151,6 +2154,7 @@ class ConversationsListActivity :
         val bundle = Bundle()
         bundle.putString(KEY_ROOM_TOKEN, selectedConversation!!.token)
         bundle.putStringArrayList(KEY_SHARED_MESSAGE_IDS, messageIds)
+        bundle.putString(KEY_FORWARD_MESSAGES_JSON, forwardMessagesJson)
         bundle.putBoolean(KEY_FORWARD_SEQUENTIAL_MODE, isSequential)
         bundle.putString(KEY_FORWARD_COMMENT, comment)
 

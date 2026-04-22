@@ -413,6 +413,7 @@ class ChatActivity :
     private val filesToUpload: MutableList<String> = ArrayList()
     lateinit var sharedText: String
     private var sharedMessageIds: ArrayList<String>? = null
+    private var sharedMessagesJson: String? = null
     private var isSequentialMode: Boolean = false
     private var forwardComment: String? = null
     private var hasHandledSharedMessages: Boolean = false
@@ -590,13 +591,30 @@ class ChatActivity :
         }
     }
 
+    // 合并消息标题 add by ray on 2026/04/21
+    fun multiMessageTitle(): String {
+        return if (currentConversation != null) {
+            if (isOneToOneConversation()) {
+                // 单人会话：XX和XX的聊天记录
+                val currentUser = conversationUser?.displayName ?: ""
+                val otherUser = currentConversation?.displayName ?: ""
+                getString(R.string.clps_chat_history_person, currentUser, otherUser)
+            } else {
+                // 多人会话：会话标题的聊天记录
+                val conversationName = currentConversation?.displayName ?: "群聊"
+                getString(R.string.clps_chat_history_persons, conversationName)
+            }
+        } else {
+            getString(R.string.clps_chat_history)
+        }
+    }
+
     private fun getChatBottomMessageMenuFragment(): ChatBottomMessageMenuFragment {
         val internalId = conversationUser!!.id.toString() + "@" + roomToken
 
-        // TODO RAY 判断转发消息，直接发送，不需要到输入框
         return ChatBottomMessageMenuFragment().apply {
             arguments = Bundle().apply {
-                putString(BundleKeys.KEY_ROOM_TOKEN, roomToken)
+                putString(KEY_ROOM_TOKEN, roomToken)
                 putString(CONVERSATION_INTERNAL_ID, internalId)
                 putString(BundleKeys.KEY_SHARED_TEXT, sharedText)
             }
@@ -638,6 +656,7 @@ class ChatActivity :
         sharedText = extras?.getString(BundleKeys.KEY_SHARED_TEXT).orEmpty()
 
         sharedMessageIds = extras?.getStringArrayList(BundleKeys.KEY_SHARED_MESSAGE_IDS)
+        sharedMessagesJson = extras?.getString(BundleKeys.KEY_FORWARD_MESSAGES_JSON)
         isSequentialMode = extras?.getBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false) == true
         forwardComment = extras?.getString(BundleKeys.KEY_FORWARD_COMMENT)
         // 重置防抖标志，允许处理新的共享消息
@@ -669,6 +688,9 @@ class ChatActivity :
         active = true
         this.lifecycle.addObserver(AudioUtils)
         this.lifecycle.addObserver(chatViewModel)
+
+        // 合并转发功能 add by ray on 2026/04/22
+        handleSharedMessageIdsIfNeeded()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -691,23 +713,36 @@ class ChatActivity :
             return
         }
 
-        if (sharedMessageIds.isNullOrEmpty()) {
-            Log.d(TAG, "No shared message IDs to handle")
-            hasHandledSharedMessages = true
-            return
-        }
-
         // 立即设置标志位，防止重复调用
         hasHandledSharedMessages = true
 
         // 保存引用并清空原变量
-        val messagesToSend = ArrayList(sharedMessageIds!!)
-        sharedMessageIds = null
+        // val messagesToSend = ArrayList(sharedMessageIds!!)
 
-        runOnUiThread {
-            messageInputFragment.sendMessage(messagesToSend.toString(), false)
-            Snackbar.make(binding.root, sharedMessageIds.toString(), Snackbar.LENGTH_LONG).show()
-        }
+        // messageInputFragment.sendMessage(sharedMessagesJson!!, false)
+        sendMessage(sharedMessagesJson!!, false)
+        sharedMessageIds = null
+        sharedMessagesJson = null
+    }
+
+    /**
+     * 发送消息
+     * add by ray on 2026/04/22
+     */
+    fun sendMessage(message: String, sendWithoutNotification: Boolean) {
+        messageInputViewModel.sendChatMessage(
+            credentials = conversationUser!!.getCredentials(),
+            url = ApiUtils.getUrlForChat(
+                chatApiVersion,
+                conversationUser!!.baseUrl!!,
+                roomToken
+            ),
+            message = message,
+            displayName = conversationUser!!.displayName ?: "",
+            replyTo = getReplyToMessageId(),
+            sendWithoutNotification = sendWithoutNotification,
+            threadTitle = chatViewModel.messageDraft.threadTitle
+        )
     }
 
     @SuppressLint("NotifyDataSetChanged", "SetTextI18n", "ResourceAsColor")
@@ -1068,9 +1103,6 @@ class ChatActivity :
                     binding.offline.root.visibility = View.GONE
                     binding.messagesListView.visibility = View.VISIBLE
                     collapseSystemMessages()
-
-                    // 页面加载完成后，处理分享的消息IDs
-                    handleSharedMessageIdsIfNeeded()
                 }
 
                 is ChatViewModel.ChatMessageUpdateState -> {
@@ -1565,22 +1597,12 @@ class ChatActivity :
                         }
                     }
                 }
-
-                Log.e("Ray", "onResume scroll selectorMode = $selectorMode")
-                if (selectorMode) {
-                    forwardSelectorMode(selectorMode)
-                }
             }
         })
 
         loadAvatarForStatusBar()
         setActionBarTitle()
         viewThemeUtils.material.colorToolbarOverflowIcon(binding.chatToolbar)
-
-        Log.e("Ray", "onResume selectorMode = $selectorMode")
-        if (selectorMode) {
-            forwardSelectorMode(selectorMode)
-        }
     }
 
     // private fun getLastAdapterId(): Int {
@@ -1665,6 +1687,11 @@ class ChatActivity :
             val nextSpeed = (button as PlaybackSpeedControl).getSpeed().next()
             chatViewModel.setPlayBack(nextSpeed)
             appPreferences.savePreferredPlayback(conversationUser!!.userId, nextSpeed)
+        }
+
+        Log.e("Ray", "onResume selectorMode = $selectorMode")
+        if (selectorMode) {
+            forwardSelectorMode(selectorMode)
         }
     }
 
@@ -2991,6 +3018,7 @@ class ChatActivity :
         if (mentionAutocomplete != null && mentionAutocomplete!!.isPopupShowing) {
             mentionAutocomplete?.dismissPopup()
         }
+        // TODO RAY 性能问题，所以清空？导致回到页面需要执行initAdapter
         adapter = null
     }
 
@@ -4135,7 +4163,7 @@ class ChatActivity :
 
     // ... ray add code ...
     /**
-     * TODO RAY 消息撤回
+     * 消息撤回 -> 使用delete接口
      * add by ray on 2026/04/02
      */
     fun recallMessage(message: IMessage) {
@@ -4195,7 +4223,9 @@ class ChatActivity :
     }
 
     private var selectorMode = false
-    // ... existing code ...
+    var selectedMessageIds: MutableSet<String?> = HashSet<String?>()
+    var selectedMessages: ArrayList<ChatMessage?> = ArrayList<ChatMessage?>()
+
     fun selectMessages(message: IMessage?) {
         // TODO RAY 多選完成後，參照forwardMessage跳轉到分享頁面
         toggleMessageSelection(message as ChatMessage, true)
@@ -4204,13 +4234,15 @@ class ChatActivity :
 
     fun forwardSelectorMode(showForward: Boolean) {
         selectorMode = showForward
-        adapter?.setSelectionMode(showForward)
+        adapter?.setSelectionMode(showForward, selectedMessageIds, selectedMessages)
+        selectedMessageIds.clear()
+        selectedMessages.clear()
+        // adapter?.isSelectionMode = showForward
         binding.chatTitleMessagesSelector.root.visibility = if (showForward) View.VISIBLE else View.GONE
         binding.chatToolbar.visibility = if (showForward) View.GONE else View.VISIBLE
         binding.chatTitleMessagesSelector.cancelView.setOnClickListener {
             forwardSelectorMode(false)
         }
-
         val bottomFragment = if (selectorMode) {
             chatBottomMessageMenuFragment
         } else {
@@ -4242,6 +4274,10 @@ class ChatActivity :
             adapter?.toggleMessageSelection(chatMessage)
         }
 
+        selectedMessageIds.clear()
+        selectedMessages.clear()
+        selectedMessageIds.addAll(adapter?.getSelectedMessageIds() ?: emptySet())
+        selectedMessages.addAll(adapter?.getSelectedMessages() ?: emptyList())
         binding.chatTitleMessagesSelector.selectorText.text = if (getMessageSelectionCount() > 0) {
             String.format(
                 context.resources.getString(R.string.clps_selector_text),
@@ -4256,9 +4292,9 @@ class ChatActivity :
         return adapter?.getSelectedCount() ?: 0
     }
 
-    fun getSelectedMessageIds(): Set<String> {
-        return adapter?.getSelectedMessageIds() ?: emptySet()
-    }
+    // fun getSelectedMessageIds(): Set<String> {
+    //     return adapter?.getSelectedMessageIds() ?: emptySet()
+    // }
 
     fun clearMessageSelection() {
         adapter?.clearSelection()

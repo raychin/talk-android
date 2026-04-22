@@ -51,8 +51,8 @@
                 android:id="@+id/menu_share_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/share"
-                android:textColor="@color/high_emphasis_text"
+                android:text="@string/nc_forward_message"
+                android:textColor="@color/colorPrimary"
                 android:textSize="12sp"
                 android:layout_marginTop="4dp" />
 

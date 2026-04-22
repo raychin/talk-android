@@ -918,6 +918,8 @@ How to translate with transifex:
     <string name="clps_multi_message_navigate_hint">Tap to view complete message list</string>
 
     <!-- Message type display text  -->
+    <string name="clps_chat_history_person">%1$s和%2$s的聊天记录</string>
+    <string name="clps_chat_history_persons">%s的聊天记录</string>
     <string name="clps_chat_history">[Chat History]</string>
     <string name="clps_voice_message">[Voice Message]</string>
     <string name="clps_file_attachment">[File]</string>

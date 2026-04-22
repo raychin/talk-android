@@ -7,10 +7,8 @@
  */
 package com.nextcloud.talk.adapters.messages;
 
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.ImageView;
 
 import com.nextcloud.talk.R;
 import com.nextcloud.talk.chat.ChatActivity;
@@ -21,6 +19,7 @@ import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.messages.MessageHolders;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +30,7 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
     // 多选功能
     private boolean selectionMode = false;
     private final Set<String> selectedMessageIds = new HashSet<>();
+    private final ArrayList<ChatMessage> selectedMessages = new ArrayList<>();
     private OnSelectionChangeListener selectionChangeListener;
     public interface OnSelectionChangeListener {
         void onSelectionChange(Set<String> selectedIds);
@@ -43,11 +43,31 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
         return selectionMode;
     }
 
+    public void setSelectionMode(boolean selectionMode, Set<String> ids, ArrayList<ChatMessage> messages) {
+        if (this.selectionMode != selectionMode) {
+            this.selectionMode = selectionMode;
+            if (!selectionMode) {
+                selectedMessageIds.clear();
+                selectedMessages.clear();
+            }
+            if (!ids.isEmpty()) {
+                selectedMessageIds.addAll(ids);
+                // TODO RAY 添加选择消息数据
+                selectedMessages.addAll(messages);
+            }
+            notifyDataSetChanged();
+            if (selectionChangeListener != null) {
+                selectionChangeListener.onSelectionModeChanged(selectionMode);
+            }
+        }
+    }
+
     public void setSelectionMode(boolean selectionMode) {
         if (this.selectionMode != selectionMode) {
             this.selectionMode = selectionMode;
             if (!selectionMode) {
                 selectedMessageIds.clear();
+                selectedMessages.clear();
             }
             notifyDataSetChanged();
             if (selectionChangeListener != null) {
@@ -59,6 +79,7 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
     public void toggleFirstMessageSelection(ChatMessage chatMessage) {
         String id = String.valueOf(chatMessage.getJsonMessageId());
         selectedMessageIds.add(id);
+        selectedMessages.add(chatMessage);
 
         // 这里如果没有选择数据，则会关闭多选模式
 //        if (selectedMessageIds.isEmpty()) {
@@ -77,8 +98,10 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
         String id = String.valueOf(chatMessage.getJsonMessageId());
         if (selectedMessageIds.contains(id)) {
             selectedMessageIds.remove(id);
+            selectedMessages.remove(chatMessage);
         } else {
             selectedMessageIds.add(id);
+            selectedMessages.add(chatMessage);
         }
 
         // 这里如果没有选择数据，则会关闭多选模式
@@ -102,6 +125,9 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
     public Set<String> getSelectedMessageIds() {
         return selectedMessageIds;
     }
+    public ArrayList<M> getSelectedMessages() {
+        return (ArrayList<M>) selectedMessages;
+    }
 
     public int getSelectedCount() {
         return selectedMessageIds.size();
@@ -109,6 +135,7 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
 
     public void clearSelection() {
         selectedMessageIds.clear();
+        selectedMessages.clear();
         setSelectionMode(false);
     }
 
@@ -175,6 +202,7 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
             holderInstance.assignCommonMessageInterface(chatActivity);
             holderInstance.adjustIfNoteToSelf(chatActivity.getCurrentConversation());
 
+            updateSelectionUI(holder.itemView, position);
         } else if (holder instanceof IncomingLocationMessageViewHolder holderInstance) {
             holderInstance.assignCommonMessageInterface(chatActivity);
         } else if (holder instanceof OutcomingLocationMessageViewHolder holderInstance) {
