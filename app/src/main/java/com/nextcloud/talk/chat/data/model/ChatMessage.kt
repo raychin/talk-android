@@ -11,13 +11,11 @@ package com.nextcloud.talk.chat.data.model
 
 import android.text.TextUtils
 import android.util.Log
-import androidx.core.text.toSpanned
 import com.bluelinelabs.logansquare.annotation.JsonIgnore
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
-import com.nextcloud.talk.chat.data.model.clps.MultiMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessageTitle
 import com.nextcloud.talk.data.database.model.SendStatus
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.models.json.chat.ChatUtils.Companion.getParsedMessage
@@ -280,7 +278,12 @@ data class ChatMessage(
 
     override fun getText(): String =
         if (message != null) {
-            getParsedMessage(message, messageParameters)!!
+            // 判断文本消息，并且是合并消息
+            if (isMultiMessage()) {
+                parseAndDisplayMultiMessageTitle().toString()
+            } else {
+                getParsedMessage(message, messageParameters)!!
+            }
         } else {
             ""
         }

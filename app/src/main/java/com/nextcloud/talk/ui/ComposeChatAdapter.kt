@@ -89,6 +89,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
+import androidx.core.text.toSpanned
 import androidx.emoji2.widget.EmojiTextView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -101,7 +102,16 @@ import com.nextcloud.talk.activities.MainActivity
 import com.nextcloud.talk.adapters.messages.PreviewMessageViewHolder.Companion.KEY_MIMETYPE
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_COUNT
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_ID
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MULTI_MESSAGE_JSON
+import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_TITLE
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.chat.data.model.clps.MultiMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
+import com.nextcloud.talk.chat.data.model.clps.multiMessage
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessage
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.contacts.ContactsViewModel
 import com.nextcloud.talk.contacts.load
@@ -871,12 +881,17 @@ class ComposeChatAdapter(
     private fun EnrichedText(message: ChatMessage) {
         AndroidView(factory = { ctx ->
             val incoming = message.actorId != currentUser.userId
+
             var processedMessageText = viewModel.messageUtils.enrichChatMessageText(
                 ctx,
                 message,
                 incoming,
                 viewModel.viewThemeUtils
             )
+
+            if (message.isMultiMessage()) {
+                processedMessageText = message.parseAndDisplayMultiMessage().toSpanned()
+            }
 
             processedMessageText = viewModel.messageUtils.processMessageParameters(
                 ctx,
@@ -893,7 +908,33 @@ class ComposeChatAdapter(
                 text = processedMessageText
                 setPadding(0, INT_8, 0, 0)
             }
-        }, modifier = Modifier)
+        }, modifier = Modifier.clickable {
+            if (message.isMultiMessage()) {
+                navigateToMultiMessageDetail(message, message.multiMessage())
+            }
+        })
+    }
+
+    /**
+     * 跳转到 MultiMessage 详情页面，显示完整的消息列表
+     *
+     * @param chatMessage 当前聊天消息
+     * @param multiMessage 多消息对象
+     */
+    private fun navigateToMultiMessageDetail(chatMessage: ChatMessage, multiMessage: MultiMessage) {
+        val context = viewModel.context
+        // MultiMessageDetailActivity 来显示完整的消息列表
+        val intent = Intent(context, MultiMessageDetailActivity::class.java).apply {
+            // putExtra(KEY_ROOM_TOKEN, viewModel.roomToken)
+            putExtra(KEY_MESSAGE_ID, chatMessage.jsonMessageId)
+            // putParcelableArrayListExtra(KEY_MULTI_MESSAGE_JSON, multiMessage.message as ArrayList<out Parcelable?>?)
+            putExtra(KEY_MULTI_MESSAGE_JSON, chatMessage.message)
+            putExtra(KEY_TITLE, multiMessage.title ?: "")
+            putExtra(KEY_MESSAGE_COUNT, multiMessage.message?.size ?: 0)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        context.startActivity(intent)
     }
 
     @Composable

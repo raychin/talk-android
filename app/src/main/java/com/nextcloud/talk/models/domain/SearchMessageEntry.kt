@@ -17,5 +17,6 @@ data class SearchMessageEntry(
     val messageId: String?,
     val thumbnail: String?,
     val thumbnailSize: Int?,
-    val timestamp: Long?
+    val timestamp: Long?,
+    var messageParameters: HashMap<String?, HashMap<String?, String?>>?
 )
