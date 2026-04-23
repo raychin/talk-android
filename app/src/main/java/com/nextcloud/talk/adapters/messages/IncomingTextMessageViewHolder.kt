@@ -106,41 +106,6 @@ class IncomingTextMessageViewHolder(itemView: View, payload: Any) :
         processMessage(message, hasCheckboxes)
     }
 
-    /**
-     * CheckBox逻辑处理
-     * TODO RAY 抽象到MessageHolders，公用
-     */
-    private fun initMessageCheckbox(message: ChatMessage) {
-        val chatActivity = commonMessageInterface as ChatActivity
-        val adapter = chatActivity.adapter
-        if (adapter is TalkMessagesListAdapter<*>) {
-            val isInSelectionMode = adapter.isSelectionMode
-            // val isSelected = adapter.isMessageSelected(message.id.toString())
-
-            // 根据选择模式显示或隐藏复选框
-            binding.messageCheckbox.visibility = if (isInSelectionMode) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-
-            binding.root.setOnClickListener {
-                if (!isInSelectionMode) {
-                    return@setOnClickListener
-                }
-                commonMessageInterface.onSelectMessage(message)
-
-                // 获取消息ID并检查选中状态，然后设置checkbox为相应状态
-                val messageId = message.jsonMessageId.toString()
-                val isSelected = adapter.isMessageSelected(messageId)
-                binding.messageCheckbox.isChecked = isSelected
-
-                // 根据选择状态调整透明度
-                val alpha = if (isSelected) 0.6f else 1.0f
-                itemView.setAlpha(alpha)
-            }
-        }
-    }
     private fun processMessage(message: ChatMessage, hasCheckboxes: Boolean) {
 
         // 消息多选功能
