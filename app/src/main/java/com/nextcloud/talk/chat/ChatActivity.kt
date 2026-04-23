@@ -4703,16 +4703,31 @@ class ChatActivity :
     private fun isShowMessageDeletionButton(message: ChatMessage): Boolean {
         val isUserAllowedByPrivileges = userAllowedByPrivilages(message)
 
-        val isOlderThanSixHours = message
-            .createdAt
-            .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_DELETE_MESSAGE))
+        // 群主不需要删除
+        var currentUserIsOwner = false
+        if (currentConversation?.type == ConversationEnums.ConversationType.ROOM_GROUP_CALL ||
+            currentConversation?.type == ConversationEnums.ConversationType.ROOM_PUBLIC_CALL) {
+            val isOwnerOrModerator = Participant.ParticipantType.OWNER == currentConversation?.participantType
+            if (isOwnerOrModerator) {
+                // showRecall = true
+                currentUserIsOwner = true
+            }
+        }
+
+        // val isOlderThanSixHours = message
+        //     .createdAt
+        //     .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_DELETE_MESSAGE))
+        // 删除不需要时间限制 modify by ray on 2026/04/23
+        val isOlderThanSixHours = false
         val hasDeleteMessagesUnlimitedCapability = hasSpreedFeatureCapability(
             spreedCapabilities,
             SpreedFeatures.DELETE_MESSAGES_UNLIMITED
         )
 
         return when {
-            !isUserAllowedByPrivileges -> false
+            // 他人消息也可以删除 remove by ray on 2026/04/23
+            // !isUserAllowedByPrivileges -> false
+            currentUserIsOwner -> false
             !hasDeleteMessagesUnlimitedCapability && isOlderThanSixHours -> false
             message.systemMessageType != ChatMessage.SystemMessageType.DUMMY -> false
             message.isHidden -> false
@@ -4731,16 +4746,32 @@ class ChatActivity :
     private fun isShowMessageRecallButton(message: ChatMessage): Boolean {
         val isUserAllowedByPrivileges = userAllowedByPrivilages(message)
 
+        // 群聊天时，群主也可以撤回所有消息
+        var currentUserIsOwner = false
+        if (currentConversation?.type == ConversationEnums.ConversationType.ROOM_GROUP_CALL ||
+            currentConversation?.type == ConversationEnums.ConversationType.ROOM_PUBLIC_CALL) {
+            val isOwnerOrModerator = Participant.ParticipantType.OWNER == currentConversation?.participantType
+                // ||
+                // Participant.ParticipantType.MODERATOR == currentConversation?.participantType
+            if (isOwnerOrModerator) {
+                currentUserIsOwner = true
+            }
+        }
+        Log.e("Ray", "currentUserIsOwner =  $currentUserIsOwner")
+
+        // TODO RAY 撤回修改为5分钟
         val isOlderThanSixHours = message
             .createdAt
-            .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_DELETE_MESSAGE))
-        val hasDeleteMessagesUnlimitedCapability = hasSpreedFeatureCapability(
-            spreedCapabilities,
-            // TODO RAY 這裏狀態是什麽
-            SpreedFeatures.DELETE_MESSAGES_UNLIMITED
-        )
+            .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_RECALL_MESSAGE))
+        // val hasDeleteMessagesUnlimitedCapability = hasSpreedFeatureCapability(
+        //     spreedCapabilities,
+        //     // TODO RAY 這裏狀態是什麽
+        //     SpreedFeatures.DELETE_MESSAGES_UNLIMITED
+        // )
+        val hasDeleteMessagesUnlimitedCapability = false
 
         return when {
+            currentUserIsOwner -> true
             !isUserAllowedByPrivileges -> false
             !hasDeleteMessagesUnlimitedCapability && isOlderThanSixHours -> false
             message.systemMessageType != ChatMessage.SystemMessageType.DUMMY -> false
@@ -5032,6 +5063,7 @@ class ChatActivity :
         private const val GET_ROOM_INFO_DELAY_LOBBY: Long = 5000
         private const val MILLIS_250 = 250L
         private const val AGE_THRESHOLD_FOR_DELETE_MESSAGE: Int = 21600000 // (6 hours in millis = 6 * 3600 * 1000)
+        private const val AGE_THRESHOLD_FOR_RECALL_MESSAGE: Int = 300000 // (5 minutes in millis = 5 * 60 * 1000)
         private const val REQUEST_SHARE_FILE_PERMISSION: Int = 221
         private const val REQUEST_RECORD_AUDIO_PERMISSION = 222
         private const val REQUEST_READ_CONTACT_PERMISSION = 234
