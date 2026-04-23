@@ -14,6 +14,7 @@ import com.google.gson.JsonSyntaxException
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.MessageResultItem
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
+import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.chat.data.model.ChatMessage.MessageType
 import com.nextcloud.talk.conversationlist.ConversationsListActivity
@@ -443,5 +444,69 @@ fun ConversationsListActivity.parseAndDisplayMultiMessage(): CharSequence {
         // 如果解析失败，回退到原始消息处理
         Log.e("Ray", "Failed to parse MultiMessage", e)
         return forwardMessagesJson!!.toSpanned()
+    }
+}
+
+/**
+ * 判断消息内容是否可以解析为 MultiMessage
+ * @return 如果可以解析为 MultiMessage 返回 true，否则返回 false
+ */
+fun ChatActivity.isSharedMessagesJson(): Boolean {
+    if (sharedMessagesJson.isNullOrBlank()) {
+        return false
+    }
+
+    // 快速检查：JSON 对象应该以 { 开始
+    val trimmedContent = sharedMessagesJson!!.trim()
+    if (!trimmedContent.startsWith("{")) {
+        return false
+    }
+
+    return try {
+        // 尝试使用 Gson 解析为 MultiMessage
+        val gson = Gson()
+        val multiMessage = gson.fromJson(trimmedContent, MultiMessage::class.java)
+
+        // 验证解析结果是否有效
+        multiMessage != null &&
+            (multiMessage.title != null || !multiMessage.message.isNullOrEmpty())
+    } catch (e: JsonSyntaxException) {
+        // 解析失败，说明不是有效的 JSON 格式
+        Log.d("Ray", "Message cannot be parsed as MultiMessage: ${e.message}")
+        false
+    } catch (e: Exception) {
+        // 其他异常也视为不可解析
+        Log.d("Ray", "Error parsing message as MultiMessage: ${e.message}")
+        false
+    }
+}
+
+/**
+ * 判断消息内容是否可以解析为 MultiMessage
+ * @return 如果可以解析为 MultiMessage 返回 true，否则返回 false
+ */
+fun ChatActivity.sharedMessagesJsonToMultiMessage(): MultiMessage {
+    if (sharedMessagesJson.isNullOrBlank()) {
+        return MultiMessage()
+    }
+
+    // 快速检查：JSON 对象应该以 { 开始
+    val trimmedContent = sharedMessagesJson!!.trim()
+    if (!trimmedContent.startsWith("{")) {
+        return MultiMessage()
+    }
+
+    return try {
+        // 尝试使用 Gson 解析为 MultiMessage
+        val gson = Gson()
+        return gson.fromJson(trimmedContent, MultiMessage::class.java)
+    } catch (e: JsonSyntaxException) {
+        // 解析失败，说明不是有效的 JSON 格式
+        Log.d("Ray", "Message MultiMessage: ${e.message}")
+        MultiMessage()
+    } catch (e: Exception) {
+        // 其他异常也视为不可解析
+        Log.d("Ray", "Error parsing message as MultiMessage: ${e.message}")
+        MultiMessage()
     }
 }

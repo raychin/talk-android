@@ -179,6 +179,59 @@ class MessageInputViewModel @Inject constructor(
         }
     }
 
+    @Suppress("LongParameterList")
+    fun sendForwardChatMessage(
+        credentials: String,
+        url: String,
+        message: String,
+        displayName: String,
+        replyTo: Int,
+        sendWithoutNotification: Boolean,
+        threadTitle: String?
+    ) {
+        val referenceId = "forwarded-messages-${SendMessageUtils().generateReferenceId()}"
+        Log.d(TAG, "Random SHA-256 Hash: $referenceId")
+
+        viewModelScope.launch {
+            chatRepository.addTemporaryMessage(
+                message,
+                displayName,
+                replyTo,
+                sendWithoutNotification,
+                referenceId
+            ).collect { result ->
+                if (result.isSuccess) {
+                    Log.d(TAG, "temp message ref id: " + (result.getOrNull()?.referenceId ?: "none"))
+
+                    _sendChatMessageViewState.value = SendChatMessageSuccessState(message)
+                } else {
+                    _sendChatMessageViewState.value = SendChatMessageErrorState(message)
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            chatRepository.sendChatMessage(
+                credentials,
+                url,
+                message,
+                displayName,
+                replyTo,
+                sendWithoutNotification,
+                referenceId,
+                threadTitle
+            ).collect { result ->
+                if (result.isSuccess) {
+                    Log.d(TAG, "received ref id: " + (result.getOrNull()?.referenceId ?: "none"))
+
+                    _sendChatMessageViewState.value = SendChatMessageSuccessState(message)
+                } else {
+                    _sendChatMessageViewState.value = SendChatMessageErrorState(message)
+                }
+            }
+        }
+    }
+
     fun sendUnsentMessages(credentials: String, url: String) {
         viewModelScope.launch {
             chatRepository.sendUnsentChatMessages(

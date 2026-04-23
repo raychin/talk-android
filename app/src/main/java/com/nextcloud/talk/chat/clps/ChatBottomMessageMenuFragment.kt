@@ -115,36 +115,7 @@ class ChatBottomMessageMenuFragment : Fragment() {
         }
     }
 
-    /**
-     * 逐一转发消息
-     */
-    private fun forwardMessagesSequentially(messageIds: Set<String>) {
-        val bundle = Bundle()
-        bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
-        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
-        bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
-        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, true)
-
-        val intent = Intent(chatActivity, ConversationsListActivity::class.java)
-        intent.putExtras(bundle)
-        startActivity(intent)
-    }
-
-    /**
-     * 合并转发消息
-     */
-    private fun forwardMessagesMerged(messageIds: Set<String>) {
-        // val multiMessage = MultiMessage()
-        // multiMessage.title = "[合并转发消息]"
-        // multiMessage.message = selectedMessages
-        //     .sortedBy { it.timestamp }
-        //     .map { message ->
-        //     // 创建副本并清除 activeUser
-        //     message.copy().apply {
-        //         activeUser = null
-        //     }
-        // }.toCollection(ArrayList())
-
+    private fun jsonString(): String {
         val multiMessage = SimplifiedMultiMessage()
         multiMessage.title = chatActivity.multiMessageTitle()
         // 转换为简化版本
@@ -168,12 +139,33 @@ class ChatBottomMessageMenuFragment : Fragment() {
             }
             .toCollection(ArrayList())
         multiMessage.message = simplifiedMessages
-        val jsonString = (Gson()).toJson(multiMessage)
+        return Gson().toJson(multiMessage)
+    }
 
+    /**
+     * 逐一转发消息
+     */
+    private fun forwardMessagesSequentially(messageIds: Set<String>) {
         val bundle = Bundle()
         bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
         bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
-        bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, jsonString)
+        bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, jsonString())
+        bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, true)
+
+        val intent = Intent(chatActivity, ConversationsListActivity::class.java)
+        intent.putExtras(bundle)
+        startActivity(intent)
+    }
+
+    /**
+     * 合并转发消息
+     */
+    private fun forwardMessagesMerged(messageIds: Set<String>) {
+        val bundle = Bundle()
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
+        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
+        bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, jsonString())
         bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
         bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false)
 

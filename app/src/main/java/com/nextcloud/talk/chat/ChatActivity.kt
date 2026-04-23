@@ -142,6 +142,8 @@ import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.chat.clps.ChatBottomMessageMenuFragment
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
+import com.nextcloud.talk.chat.data.model.clps.isSharedMessagesJson
+import com.nextcloud.talk.chat.data.model.clps.sharedMessagesJsonToMultiMessage
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.chat.viewmodels.MessageInputViewModel
 import com.nextcloud.talk.contextchat.ContextChatView
@@ -414,7 +416,7 @@ class ChatActivity :
     private val filesToUpload: MutableList<String> = ArrayList()
     lateinit var sharedText: String
     private var sharedMessageIds: ArrayList<String>? = null
-    private var sharedMessagesJson: String? = null
+    var sharedMessagesJson: String? = null
     private var isSequentialMode: Boolean = false
     private var forwardComment: String? = null
     private var hasHandledSharedMessages: Boolean = false
@@ -721,7 +723,35 @@ class ChatActivity :
         // val messagesToSend = ArrayList(sharedMessageIds!!)
 
         // messageInputFragment.sendMessage(sharedMessagesJson!!, false)
-        sendMessage(sharedMessagesJson!!, false)
+        if (isSequentialMode) {
+            // TODO RAY 顺序发送消息，还需要判断是否{file}
+            val multiMessage = sharedMessagesJsonToMultiMessage()
+            multiMessage.message?.forEach { msg ->
+                if (msg.message != "{file}") {
+                    if (msg.isMultiMessage()) {
+                        sendForwardChatMessage(msg.message!!, false)
+                    } else {
+                        sendMessage(msg.message!!, false)
+                    }
+                } else {
+                    // TODO RAY 文件类消息处理
+                }
+            }
+        } else {
+            // 判断是否可以转json
+            // 发送合并消息json
+            if (isSharedMessagesJson()) {
+                sendForwardChatMessage(sharedMessagesJson!!, false)
+            } else {
+                sendMessage(sharedMessagesJson!!, false)
+            }
+        }
+
+        if (forwardComment!!.isNotEmpty()) {
+            sendMessage(forwardComment!!, false)
+            forwardComment = null
+        }
+
         sharedMessageIds = null
         sharedMessagesJson = null
     }
@@ -732,6 +762,26 @@ class ChatActivity :
      */
     fun sendMessage(message: String, sendWithoutNotification: Boolean) {
         messageInputViewModel.sendChatMessage(
+            credentials = conversationUser!!.getCredentials(),
+            url = ApiUtils.getUrlForChat(
+                chatApiVersion,
+                conversationUser!!.baseUrl!!,
+                roomToken
+            ),
+            message = message,
+            displayName = conversationUser!!.displayName ?: "",
+            replyTo = getReplyToMessageId(),
+            sendWithoutNotification = sendWithoutNotification,
+            threadTitle = chatViewModel.messageDraft.threadTitle
+        )
+    }
+
+    /**
+     * 发送消息
+     * add by ray on 2026/04/22
+     */
+    fun sendForwardChatMessage(message: String, sendWithoutNotification: Boolean) {
+        messageInputViewModel.sendForwardChatMessage(
             credentials = conversationUser!!.getCredentials(),
             url = ApiUtils.getUrlForChat(
                 chatApiVersion,
@@ -1692,7 +1742,7 @@ class ChatActivity :
 
         Log.e("Ray", "onResume selectorMode = $selectorMode")
         if (selectorMode) {
-            forwardSelectorMode(selectorMode)
+            forwardSelectorMode(true)
         }
     }
 
@@ -4286,8 +4336,8 @@ class ChatActivity :
 
         selectedMessageIds.clear()
         selectedMessages.clear()
-        selectedMessageIds.addAll(adapter?.getSelectedMessageIds() ?: emptySet())
-        selectedMessages.addAll(adapter?.getSelectedMessages() ?: emptyList())
+        selectedMessageIds.addAll(adapter?.selectedMessageIds ?: emptySet())
+        selectedMessages.addAll(adapter?.raySelectedMessages ?: emptyList())
         binding.chatTitleMessagesSelector.selectorText.text = if (getMessageSelectionCount() > 0) {
             String.format(
                 context.resources.getString(R.string.clps_selector_text),
