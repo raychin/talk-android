@@ -89,6 +89,7 @@ import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.arbitrarystorage.ArbitraryStorageManager
 import com.nextcloud.talk.chat.ChatActivity
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessage
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.contacts.ContactsActivity
 import com.nextcloud.talk.contacts.ContactsUiState
@@ -121,6 +122,7 @@ import com.nextcloud.talk.ui.dialog.ChooseAccountShareToDialogFragment
 import com.nextcloud.talk.contextchat.ContextChatView
 import com.nextcloud.talk.contextchat.ContextChatViewModel
 import com.nextcloud.talk.extensions.generateImageUrl
+import com.nextcloud.talk.extensions.loadAvatarOrImagePreview
 import com.nextcloud.talk.ui.dialog.ConversationsListBottomDialog
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment.Companion.ARCHIVE
@@ -243,7 +245,7 @@ class ConversationsListActivity :
     private var selectedMessageId: String? = null
     private var forwardMessage: Boolean = false
     private var forwardMessageIds: ArrayList<String>? = null
-    private var forwardMessagesJson: String? = null
+    var forwardMessagesJson: String? = null
     private var forwardSequentialMode: Boolean = false
     private var nextUnreadConversationScrollPosition = 0
     private var layoutManager: SmoothScrollLinearLayoutManager? = null
@@ -1850,14 +1852,10 @@ class ConversationsListActivity :
         // 加载头像和名称
         selectedConversation?.let { conversation ->
             receiverNameTextView.text = conversation.displayName
-            // viewThemeUtils.material.themeAvatar(avatarImageView)
-            // avatarImageView.loadAvatarOrImagePreviewGlide(
-            //     conversation.avatarUrl,
-            //     conversation.displayName,
-            //     conversation.name,
-            //     currentUser!!,
-            //     context
-            // )
+            conversation.name.let {
+                val url = ApiUtils.getUrlForAvatar(currentUser!!.baseUrl, it, false)
+                avatarImageView.loadAvatarOrImagePreview(url, currentUser!!, null)
+            }
         }
 
         // 设置消息信息
@@ -1865,7 +1863,8 @@ class ConversationsListActivity :
         messageInfoTextView.text = if (forwardSequentialMode) {
             String.format(resources!!.getString(R.string.forward_multiple_messages), messageCount)
         } else {
-            resources!!.getString(R.string.forward_merged_message)
+            // resources!!.getString(R.string.forward_merged_message)
+            parseAndDisplayMultiMessage().toString()
         }
 
         // 创建底部弹窗

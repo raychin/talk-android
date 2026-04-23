@@ -71,6 +71,7 @@
 
     <!-- 第四行：输入框（支持表情） -->
     <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:id="@+id/text_input_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -87,19 +88,39 @@
             android:layout_height="wrap_content"
             android:minHeight="40dp"
             android:maxHeight="80dp"
-            android:gravity="top|start"
+            android:gravity="center_vertical|start"
             android:hint="@string/forward_comment_hint"
             android:textSize="14sp"
-            android:textColor="@color/high_emphasis_text"
-            android:background="@drawable/bg_input_comment"
+            android:background="@color/transparent"
             android:paddingStart="@dimen/standard_half_margin"
             android:paddingEnd="@dimen/standard_half_margin"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
-            android:maxLines="4"
+            android:maxLines="3"
+            android:textColor="@color/nc_incoming_text_default"
             android:scrollbars="vertical" />
 
     </com.google.android.material.textfield.TextInputLayout>
+<!--    <com.google.android.material.textfield.TextInputLayout-->
+<!--        android:id="@+id/text_input_layout"-->
+<!--        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_margin="@dimen/standard_margin">-->
+
+<!--        <com.google.android.material.textfield.TextInputEditText-->
+<!--            android:id="@+id/et_comment"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:hint="@string/nc_caption"-->
+<!--            android:maxLines="3"-->
+<!--            tools:text="a.png\nb.png\nc.png" />-->
+
+<!--    </com.google.android.material.textfield.TextInputLayout>-->
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <!-- 第五行：取消和发送按钮 -->
     <LinearLayout

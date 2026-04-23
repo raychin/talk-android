@@ -141,6 +141,7 @@ import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.chat.clps.ChatBottomMessageMenuFragment
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.chat.viewmodels.MessageInputViewModel
 import com.nextcloud.talk.contextchat.ContextChatView
@@ -4214,8 +4215,17 @@ class ChatActivity :
     fun forwardMessage(message: IMessage?) {
         val bundle = Bundle()
         bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
-        bundle.putString(BundleKeys.KEY_FORWARD_MSG_TEXT, message?.text)
+        // bundle.putString(BundleKeys.KEY_FORWARD_MSG_TEXT, message?.text)
         bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
+
+        val chatMessage = message as ChatMessage
+        if (chatMessage.isMultiMessage()) {
+            bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, chatMessage.message)
+        } else {
+            bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, message?.text)
+        }
+        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, arrayListOf("11111"))
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false)
 
         val intent = Intent(this, ConversationsListActivity::class.java)
         intent.putExtras(bundle)
