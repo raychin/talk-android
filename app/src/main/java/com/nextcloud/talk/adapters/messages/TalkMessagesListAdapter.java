@@ -51,8 +51,10 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
                 selectedMessages.clear();
             }
             if (!ids.isEmpty()) {
+                selectedMessageIds.clear();
+                selectedMessages.clear();
                 selectedMessageIds.addAll(ids);
-                // TODO RAY 添加选择消息数据
+                // 添加选择消息数据
                 selectedMessages.addAll(messages);
             }
             notifyDataSetChanged();
@@ -77,6 +79,8 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
     }
 
     public void toggleFirstMessageSelection(ChatMessage chatMessage) {
+        selectedMessageIds.clear();
+        selectedMessages.clear();
         String id = String.valueOf(chatMessage.getJsonMessageId());
         selectedMessageIds.add(id);
         selectedMessages.add(chatMessage);
@@ -96,12 +100,19 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
     }
     public void toggleMessageSelection(ChatMessage chatMessage) {
         String id = String.valueOf(chatMessage.getJsonMessageId());
+//        selectedMessages.removeIf(message -> String.valueOf(message.getJsonMessageId()).equals(id));
         if (selectedMessageIds.contains(id)) {
             selectedMessageIds.remove(id);
-            selectedMessages.remove(chatMessage);
+//            selectedMessages.remove(chatMessage);
+            selectedMessages.removeIf(message -> String.valueOf(message.getJsonMessageId()).equals(id));
         } else {
             selectedMessageIds.add(id);
-            selectedMessages.add(chatMessage);
+//            selectedMessages.add(chatMessage);
+            boolean messageExists = selectedMessages.stream()
+                .anyMatch(message -> String.valueOf(message.getJsonMessageId()).equals(id));
+            if (!messageExists) {
+                selectedMessages.add(chatMessage);
+            }
         }
 
         // 这里如果没有选择数据，则会关闭多选模式
@@ -125,8 +136,8 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
     public Set<String> getSelectedMessageIds() {
         return selectedMessageIds;
     }
-    public ArrayList<M> getSelectedMessages() {
-        return (ArrayList<M>) selectedMessages;
+    public ArrayList<ChatMessage> getRaySelectedMessages() {
+        return selectedMessages;
     }
 
     public int getSelectedCount() {
