@@ -248,14 +248,18 @@ fun ChatMessage.parseAndDisplayMultiMessageTitle(): CharSequence {
         // 构建 MultiMessage 的显示文本
         val displayText = StringBuilder()
 
-        displayText.append(getNullsafeActorDisplayName())
-        if (displayText.isNotBlank()){
-            displayText.append(": ")
-        }
-        displayText.append(sharedApplication!!.getString(R.string.clps_chat_history))
+        // 仿微信显示，其他端暂时没有
+        // displayText.append(getNullsafeActorDisplayName())
+        // if (displayText.isNotBlank()){
+        //     displayText.append(": ")
+        // }
+        // displayText.append(sharedApplication!!.getString(R.string.clps_chat_history))
+
         // 添加标题（如果有）
         if (!multiMessage.title.isNullOrBlank()) {
             displayText.append(multiMessage.title)
+        } else {
+            displayText.append(sharedApplication!!.getString(R.string.clps_chat_history))
         }
 
         return displayText
