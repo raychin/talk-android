@@ -950,4 +950,6 @@ How to translate with transifex:
     <string name="forward_confirm_send_sequential">Forward these messages one by one to %1$s?</string>
     <string name="forward_confirm_send_merged">Forward these messages as a merged message to %1$s?</string>
 
+    <string name="clps_items_image">Image</string>
+    <string name="clps_items_file">File</string>
 </resources>

@@ -873,8 +873,8 @@ How to translate with transifex:
     <string name="show_ban_reason">顯示封鎖原因</string>
     <string name="error_unbanning">解除封鎖參與者嗰陣出錯</string>
     <string name="connection_lost">連唔到伺服器</string>
-    <string name="archive_conversation">封存對話</string>
-    <string name="unarchive_conversation">取消封存對話</string>
+    <string name="archive_conversation">封存</string>
+    <string name="unarchive_conversation">取消封存</string>
     <string name="archived">已封存</string>
     <string name="archive_hint">對話封存之後，預設會隱藏。揀篩選條件「已封存」就可以睇返已封存嘅對話。直接提及仍然會收到。</string>
     <string name="unarchive_hint">對話取消封存之後，預設會再次顯示。</string>
@@ -947,4 +947,7 @@ How to translate with transifex:
     <string name="forward_confirm_title">轉發訊息</string>
     <string name="forward_confirm_send_sequential">將呢啲訊息逐條轉發去 %1$s？</string>
     <string name="forward_confirm_send_merged">將呢啲訊息合併轉發去 %1$s？</string>
+
+    <string name="clps_items_image">圖片</string>
+    <string name="clps_items_file">檔案</string>
 </resources>

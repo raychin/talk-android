@@ -69,10 +69,12 @@ class MessageSearchActivity : BaseActivity() {
     private var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>? = null
 
     private var filterAdapter: FlexibleAdapter<AbstractFlexibleItem<*>>? = null
-    private val filters: List<MessageFilter> = listOf(
-        MessageFilter(10001,  "文件", MessageFilterType.FILE),
-        MessageFilter(10002,  "图片", MessageFilterType.IMAGE)
-    )
+    private val filters: List<MessageFilter> by lazy {
+        listOf(
+            MessageFilter(10001,  getString(R.string.clps_items_file), MessageFilterType.FILE),
+            MessageFilter(10002,  getString(R.string.clps_items_image), MessageFilterType.IMAGE)
+        )
+    }
     private var filterItemChoose: MessageFilter = MessageFilter(-10000, "", MessageFilterType.TEXT)
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
