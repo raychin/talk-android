@@ -1577,6 +1577,9 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun addIceServers(signalingSettingsOverall: SignalingSettingsOverall, apiVersion: Int) {
+        // 清空信令服务
+        iceServers!!.clear()
+
         if (signalingSettingsOverall.ocs!!.settings!!.stunServers != null) {
             val stunServers = signalingSettingsOverall.ocs!!.settings!!.stunServers
             if (apiVersion == ApiUtils.API_V3) {
