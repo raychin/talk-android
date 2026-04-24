@@ -425,21 +425,24 @@ fun ConversationsListActivity.parseAndDisplayMultiMessage(): CharSequence {
                 displayText.append("… 还有 ${messageCount - MAX_MULTI_MESSAGE} 条消息")
             }
 
-            // if (messageParameters == null) {
-            //     messageParameters = HashMap()
-            // }
-            // multiMessage.message?.forEachIndexed { index, item ->
-            //     Log.d("Ray", "-------------item $index")
-            //     // messageParameters也许需要更新加上index
-            //     item.messageParameters?.forEach { (key, value) ->
-            //         // 只保留特殊类型的参数（用户、群组等）
-            //         when (value["type"]) {
-            //             "user", "guest", "call", "user-group", "email", "circle" -> {
-            //                 messageParameters!![key] = value
-            //             }
-            //         }
-            //     }
-            // }
+            // 替换member
+            val messageParameters: HashMap<String?, HashMap<String?, String?>> = HashMap()
+            multiMessage.message?.forEachIndexed { index, item ->
+                Log.d("Ray", "-------------item $index")
+                // messageParameters也许需要更新加上index
+                item.messageParameters?.forEach { (key, value) ->
+                    // 只保留特殊类型的参数（用户、群组等）
+                    when (value["type"]) {
+                        "user", "guest", "call", "user-group", "email", "circle" -> {
+                            messageParameters!![key] = value
+                        }
+                    }
+                }
+            }
+
+            // 替换 mention 占位符
+            val finalText = replaceMentionPlaceholders(displayText.toString(), messageParameters)
+            return finalText.toSpanned()
         }
 
         return displayText
@@ -449,6 +452,47 @@ fun ConversationsListActivity.parseAndDisplayMultiMessage(): CharSequence {
         Log.e("Ray", "Failed to parse MultiMessage", e)
         return forwardMessagesJson!!.toSpanned()
     }
+}
+
+/**
+ * 替换 displayText 中的 {mention-key} 占位符为 @name 格式
+ * @param displayText 原始显示文本
+ * @param messageParameters 消息参数映射
+ * @return 替换后的文本
+ */
+fun replaceMentionPlaceholders(displayText: String, messageParameters: HashMap<String?, HashMap<String?, String?>>?): String {
+    if (messageParameters == null || messageParameters.isEmpty()) {
+        return displayText
+    }
+
+    var result = displayText
+
+    // 遍历 messageParameters，查找并替换 {key} 格式的占位符
+    for ((key, value) in messageParameters) {
+        if (key != null && value != null && value.containsKey("name")) {
+            val placeholder = "{$key}"
+            val name = value["name"]
+
+            // 如果占位符存在于文本中，且 name 不为空
+            if (result.contains(placeholder) && !name.isNullOrBlank()) {
+                val mentionType = value["type"]
+
+                // 对于 user、guest、call 类型，添加 @ 前缀
+                val replacement = if (mentionType == "user" ||
+                    mentionType == "guest" ||
+                    mentionType == "call") {
+                    "@$name"
+                } else {
+                    name
+                }
+
+                // 替换所有匹配的占位符
+                result = result.replace(placeholder, replacement)
+            }
+        }
+    }
+
+    return result
 }
 
 /**
