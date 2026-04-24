@@ -29,6 +29,7 @@ import com.nextcloud.talk.databinding.ChatBottomMessageMenuBinding
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import javax.inject.Inject
+import kotlin.String
 
 // @AutoInjector(NextcloudTalkApplication::class)
 class ChatBottomMessageMenuFragment : Fragment() {
@@ -134,7 +135,13 @@ class ChatBottomMessageMenuFragment : Fragment() {
                     parentMessageId = msg.parentMessageId,
                     reactions = msg.reactions,
                     isTemporary = msg.isTemporary,
-                    referenceId = msg.referenceId
+                    referenceId = msg.referenceId,
+                    id = msg.id,
+                    expirationTimestamp = 0,
+                    isReplyable = msg.replyable,
+                    markdown = msg.renderMarkdown,
+                    systemMessage = msg.messageType,
+                    token = msg.token
                 )
             }
             .toCollection(ArrayList())
@@ -213,7 +220,13 @@ class ChatBottomMessageMenuFragment : Fragment() {
         val parentMessageId: Long?,
         val reactions: LinkedHashMap<String, Int>?,
         val isTemporary: Boolean,
-        val referenceId: String?
+        val referenceId: String?,
+        val id: String?,
+        val expirationTimestamp: Int = 0,
+        val isReplyable: Boolean = false,
+        val markdown: Boolean? = null,
+        val systemMessage: String? = null,
+        val token: String?
     )
 }
 
