@@ -173,7 +173,7 @@ class MessageActionsDialog(
 
             initMenuSelectMessages(
                 // TODO RAY 能顯示多選的消息需要同步
-                ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() &&
+                // ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() &&
                     !(message.isDeletedCommentMessage || message.isDeleted) &&
                     isOnline
             )

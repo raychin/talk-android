@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import autodagger.AutoInjector
 import coil.load
 import com.nextcloud.talk.R
+import com.nextcloud.talk.adapters.messages.clps.MessageCheckboxHelper
 import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
@@ -69,6 +70,15 @@ class IncomingLinkPreviewMessageViewHolder(incomingView: View, payload: Any) :
         super.onBind(message)
         this.message = message
         sharedApplication!!.componentApplication.inject(this)
+
+        // 消息多选功能
+        MessageCheckboxHelper.initMessageCheckbox(
+            messageCheckbox = itemView.findViewById(R.id.messageCheckbox),
+            rootView = itemView,
+            message = message,
+            commonMessageInterface = commonMessageInterface
+        )
+
         binding.messageTime.text = dateUtils.getLocalTimeStringFromTimestamp(message.timestamp)
 
         var processedMessageText = messageUtils.enrichChatMessageText(
