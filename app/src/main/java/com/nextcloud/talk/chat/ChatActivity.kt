@@ -4287,9 +4287,9 @@ class ChatActivity :
     var selectedMessages: ArrayList<ChatMessage?> = ArrayList<ChatMessage?>()
 
     fun selectMessages(message: IMessage?) {
-        // TODO RAY 多選完成後，參照forwardMessage跳轉到分享頁面
-        toggleMessageSelection(message as ChatMessage, true)
         forwardSelectorMode(true)
+        // 多選完成後，參照forwardMessage跳轉到分享頁面
+        toggleMessageSelection(message as ChatMessage, true)
     }
 
     fun forwardSelectorMode(showForward: Boolean) {
