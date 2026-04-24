@@ -39,7 +39,8 @@
         android:textSize="16sp"
         android:gravity="center"
         android:background="?attr/selectableItemBackground"
-        android:layout_marginBottom="@dimen/standard_half_margin" />
+        android:layout_marginBottom="@dimen/standard_half_margin"
+        android:visibility="gone" />
 
     <!-- 合并转发按钮 -->
     <TextView
