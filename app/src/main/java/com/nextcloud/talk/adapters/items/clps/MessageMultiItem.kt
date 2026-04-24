@@ -23,7 +23,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.FlexibleItemViewType
 import com.nextcloud.talk.adapters.items.GenericTextHeaderItem
-import com.nextcloud.talk.adapters.messages.PreviewMessageViewHolder.Companion.KEY_MIMETYPE
 import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity
 import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_COUNT
 import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_ID
@@ -42,6 +41,7 @@ import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.DrawableUtils.getDrawableResourceIdForMimeType
 import com.nextcloud.talk.utils.FileViewerUtils
+import com.nextcloud.talk.utils.Mimetype
 import com.nextcloud.talk.utils.message.MessageUtils
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
@@ -164,16 +164,21 @@ data class MessageMultiItem(
                     )
 
                     Log.d("Ray", "Generated preview URL: $previewUrl")
-                    Log.d("Ray", messageEntry.imageUrl!!)
+                    // Log.d("Ray", messageEntry.imageUrl!!)
 
                     // 显示并加载图片
                     holder.binding.thumbnailImg.visibility = View.VISIBLE
 
-                    val mimetype = messageEntry.selectedIndividualHashMap!![KEY_MIMETYPE]
+                    // val mimetype = messageEntry.selectedIndividualHashMap!![KEY_MIMETYPE]
                     val drawableResourceId = getDrawableResourceIdForMimeType(mimetype)
                     val placeholderDrawable = androidx.core.content.ContextCompat.getDrawable(context, drawableResourceId)
                     // 使用 loadImage 扩展方法（会自动添加认证头）
-                    holder.binding.thumbnailImg.loadAvatarOrImagePreview(messageEntry.imageUrl!!, currentUser, placeholderDrawable)
+                    if (messageEntry.imageUrl.isNullOrBlank()) {
+                        holder.binding.thumbnailImg.loadAvatarOrImagePreview(previewUrl, currentUser, placeholderDrawable)
+                    } else {
+                        holder.binding.thumbnailImg.loadAvatarOrImagePreview(messageEntry.imageUrl!!, currentUser, placeholderDrawable)
+                    }
+
                     holder.binding.thumbnailImg.setOnClickListener { view ->
                         handleImageOrFileClickLikeChat(messageEntry, holder.binding.progressBar)
                     }
@@ -181,6 +186,14 @@ data class MessageMultiItem(
                     Log.e("Ray", "Cannot load image: fileId or baseUrl is null!")
                     holder.binding.thumbnailImg.visibility = View.GONE
                 }
+
+                // 如果是音频文件，整个消息项也设置为可点击播放
+                // if (isAudioMimetype(mimetype!!)) {
+                    holder.itemView.setOnClickListener {
+                        // handleAudioFileClick(messageEntry, holder.binding.progressBar)
+                        handleImageOrFileClickLikeChat(messageEntry, holder.binding.progressBar)
+                    }
+                // }
             }
 
             // val previewUrlFromPath = ApiUtils.getUrlForFilePreviewWithRemotePath(
@@ -243,6 +256,16 @@ data class MessageMultiItem(
         //     holder.binding.thumbnailSize.visibility = View.VISIBLE
         //     holder.binding.thumbnailSize.text = formatFileSize(messageEntry.thumbnailSize!!)
         // }
+    }
+
+    /**
+     * 判断是否为音频 MIME 类型
+     */
+    private fun isAudioMimetype(mimetype: String?): Boolean {
+        return mimetype == Mimetype.AUDIO_MPEG ||
+            mimetype == Mimetype.AUDIO_WAV ||
+            mimetype == Mimetype.AUDIO_OGG ||
+            mimetype?.startsWith("audio/") == true
     }
 
     /**
@@ -361,9 +384,53 @@ data class MessageMultiItem(
         return currentActorId != null && currentActorId == previousActorId
     }
 
+    /**
+     * 处理音频文件点击事件，使用 MediaPlayerManager 播放音频
+     */
+    private fun handleAudioFileClick(message: ChatMessage, progressBar: ProgressBar) {
+        message.activeUser = currentUser
+
+        // 检查是否为音频 MIME 类型
+        val fileParams = message.messageParameters?.get("file")
+        val mimetype = fileParams?.get("mimetype")
+
+        if (!isAudioMimetype(mimetype)) {
+            Log.w("Ray", "Not an audio file, mimetype: $mimetype")
+            return
+        }
+
+        Log.d("Ray", "Handling audio file click: ${fileParams?.get("name")}")
+
+        // 使用 FileViewerUtils 下载并播放音频文件
+        val fileViewerUtils = FileViewerUtils(context, message.activeUser!!)
+
+        if (message.activeUser != null &&
+            message.activeUser!!.username != null &&
+            message.activeUser!!.baseUrl != null
+        ) {
+            // 创建 ProgressUi 对象
+            val progressUi = FileViewerUtils.ProgressUi(
+                progressBar = progressBar,
+                messageText = null,
+                previewImage = ImageView(context)
+            )
+
+            // 设置 openWhenDownloaded 为 true，下载完成后自动播放
+            message.openWhenDownloaded = true
+            fileViewerUtils.openFile(message, progressUi)
+        }
+    }
+
     // ... ray add code ...
     private fun handleImageOrFileClickLikeChat(message: ChatMessage, progressBar: ProgressBar) {
         message.activeUser = currentUser
+
+        val fileParams = message.messageParameters?.get("file")
+        val mimetype = fileParams?.get("mimetype")
+        if (isAudioMimetype(mimetype)) {
+            handleAudioFileClick(message, progressBar)
+            return
+        }
 
         when {
             // 如果是附件消息（文件、图片等），使用 FileViewerUtils 打开
