@@ -950,4 +950,6 @@ How to translate with transifex:
 
     <string name="clps_items_image">圖片</string>
     <string name="clps_items_file">檔案</string>
+
+    <string name="clps_message_delete_are_you_sure">此操作會刪除操作人自身帳號下的訊息記錄，但不影響其他用戶，確定要刪除此訊息嗎？</string>
 </resources>
