@@ -27,6 +27,7 @@ import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
 import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.DialogMessageActionsBinding
@@ -134,7 +135,7 @@ class MessageActionsDialog(
         viewThemeUtils.material.colorBottomSheetBackground(dialogMessageActionsBinding.root)
         viewThemeUtils.material.colorBottomSheetDragHandle(dialogMessageActionsBinding.bottomSheetDragHandle)
         initEmojiBar(hasChatPermission)
-        initMenuItemCopy(!message.isDeleted)
+        initMenuItemCopy(!message.isDeleted && !message.isMultiMessage())
         initMenuItems(networkMonitor.isOnline.value)
     }
 
@@ -156,7 +157,7 @@ class MessageActionsDialog(
                     isOnline
             )
             initMenuOpenThread(message.isThread && chatActivity.conversationThreadId == null)
-            initMenuEditMessage(isMessageEditable)
+            initMenuEditMessage(isMessageEditable && !message.isMultiMessage())
             initMenuDeleteMessage(showMessageDeletionButton && isOnline)
 
             /**
@@ -188,7 +189,7 @@ class MessageActionsDialog(
                     ChatMessage.MessageType.SYSTEM_MESSAGE != message.getCalculateMessageType() &&
                     isOnline
             )
-            initMenuShare(messageHasFileAttachment || messageHasRegularText && isOnline)
+            initMenuShare(messageHasFileAttachment || messageHasRegularText && isOnline && !message.isMultiMessage())
             initMenuItemOpenNcApp(
                 ChatMessage.MessageType.SINGLE_NC_ATTACHMENT_MESSAGE == message.getCalculateMessageType() &&
                     isOnline
