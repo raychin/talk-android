@@ -83,13 +83,13 @@ class OutcomingVoiceMessageViewHolder(outcomingView: View) :
     override fun onBind(message: ChatMessage) {
         super.onBind(message)
 
-        // 消息多选功能
-        MessageCheckboxHelper.initMessageCheckbox(
-            messageCheckbox = itemView.findViewById(R.id.messageCheckbox),
-            rootView = itemView,
-            message = message,
-            commonMessageInterface = commonMessageInterface
-        )
+        // 消息多选功能 暂时停用
+        // MessageCheckboxHelper.initMessageCheckbox(
+        //     messageCheckbox = itemView.findViewById(R.id.messageCheckbox),
+        //     rootView = itemView,
+        //     message = message,
+        //     commonMessageInterface = commonMessageInterface
+        // )
 
         if (isBound) {
             handleIsPlayingVoiceMessageState(message)

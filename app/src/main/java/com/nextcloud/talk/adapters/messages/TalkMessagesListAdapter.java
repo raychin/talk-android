@@ -233,13 +233,13 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
             holderInstance.assignVoiceMessageInterface(chatActivity);
             holderInstance.assignCommonMessageInterface(chatActivity);
 
-            updateSelectionUI(holder.itemView, position);
+//            updateSelectionUI(holder.itemView, position);
         } else if (holder instanceof OutcomingVoiceMessageViewHolder holderInstance) {
             holderInstance.assignVoiceMessageInterface(chatActivity);
             holderInstance.assignCommonMessageInterface(chatActivity);
             holderInstance.adjustIfNoteToSelf(chatActivity.getCurrentConversation());
 
-            updateSelectionUI(holder.itemView, position);
+//            updateSelectionUI(holder.itemView, position);
         } else if (holder instanceof PreviewMessageViewHolder holderInstance) {
             holderInstance.assignPreviewMessageInterface(chatActivity);
             holderInstance.assignCommonMessageInterface(chatActivity);
