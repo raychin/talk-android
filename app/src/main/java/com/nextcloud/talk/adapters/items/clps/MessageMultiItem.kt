@@ -19,6 +19,7 @@ import android.widget.ProgressBar
 import androidx.core.net.toUri
 import androidx.core.text.toSpanned
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.FlexibleItemViewType
@@ -128,6 +129,16 @@ data class MessageMultiItem(
             0,
             DateUtils.FORMAT_ABBREV_RELATIVE
         )
+
+        holder.binding.messageQuote.quotedChatMessageView.visibility =
+            if (!messageEntry.isDeleted &&
+                messageEntry.parentMessage != null
+            ) {
+                processParentMessage(holder.binding, messageUtils, messageEntry)
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
         holder.binding.thumbnailImg.visibility = View.GONE
         holder.binding.thumbnailSize.visibility = View.GONE
@@ -467,5 +478,128 @@ data class MessageMultiItem(
             }
         }
     }
-    // ... ray add code ...
+
+    @Suppress("Detekt.TooGenericExceptionCaught")
+    private fun processParentMessage(binding: RvItemMultiMessageBinding, messageUtils: MessageUtils, message: ChatMessage) {
+        if (message.parentMessage != null) {
+            val parentChatMessage = message.parentMessage
+            Log.e("Ray", "parentChatMessage = ${parentChatMessage.toString()}")
+
+            parentChatMessage?.imageUrl?.let {
+                binding.messageQuote.quotedMessageImage.visibility = View.VISIBLE
+                binding.messageQuote.quotedMessageImage.load(it) {
+                    addHeader(
+                        "Authorization",
+                        ApiUtils.getCredentials(message.activeUser!!.username, message.activeUser!!.token)!!
+                    )
+                }
+            } ?: run {
+                binding.messageQuote.quotedMessageImage.visibility = View.GONE
+            }
+            binding.messageQuote.quotedMessageAuthor.text = parentChatMessage?.actorDisplayName
+                ?: context.getText(R.string.nc_nick_guest)
+            binding.messageQuote.quotedMessage.text = messageUtils
+                .enrichChatReplyMessageText(
+                    binding.messageQuote.quotedMessage.context,
+                    parentChatMessage!!,
+                    false,
+                    viewThemeUtils
+                )
+
+            viewThemeUtils.talk.colorOutgoingQuoteText(binding.messageQuote.quotedMessage)
+            viewThemeUtils.talk.colorOutgoingQuoteAuthorText(binding.messageQuote.quotedMessageAuthor)
+            viewThemeUtils.talk.themeParentMessage(
+                parentChatMessage,
+                message,
+                binding.messageQuote.quotedChatMessageView
+            )
+
+            // binding.messageQuote.quotedChatMessageView.setOnClickListener {
+            //     chatActivity.jumpToQuotedMessage(parentChatMessage)
+            // }
+        }
+    }
+
+    // fun getMessageById(url: String, conversationToken: String, messageId: Long): Flow<ChatMessage> =
+    //     flow {
+    //         val activity = context as MultiMessageDetailActivity
+    //         val bundle = Bundle()
+    //         bundle.putString(BundleKeys.KEY_CHAT_URL, url)
+    //         bundle.putString(
+    //             BundleKeys.KEY_CREDENTIALS,
+    //             activity.user.getCredentials()
+    //         )
+    //         bundle.putString(BundleKeys.KEY_ROOM_TOKEN, conversationToken)
+    //
+    //         val message = chatRepository.getMessage(messageId, bundle)
+    //         emit(message.first())
+    //     }
+    // @Suppress("Detekt.TooGenericExceptionCaught")
+    // private fun processParentMessage(message: ChatMessage, binding: RvItemMultiMessageBinding, messageUtils: MessageUtils) {
+    //     if (message.parentMessageId != null && !message.isDeleted) {
+    //         CoroutineScope(Dispatchers.Main).launch {
+    //             try {
+    //                 val activity = context as MultiMessageDetailActivity
+    //                 val urlForChatting = ApiUtils.getUrlForChat(
+    //                     activity.chatApiVersion,
+    //                     activity.user.baseUrl,
+    //                     activity.roomToken!!
+    //                 )
+    //
+    //                 val parentChatMessage = withContext(Dispatchers.IO) {
+    //                     activity.chatViewModel.getMessageById(
+    //                         urlForChatting,
+    //                         activity.user!!,
+    //                         message.parentMessageId!!
+    //                     ).first()
+    //                 }
+    //
+    //                 parentChatMessage.activeUser = message.activeUser
+    //
+    //                 Log.e("Ray", "parentChatMessage = ${parentChatMessage.toString()}")
+    //                 // 修复引用消息显示问题
+    //                 message.parentMessage = parentChatMessage
+    //
+    //                 parentChatMessage.imageUrl?.let {
+    //                     binding.messageQuote.quotedMessageImage.visibility = View.VISIBLE
+    //                     binding.messageQuote.quotedMessageImage.load(it) {
+    //                         addHeader(
+    //                             "Authorization",
+    //                             ApiUtils.getCredentials(message.activeUser!!.username, message.activeUser!!.token)!!
+    //                         )
+    //                     }
+    //                 } ?: run {
+    //                     binding.messageQuote.quotedMessageImage.visibility = View.GONE
+    //                 }
+    //                 binding.messageQuote.quotedMessageAuthor.text =
+    //                     if (parentChatMessage.actorDisplayName.isNullOrEmpty()) {
+    //                         context.getText(R.string.nc_nick_guest)
+    //                     } else {
+    //                         parentChatMessage.actorDisplayName
+    //                     }
+    //
+    //                 binding.messageQuote.quotedMessage.text = messageUtils
+    //                     .enrichChatReplyMessageText(
+    //                         binding.messageQuote.quotedMessage.context,
+    //                         parentChatMessage,
+    //                         true,
+    //                         viewThemeUtils
+    //                     )
+    //
+    //                 viewThemeUtils.talk.themeParentMessage(
+    //                     parentChatMessage,
+    //                     message,
+    //                     binding.messageQuote.quotedChatMessageView,
+    //                     R.color.high_emphasis_text
+    //                 )
+    //
+    //                 // binding.messageQuote.quotedChatMessageView.setOnClickListener {
+    //                 //     activity.jumpToQuotedMessage(parentChatMessage)
+    //                 // }
+    //             } catch (e: Exception) {
+    //                 Log.d("Ray", "Error when processing parent message in view holder", e)
+    //             }
+    //         }
+    //     }
+    // }
 }

@@ -53,6 +53,7 @@ import com.nextcloud.talk.utils.CapabilitiesUtil.hasSpreedFeatureCapability
 import com.nextcloud.talk.utils.DateUtils
 import com.nextcloud.talk.utils.SpreedFeatures
 import com.nextcloud.talk.utils.TextMatchers
+import com.nextcloud.talk.utils.bundle.BundleKeys
 import com.nextcloud.talk.utils.database.user.CurrentUserProviderNew
 import com.nextcloud.talk.utils.message.MessageUtils
 import com.stfalcon.chatkit.messages.MessageHolders.OutcomingTextMessageViewHolder
@@ -166,6 +167,7 @@ class OutcomingTextMessageViewHolder(itemView: View) :
              */
             Log.e("Ray", "1111------messageType ${message.getCalculateMessageType()}")
             if (message.isMultiMessage()) {
+                Log.e("Ray", "message out json ${message.message}")
                 processedMessageText = message.parseAndDisplayMultiMessage().toSpanned()
                 addClickToNavigateToMultiMessageDetail(processedMessageText, message, message.multiMessage())
             }
@@ -317,6 +319,7 @@ class OutcomingTextMessageViewHolder(itemView: View) :
                 putExtra(KEY_MULTI_MESSAGE_JSON, chatMessage.message)
                 putExtra(KEY_TITLE, multiMessage.title ?: "")
                 putExtra(KEY_MESSAGE_COUNT, multiMessage.message?.size ?: 0)
+                putExtra(BundleKeys.KEY_CHAT_API_VERSION, chatActivity.chatApiVersion)
             }
 
             binding.messageText.context.startActivity(intent)
@@ -482,6 +485,11 @@ class OutcomingTextMessageViewHolder(itemView: View) :
                     }
 
                     parentChatMessage.activeUser = message.activeUser
+
+                    Log.e("Ray", "parentChatMessage = ${parentChatMessage.toString()}")
+                    // 修复引用消息显示问题
+                    message.parentMessage = parentChatMessage
+
                     parentChatMessage.imageUrl?.let {
                         binding.messageQuote.quotedMessageImage.visibility = View.VISIBLE
                         binding.messageQuote.quotedMessageImage.load(it) {

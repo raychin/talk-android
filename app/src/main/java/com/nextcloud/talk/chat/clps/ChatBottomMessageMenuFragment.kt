@@ -123,6 +123,49 @@ class ChatBottomMessageMenuFragment : Fragment() {
         val simplifiedMessages = selectedMessages
             .sortedBy { it.timestamp }
             .map { msg ->
+                // val referenceId = if (msg.isMultiMessage()) {
+                //     Log.e("Ray", "referenceId multi = ${msg.referenceId}")
+                //     "forwarded-messages-${msg.referenceId}"
+                // } else {
+                //     msg.referenceId
+                // }
+                // Log.e("Ray", "referenceId = $referenceId")
+                // Log.e("Ray", "referenceId multi = ${msg.referenceId}")
+                // val messageTemp = if (msg.isMultiMessage()) {
+                //     Gson().toJson(msg.multiMessage())
+                // } else {
+                //     msg.message
+                // }
+
+                // 修复引用消息显示问题
+                val parentMsg = if (msg.parentMessageId != null && msg.parentMessage != null) {
+                    val parentObj = msg.parentMessage
+                    SimplifiedChatMessage(
+                        jsonMessageId = parentObj!!.jsonMessageId,
+                        timestamp = parentObj!!.timestamp,
+                        message = parentObj!!.message,
+                        actorDisplayName = parentObj!!.actorDisplayName,
+                        actorType = parentObj!!.actorType,
+                        actorId = parentObj!!.actorId,
+                        messageType = parentObj!!.messageType,
+                        messageParameters = parentObj!!.messageParameters,
+                        parentMessageId = parentObj!!.parentMessageId,
+                        reactions = parentObj!!.reactions,
+                        isTemporary = parentObj!!.isTemporary,
+                        referenceId = parentObj!!.referenceId,
+                        id = parentObj!!.id,
+                        expirationTimestamp = 0,
+                        isReplyable = parentObj!!.replyable,
+                        markdown = parentObj!!.renderMarkdown,
+                        systemMessage = parentObj!!.getSystemMessage(),
+                        token = parentObj!!.token,
+                        parent = null
+                    )
+                } else {
+                    null
+                }
+
+                // val messageType = EnumSystemMessageTypeConverter().convertToString(msg.systemMessageType)
                 SimplifiedChatMessage(
                     jsonMessageId = msg.jsonMessageId,
                     timestamp = msg.timestamp,
@@ -140,8 +183,9 @@ class ChatBottomMessageMenuFragment : Fragment() {
                     expirationTimestamp = 0,
                     isReplyable = msg.replyable,
                     markdown = msg.renderMarkdown,
-                    systemMessage = msg.messageType,
-                    token = msg.token
+                    systemMessage = msg.getSystemMessage(),
+                    token = msg.token,
+                    parent = parentMsg
                 )
             }
             .toCollection(ArrayList())
@@ -169,6 +213,7 @@ class ChatBottomMessageMenuFragment : Fragment() {
      * 合并转发消息
      */
     private fun forwardMessagesMerged(messageIds: Set<String>) {
+        Log.e("Ray", "jsonString() = ${jsonString()}")
         val bundle = Bundle()
         bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
         bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, ArrayList(messageIds))
@@ -226,7 +271,8 @@ class ChatBottomMessageMenuFragment : Fragment() {
         val isReplyable: Boolean = false,
         val markdown: Boolean? = null,
         val systemMessage: String? = null,
-        val token: String?
+        val token: String?,
+        val parent: SimplifiedChatMessage?
     )
 }
 

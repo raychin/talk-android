@@ -12,6 +12,7 @@ package com.nextcloud.talk.chat.data.model
 import android.text.TextUtils
 import android.util.Log
 import com.bluelinelabs.logansquare.annotation.JsonIgnore
+import com.google.gson.annotations.SerializedName
 import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
@@ -133,7 +134,11 @@ data class ChatMessage(
 
     var sendStatus: SendStatus? = null,
 
-    var silent: Boolean = false
+    var silent: Boolean = false,
+
+    // 修复引用消息显示问题
+    @SerializedName("parent")
+    var parentMessage: ChatMessage? = null
 
 ) : MessageContentType,
     MessageContentType.Image {

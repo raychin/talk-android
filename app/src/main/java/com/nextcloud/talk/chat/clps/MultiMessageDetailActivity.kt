@@ -39,8 +39,13 @@ class MultiMessageDetailActivity : BaseActivity() {
     private var title: String? = null
     private var messageCount: Int = 0
 
-    private lateinit var user: User
+    lateinit var user: User
     var rootView: View? = null
+
+    // lateinit var chatViewModel: ChatViewModel
+    // @Inject
+    // lateinit var viewModelFactory: ViewModelProvider.Factory
+    // var currentConversation: ConversationModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +55,8 @@ class MultiMessageDetailActivity : BaseActivity() {
         rootView= binding.root
 
         user = currentUserProvider.currentUser.blockingGet()
+
+        // chatViewModel = ViewModelProvider(this, viewModelFactory)[ChatViewModel::class.java]
 
         setupIntentData()
         setupToolbar()
