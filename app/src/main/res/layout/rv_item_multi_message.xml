@@ -131,12 +131,30 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="Message thumbnail size goes here" />
 
+    <androidx.emoji2.widget.EmojiTextView
+        android:id="@+id/message_content"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginHorizontal="@dimen/margin_between_elements"
+        android:gravity="start|top"
+        android:textColor="@color/textColorMaxContrast"
+        android:textSize="14sp"
+        android:textAlignment="viewStart"
+        android:textIsSelectable="false"
+        android:lineSpacingExtra="1dp"
+        android:lineSpacingMultiplier="1.1"
+        app:layout_constraintStart_toStartOf="@+id/conversation_top_container"
+        app:layout_constraintTop_toBottomOf="@+id/thumbnail_img"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="...this is a message result from unified search, which includes ellipses..." />
+
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/bottom_barrier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="thumbnail_img, thumbnail_size,message_excerpt" />
+        app:constraint_referenced_ids="message_content, thumbnail_img, thumbnail_size,message_excerpt" />
 
     <View
         android:id="@+id/divider"

@@ -143,8 +143,9 @@ data class MessageMultiItem(
         holder.binding.thumbnailImg.visibility = View.GONE
         holder.binding.thumbnailSize.visibility = View.GONE
         holder.binding.messageExcerpt.visibility = View.GONE
-        // "message": "{file}"
-        if (messageEntry.message == "{file}") {
+        holder.binding.messageContent.visibility = View.GONE
+
+        if (messageEntry.message == "{file}" || messageEntry.messageParameters?.get("file") != null) {
             holder.binding.thumbnailImg.visibility = View.VISIBLE
 
             val fileParams = messageEntry.messageParameters?.get("file")
@@ -231,12 +232,12 @@ data class MessageMultiItem(
             holder.binding.thumbnailSize.visibility = View.VISIBLE
             holder.binding.thumbnailSize.text = formatFileSize(messageEntry.messageParameters?.get("file")?.get
                     ("size")!!)
-        } else {
-            holder.binding.messageExcerpt.visibility = View.VISIBLE
-            val layoutParams = holder.binding.messageExcerpt.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+        }
+        if (messageEntry.message != "{file}" && messageEntry.message!!.isNotEmpty()) {
+            holder.binding.messageContent.visibility = View.VISIBLE
+            val layoutParams = holder.binding.messageContent.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
             layoutParams.marginStart = (48 * context.resources.displayMetrics.density).toInt()
-            holder.binding.messageExcerpt.layoutParams = layoutParams
-            // holder.binding.messageExcerpt.text = messageEntry.message
+            holder.binding.messageContent.layoutParams = layoutParams
 
             /**
              * 判断 message.message 是否可以转为 MultiMessage 消息
@@ -244,29 +245,20 @@ data class MessageMultiItem(
              */
             if (messageEntry.isMultiMessage()) {
                 processedMessageText = messageEntry.parseAndDisplayMultiMessage().toSpanned()
-                addClickToNavigateToMultiMessageDetail(holder.binding.messageExcerpt, processedMessageText,
+                addClickToNavigateToMultiMessageDetail(holder.binding.root, processedMessageText,
                 messageEntry, messageEntry.multiMessage())
             }
 
             processedMessageText = messageUtils.processMessageParameters(
-                holder.binding.messageExcerpt.context,
+                holder.binding.messageContent.context,
                 viewThemeUtils,
                 processedMessageText!!.toSpanned(),
                 messageEntry,
                 holder.itemView
             )
             Log.e("Ray", "multi || $processedMessageText")
-            holder.binding.messageExcerpt.text = processedMessageText
+            holder.binding.messageContent.text = processedMessageText
         }
-        // if (TextUtils.isEmpty(messageEntry.thumbnail)) {
-        //     holder.binding.thumbnailImg.visibility = View.GONE
-        //     holder.binding.thumbnailSize.visibility = View.GONE
-        // } else {
-        //     holder.binding.thumbnailImg.visibility = View.VISIBLE
-        //     holder.binding.thumbnailImg.loadImage(messageEntry.thumbnail!!, currentUser, null)
-        //     holder.binding.thumbnailSize.visibility = View.VISIBLE
-        //     holder.binding.thumbnailSize.text = formatFileSize(messageEntry.thumbnailSize!!)
-        // }
     }
 
     /**

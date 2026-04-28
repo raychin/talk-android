@@ -121,49 +121,10 @@ class ChatBottomMessageMenuFragment : Fragment() {
         multiMessage.title = chatActivity.multiMessageTitle()
         // 转换为简化版本
         val simplifiedMessages = selectedMessages
-            .sortedBy { it.timestamp }
+            .sortedBy { it.timestamp * 1000 }
             .map { msg ->
-                // val referenceId = if (msg.isMultiMessage()) {
-                //     Log.e("Ray", "referenceId multi = ${msg.referenceId}")
-                //     "forwarded-messages-${msg.referenceId}"
-                // } else {
-                //     msg.referenceId
-                // }
-                // Log.e("Ray", "referenceId = $referenceId")
-                // Log.e("Ray", "referenceId multi = ${msg.referenceId}")
-                // val messageTemp = if (msg.isMultiMessage()) {
-                //     Gson().toJson(msg.multiMessage())
-                // } else {
-                //     msg.message
-                // }
-
                 // 修复引用消息显示问题
-                val parentMsg = if (msg.parentMessageId != null && msg.parentMessage != null) {
-                    val parentObj = msg.parentMessage
-                    SimplifiedChatMessage(
-                        jsonMessageId = parentObj!!.jsonMessageId,
-                        timestamp = parentObj!!.timestamp,
-                        message = parentObj!!.message,
-                        actorDisplayName = parentObj!!.actorDisplayName,
-                        actorType = parentObj!!.actorType,
-                        actorId = parentObj!!.actorId,
-                        messageType = parentObj!!.messageType,
-                        messageParameters = parentObj!!.messageParameters,
-                        parentMessageId = parentObj!!.parentMessageId,
-                        reactions = parentObj!!.reactions,
-                        isTemporary = parentObj!!.isTemporary,
-                        referenceId = parentObj!!.referenceId,
-                        id = parentObj!!.id,
-                        expirationTimestamp = 0,
-                        isReplyable = parentObj!!.replyable,
-                        markdown = parentObj!!.renderMarkdown,
-                        systemMessage = parentObj!!.getSystemMessage(),
-                        token = parentObj!!.token,
-                        parent = null
-                    )
-                } else {
-                    null
-                }
+                val parentMsg = extractParentMessageSafely(msg)
 
                 // val messageType = EnumSystemMessageTypeConverter().convertToString(msg.systemMessageType)
                 SimplifiedChatMessage(
@@ -191,6 +152,43 @@ class ChatBottomMessageMenuFragment : Fragment() {
             .toCollection(ArrayList())
         multiMessage.message = simplifiedMessages
         return Gson().toJson(multiMessage)
+    }
+
+    /**
+     * 安全地提取父消息，无限循环
+     * 第一层父消息，并将父消息的 parent 设为 null
+     */
+    private fun extractParentMessageSafely(msg: ChatMessage): SimplifiedChatMessage? {
+        return if (msg.parentMessageId != null && msg.parentMessage != null) {
+            val parentObj = msg.parentMessage
+
+            // 安全检查：确保 parentObj 不为 null
+            parentObj?.let { parent ->
+                SimplifiedChatMessage(
+                    jsonMessageId = parent.jsonMessageId,
+                    timestamp = parent.timestamp,
+                    message = parent.message,
+                    actorDisplayName = parent.actorDisplayName,
+                    actorType = parent.actorType,
+                    actorId = parent.actorId,
+                    messageType = parent.messageType,
+                    messageParameters = parent.messageParameters,
+                    parentMessageId = parent.parentMessageId,
+                    reactions = parent.reactions,
+                    isTemporary = parent.isTemporary,
+                    referenceId = parent.referenceId,
+                    id = parent.id,
+                    expirationTimestamp = 0,
+                    isReplyable = parent.replyable,
+                    markdown = parent.renderMarkdown,
+                    systemMessage = parent.getSystemMessage(),
+                    token = parent.token,
+                    parent = extractParentMessageSafely(parent)
+                )
+            }
+        } else {
+            null
+        }
     }
 
     /**
