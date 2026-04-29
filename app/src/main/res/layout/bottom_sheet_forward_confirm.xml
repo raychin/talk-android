@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2026
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingStart="@dimen/standard_margin"
+    android:paddingEnd="@dimen/standard_margin"
+    android:paddingTop="@dimen/standard_half_margin"
+    android:paddingBottom="@dimen/standard_margin">
+
+    <!-- 第一行：发送给 -->
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/forward_send_to"
+        android:textColor="@color/low_emphasis_text"
+        android:textSize="12sp"
+        android:layout_marginTop="@dimen/standard_half_margin"
+        android:layout_marginBottom="@dimen/standard_half_margin" />
+
+    <!-- 第二行：接收者头像和名称 -->
+    <LinearLayout
+        android:id="@+id/layout_receiver"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="@dimen/standard_half_margin"
+        android:paddingBottom="@dimen/standard_half_margin">
+
+        <ImageView
+            android:id="@+id/iv_avatar"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_gravity="start|center_vertical"
+            android:contentDescription="@null"
+            tools:src="@drawable/ic_avatar_group" />
+
+        <TextView
+            android:id="@+id/tv_receiver_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/high_emphasis_text"
+            android:textStyle="bold"
+            android:layout_marginStart="@dimen/standard_margin"
+            tools:text="John Doe" />
+
+    </LinearLayout>
+
+    <!-- 第三行：合并消息或多条消息 -->
+    <TextView
+        android:id="@+id/tv_message_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="@color/medium_emphasis_text"
+        android:layout_marginTop="@dimen/standard_half_margin"
+        android:layout_marginBottom="@dimen/standard_half_margin"
+        tools:text="5 条消息" />
+
+    <!-- 第四行：输入框（支持表情） -->
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:id="@+id/text_input_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/standard_half_margin"
+        android:layout_marginBottom="@dimen/standard_margin"
+        app:boxBackgroundMode="none"
+        app:hintEnabled="false"
+        app:endIconMode="custom"
+        app:endIconDrawable="@drawable/ic_emoticon_outline">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_comment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="40dp"
+            android:maxHeight="80dp"
+            android:gravity="center_vertical|start"
+            android:hint="@string/forward_comment_hint"
+            android:textSize="14sp"
+            android:background="@color/transparent"
+            android:paddingStart="@dimen/standard_half_margin"
+            android:paddingEnd="@dimen/standard_half_margin"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:maxLines="3"
+            android:textColor="@color/nc_incoming_text_default"
+            android:scrollbars="vertical" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+<!--    <com.google.android.material.textfield.TextInputLayout-->
+<!--        android:id="@+id/text_input_layout"-->
+<!--        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_margin="@dimen/standard_margin">-->
+
+<!--        <com.google.android.material.textfield.TextInputEditText-->
+<!--            android:id="@+id/et_comment"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:hint="@string/nc_caption"-->
+<!--            android:maxLines="3"-->
+<!--            tools:text="a.png\nb.png\nc.png" />-->
+
+<!--    </com.google.android.material.textfield.TextInputLayout>-->
+
+    <com.google.android.material.divider.MaterialDivider
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- 第五行：取消和发送按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nc_cancel"
+            android:textColor="@color/medium_emphasis_text"
+            android:layout_marginEnd="@dimen/standard_half_margin"
+            app:cornerRadius="8dp" />
+
+        <Button
+            android:id="@+id/btn_send"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nc_send"
+            android:textColor="@color/white"
+            app:cornerRadius="8dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

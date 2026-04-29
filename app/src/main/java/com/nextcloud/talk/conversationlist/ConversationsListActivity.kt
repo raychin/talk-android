@@ -22,6 +22,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.text.InputType
 import android.text.TextUtils
@@ -36,8 +37,12 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -85,6 +90,7 @@ import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.arbitrarystorage.ArbitraryStorageManager
 import com.nextcloud.talk.chat.ChatActivity
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessage
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.contacts.ContactsActivity
 import com.nextcloud.talk.contacts.ContactsViewModel
@@ -112,6 +118,7 @@ import com.nextcloud.talk.ui.dialog.ChooseAccountDialogCompose
 import com.nextcloud.talk.ui.chooseaccount.ChooseAccountShareToDialogFragment
 import com.nextcloud.talk.contextchat.ContextChatViewModel
 import com.nextcloud.talk.extensions.generateImageUrl
+import com.nextcloud.talk.extensions.loadAvatarOrImagePreview
 import com.nextcloud.talk.ui.dialog.ConversationsListBottomDialog
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment
 import com.nextcloud.talk.ui.dialog.FilterConversationFragment.Companion.ARCHIVE
@@ -124,6 +131,7 @@ import com.nextcloud.talk.utils.CapabilitiesUtil.hasSpreedFeatureCapability
 import com.nextcloud.talk.utils.CapabilitiesUtil.isServerEOL
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
 import com.nextcloud.talk.utils.ConversationUtils
+import com.nextcloud.talk.extensions.loadAvatarOrImagePreviewGlide
 import com.nextcloud.talk.utils.FileUtils
 import com.nextcloud.talk.utils.Mimetype
 import com.nextcloud.talk.utils.NotificationUtils
@@ -135,9 +143,14 @@ import com.nextcloud.talk.utils.bundle.BundleKeys.ADD_ADDITIONAL_ACCOUNT
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MSG_FLAG
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MSG_TEXT
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MESSAGE_IDS
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_COMMENT
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FORWARD_MESSAGES_JSON
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_INTERNAL_USER_ID
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_ROOM_TOKEN
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SCROLL_TO_NOTIFICATION_CATEGORY
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SHARED_MESSAGE_IDS
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_SHARED_TEXT
 import com.nextcloud.talk.utils.permissions.PlatformPermissionUtil
 import com.nextcloud.talk.utils.power.PowerManagerUtils
@@ -228,6 +241,9 @@ class ConversationsListActivity :
     private var textToPaste: String? = ""
     private var selectedMessageId: String? = null
     private var forwardMessage: Boolean = false
+    private var forwardMessageIds: ArrayList<String>? = null
+    var forwardMessagesJson: String? = null
+    private var forwardSequentialMode: Boolean = false
     private var nextUnreadConversationScrollPosition = 0
     private var layoutManager: SmoothScrollLinearLayoutManager? = null
     private val callHeaderItems = HashMap<String, GenericTextHeaderItem>()
@@ -274,6 +290,9 @@ class ConversationsListActivity :
         viewThemeUtils.platform.colorTextView(binding.searchText, ColorRole.ON_SURFACE_VARIANT)
 
         forwardMessage = intent.getBooleanExtra(KEY_FORWARD_MSG_FLAG, false)
+        forwardMessageIds = intent.getStringArrayListExtra(KEY_FORWARD_MESSAGE_IDS)
+        forwardMessagesJson = intent.getStringExtra(KEY_FORWARD_MESSAGES_JSON)
+        forwardSequentialMode = intent.getBooleanExtra(KEY_FORWARD_SEQUENTIAL_MODE, false)
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
 
         initObservers()
@@ -293,6 +312,71 @@ class ConversationsListActivity :
             )
         }
     }
+
+    // ... ray add code ...
+    private var autoRefreshHandler: Handler? = null
+    private var autoRefreshRunnable: Runnable? = null
+    private val AUTO_REFRESH_INTERVAL_MS: Long = 30 * 1000 // 30 秒自动刷新一次
+
+
+    private fun scrollToNextUnreadConversation() {
+        if (nextUnreadConversationScrollPosition > -1) {
+            layoutManager?.scrollToPositionWithOffset(nextUnreadConversationScrollPosition, 0)
+        }
+    }
+
+    /**
+     * 启动自动静默刷新功能
+     * 每隔一定时间自动从服务器获取最新的会话列表，但不显示刷新动画
+     */
+    private fun startAutoRefresh() {
+        autoRefreshHandler = Handler(Looper.getMainLooper())
+
+        autoRefreshRunnable = Runnable {
+            // 静默刷新，不显示刷新动画
+            fetchRoomsSilently()
+            // 延迟执行下一次刷新
+            autoRefreshHandler?.postDelayed(autoRefreshRunnable!!, AUTO_REFRESH_INTERVAL_MS)
+        }
+
+        // 首次延迟启动
+        autoRefreshHandler?.postDelayed(autoRefreshRunnable!!, AUTO_REFRESH_INTERVAL_MS)
+
+        Log.d(TAG, "Auto refresh started with interval: $AUTO_REFRESH_INTERVAL_MS ms")
+    }
+
+    /**
+     * 停止自动刷新
+     */
+    private fun stopAutoRefresh() {
+        autoRefreshHandler?.removeCallbacksAndMessages(null)
+        Log.d(TAG, "Auto refresh stopped")
+    }
+
+    /**
+     * 静默获取会话列表（不显示刷新动画）
+     */
+    private fun fetchRoomsSilently() {
+        if (currentUser == null || !networkMonitor.isOnline.value) {
+            Log.d(TAG, "Skip silent fetch: currentUser is null or device is offline")
+            return
+        }
+
+        // 标记为静默刷新模式
+        isRefreshing = false
+
+        // 调用 ViewModel 获取数据
+        conversationsListViewModel.getRooms()
+
+        Log.d(TAG, "Silent fetch of conversations triggered")
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: ConversationsListFetchDataEvent) {
+        fetchRooms()
+    }
+    // ... ray add code ...
+
 
     override fun onResume() {
         super.onResume()
@@ -341,6 +425,9 @@ class ConversationsListActivity :
             searchBehaviorSubject.onNext(false)
             fetchRooms()
             fetchPendingInvitations()
+
+            // 启动自动静默刷新
+            startAutoRefresh()
         } else {
             Log.e(TAG, "currentUser was null")
             Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
@@ -358,6 +445,9 @@ class ConversationsListActivity :
         val firstOffset = firstTop?.minus(CONVERSATION_ITEM_HEIGHT) ?: 0
 
         appPreferences.setConversationListPositionAndOffset(firstVisible, firstOffset)
+
+        // 停止自动刷新
+        stopAutoRefresh()
     }
 
     // if edge to edge is used, add an empty item at the bottom of the list
@@ -815,7 +905,8 @@ class ConversationsListActivity :
                 imeOptions = imeOptions or EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
             }
             searchView!!.imeOptions = imeOptions
-            searchView!!.queryHint = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+            // searchView!!.queryHint = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+            searchView!!.queryHint = getString(R.string.nc_search)
             if (searchManager != null) {
                 searchView!!.setSearchableInfo(searchManager.getSearchableInfo(componentName))
             }
@@ -991,7 +1082,8 @@ class ConversationsListActivity :
     private fun showSearchBar() {
         val layoutParams = binding.searchToolbar.layoutParams as AppBarLayout.LayoutParams
         binding.searchToolbar.visibility = View.VISIBLE
-        binding.searchText.text = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+        // binding.searchText.text = getString(R.string.appbar_search_in, getString(R.string.nc_app_product_name))
+        binding.searchText.text = getString(R.string.nc_search)
         binding.conversationListToolbar.visibility = View.GONE
         // layoutParams.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout
         // .LayoutParams.SCROLL_FLAG_SNAP | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
@@ -1045,7 +1137,41 @@ class ConversationsListActivity :
     }
 
     fun fetchRooms() {
+        // 原始逻辑
+        // conversationsListViewModel.getRooms()
+
+        // 新增30S自动刷新后，调整
+        if (currentUser == null) {
+            return
+        }
+
+        // 如果不是静默模式，显示刷新动画
+        if (!isRefreshing) {
+            binding.swipeRefreshLayoutView.isRefreshing = true
+        }
+
+        dispose(null)
         conversationsListViewModel.getRooms(currentUser!!)
+        // 同上一行代码类似
+        // val includeStatus = CapabilitiesUtil.isUserStatusAvailable(currentUser!!)
+        //
+        // roomsQueryDisposable =
+        //     ncApi.getRooms(
+        //         credentials,
+        //         ApiUtils.getUrlForRooms(
+        //             currentUser!!.baseUrl!!,
+        //             includeStatus
+        //         )
+        //     )
+        //         .subscribeOn(Schedulers.io())
+        //         .observeOn(AndroidSchedulers.mainThread())
+        //         .subscribe({ roomsOverall ->
+        //             handleRoomsResponse(roomsOverall)
+        //         }) { throwable ->
+        //             handleHttpException(throwable)
+        //             binding.swipeRefreshLayoutView.isRefreshing = false
+        //             isRefreshing = false
+        //         }
     }
 
     private fun fetchPendingInvitations() {
@@ -1371,6 +1497,28 @@ class ConversationsListActivity :
         if (searchViewDisposable != null && !searchViewDisposable!!.isDisposed) {
             searchViewDisposable!!.dispose()
         }
+
+        // 清理资源 add by ray on 2026/04/02
+        openConversationsQueryDisposable = null
+        roomsQueryDisposable = null
+        searchViewDisposable = null
+
+        // 清理自动刷新相关资源
+        stopAutoRefresh()
+        autoRefreshHandler = null
+        autoRefreshRunnable = null
+
+        if (this::binding.isInitialized) {
+            binding.recyclerView.adapter = null
+        }
+        conversationItems.clear()
+        conversationItemsWithHeader.clear()
+        searchableConversationItems.clear()
+        filterableConversationItems.clear()
+        nearFutureEventConversationItems.clear()
+        callHeaderItems.clear()
+        adapter = null
+        eventBus.unregister(this)
     }
 
     private fun onQueryTextChange(newText: String?) {
@@ -1522,8 +1670,13 @@ class ConversationsListActivity :
                 }
             } else if (forwardMessage) {
                 if (hasChatPermission && !isReadOnlyConversation(selectedConversation!!)) {
-                    openConversation(intent.getStringExtra(KEY_FORWARD_MSG_TEXT))
-                    forwardMessage = false
+                    if (forwardMessageIds != null && forwardMessageIds!!.isNotEmpty()) {
+                        showForwardConfirmDialog()
+                    } else {
+                        openConversation(intent.getStringExtra(KEY_FORWARD_MSG_TEXT))
+                    }
+                    // TODO RAY 这里为何要改为false
+                    // forwardMessage = false
                 } else {
                     Snackbar.make(binding.root, R.string.send_to_forbidden, Snackbar.LENGTH_LONG).show()
                 }
@@ -1601,6 +1754,52 @@ class ConversationsListActivity :
             }
         } else {
             UploadAndShareFilesWorker.requestStoragePermission(this)
+        }
+    }
+
+    private fun showForwardConfirmDialog() {
+        val bottomSheetView = layoutInflater.inflate(R.layout.bottom_sheet_forward_confirm, null)
+
+        // 设置接收者信息
+        val avatarImageView = bottomSheetView.findViewById<ImageView>(R.id.iv_avatar)
+        val receiverNameTextView = bottomSheetView.findViewById<TextView>(R.id.tv_receiver_name)
+        val messageInfoTextView = bottomSheetView.findViewById<TextView>(R.id.tv_message_info)
+
+        // 加载头像和名称
+        selectedConversation?.let { conversation ->
+            receiverNameTextView.text = conversation.displayName
+            conversation.name.let {
+                val url = ApiUtils.getUrlForAvatar(currentUser!!.baseUrl, it, false)
+                avatarImageView.loadAvatarOrImagePreview(url, currentUser!!, null)
+            }
+        }
+
+        // 设置消息信息
+        val messageCount = forwardMessageIds!!.size
+        messageInfoTextView.text = if (forwardSequentialMode) {
+            String.format(resources!!.getString(R.string.forward_multiple_messages), messageCount)
+        } else {
+            // resources!!.getString(R.string.forward_merged_message)
+            parseAndDisplayMultiMessage().toString()
+        }
+
+        // 创建底部弹窗
+        val dialog = BottomSheetDialog(this, R.style.ThemeOverlay_App_BottomSheetDialog)
+        dialog.setContentView(bottomSheetView)
+        dialog.show()
+
+        // 设置按钮事件
+        bottomSheetView.findViewById<Button>(R.id.btn_cancel).setOnClickListener {
+            dialog.dismiss()
+            Log.d(TAG, "forwarding messages cancelled")
+        }
+
+        bottomSheetView.findViewById<Button>(R.id.btn_send).setOnClickListener {
+            val comment = bottomSheetView.findViewById<com.google.android.material.textfield.TextInputEditText>(
+                R.id.et_comment
+            ).text?.toString() ?: ""
+            dialog.dismiss()
+            openConversationWithMessageIds(forwardMessageIds!!, forwardSequentialMode, comment)
         }
     }
 
@@ -1838,6 +2037,7 @@ class ConversationsListActivity :
         val bundle = Bundle()
         bundle.putString(KEY_ROOM_TOKEN, selectedConversation!!.token)
         bundle.putString(KEY_SHARED_TEXT, textToPaste)
+        // TODO RAY，添加一个判断直接发送
         if (selectedMessageId != null) {
             bundle.putString(BundleKeys.KEY_MESSAGE_ID, selectedMessageId)
             selectedMessageId = null
@@ -1847,6 +2047,36 @@ class ConversationsListActivity :
         val count = appPreferences.getNotificationCount() - selectedConversation!!.unreadMessages
         appPreferences.setNotificationCount(count)
         Log.e("Ray", "openConversation count = $count")
+        val intent = Intent(context, ChatActivity::class.java)
+        intent.putExtras(bundle)
+        startActivity(intent)
+
+        clearIntentAction()
+    }
+
+    private fun openConversationWithMessageIds(messageIds: ArrayList<String>, isSequential: Boolean, comment: String = "") {
+        if (CallActivity.active &&
+            selectedConversation!!.token != ApplicationWideCurrentRoomHolder.getInstance().currentRoomToken
+        ) {
+            Snackbar.make(
+                binding.root,
+                context.getString(R.string.restrict_join_other_room_while_call),
+                Snackbar.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        val bundle = Bundle()
+        bundle.putString(KEY_ROOM_TOKEN, selectedConversation!!.token)
+        bundle.putStringArrayList(KEY_SHARED_MESSAGE_IDS, messageIds)
+        bundle.putString(KEY_FORWARD_MESSAGES_JSON, forwardMessagesJson)
+        bundle.putBoolean(KEY_FORWARD_SEQUENTIAL_MODE, isSequential)
+        bundle.putString(KEY_FORWARD_COMMENT, comment)
+
+        // 减去角标数量
+        val count = appPreferences.getNotificationCount() - selectedConversation!!.unreadMessages
+        appPreferences.setNotificationCount(count)
+        Log.e("Ray", "openConversationWithMessageIds count = $count, sequential = $isSequential, comment = $comment")
         val intent = Intent(context, ChatActivity::class.java)
         intent.putExtras(bundle)
         startActivity(intent)

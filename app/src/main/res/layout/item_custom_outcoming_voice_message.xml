@@ -2,8 +2,8 @@
 <!--
   ~ Nextcloud Talk - Android Client
   ~
-  ~ SPDX-FileCopyrightText: 2021, 2025 Andy Scherzinger <info@andy-scherzinger.de>
   ~ SPDX-FileCopyrightText: 2024 Christian Reiner <foss@christian-reiner.info>
+  ~ SPDX-FileCopyrightText: 2021 Andy Scherzinger <info@andy-scherzinger.de>
   ~ SPDX-FileCopyrightText: 2021 Marcel Hibbe <dev@mhibbe.de>
   ~ SPDX-FileCopyrightText: 2017-2018 Mario Danic <mario@lovelyhq.com>
   ~ SPDX-License-Identifier: GPL-3.0-or-later
@@ -17,6 +17,20 @@
     android:layout_marginTop="2dp"
     android:layout_marginEnd="@dimen/standard_margin"
     android:layout_marginBottom="2dp">
+
+    <CheckBox
+        android:id="@+id/messageCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="-8dp"
+        android:button="@drawable/checkbox_circle_selector"
+        android:buttonTint="@null"
+        android:background="@null"
+        android:visibility="gone"
+        android:clickable="false"
+        android:focusable="false"
+        android:contentDescription="@string/app_name"/>
 
     <RelativeLayout
         android:layout_width="match_parent"

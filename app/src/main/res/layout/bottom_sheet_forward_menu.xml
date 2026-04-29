@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2026
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:padding="@dimen/standard_margin">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/nc_forward_to_three_dots"
+        android:textColor="@color/high_emphasis_text"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="@dimen/standard_margin" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/chat_separator"
+        android:layout_marginBottom="@dimen/standard_margin" />
+
+    <!-- 逐一转发按钮 -->
+    <TextView
+        android:id="@+id/btn_forward_sequential"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="@string/clps_forward_sequential"
+        android:textColor="@color/high_emphasis_text"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:background="?attr/selectableItemBackground"
+        android:layout_marginBottom="@dimen/standard_half_margin"
+        android:visibility="gone" />
+
+    <!-- 合并转发按钮 -->
+    <TextView
+        android:id="@+id/btn_forward_merged"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="@string/clps_forward_merged"
+        android:textColor="@color/high_emphasis_text"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:background="?attr/selectableItemBackground"
+        android:layout_marginBottom="@dimen/standard_margin" />
+
+    <!-- 取消按钮 -->
+    <TextView
+        android:id="@+id/btn_cancel"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="@string/nc_cancel"
+        android:textColor="@color/low_emphasis_text"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:background="@drawable/bg_bottom_sheet_cancel" />
+
+</LinearLayout>

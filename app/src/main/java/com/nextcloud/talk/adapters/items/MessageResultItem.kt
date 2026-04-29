@@ -15,6 +15,7 @@ import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.nextcloud.talk.R
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessage
 import com.nextcloud.talk.data.message.model.MessageFilterType
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.RvItemSearchMessageBinding
@@ -102,6 +103,10 @@ data class MessageResultItem(
 
 
     private fun bindMessageExcerpt(holder: ViewHolder) {
+
+        Log.e("Ray", "messageSearch: ${messageEntry.messageExcerpt}")
+
+        val msg = parseAndDisplayMultiMessage()
         // 遍历枚举替换筛选类型值
         val highText = MessageFilterType.entries.fold(messageEntry.searchTerm) { acc, filterType ->
             acc.replace(filterType.value, "")
@@ -109,7 +114,7 @@ data class MessageResultItem(
 
         viewThemeUtils.platform.highlightText(
             holder.binding.messageExcerpt,
-            messageEntry.messageExcerpt,
+            msg.toString(),
             highText
         )
     }
@@ -123,18 +128,22 @@ data class MessageResultItem(
         private const val MILLIES = 1000L
     }
 
-    override fun getHeader(): GenericTextHeaderItem =
-        MessagesTextHeaderItem(context, viewThemeUtils)
-            .apply {
-                // FlexibleAdapter needs this hack for some reason
-                isHidden  = if (context is MessageSearchActivity) {
-                    // 如果是 MessageSearchActivity，不显示头部
-                    true
-                } else {
-                    // 否则使用 showHeader 的值
-                    showHeader
-                }
-            }
+    // override fun getHeader(): GenericTextHeaderItem = MessagesTextHeaderItem(context, viewThemeUtils)
+    //         .apply {
+    //             // FlexibleAdapter needs this hack for some reason
+    //             isHidden  = if (context is MessageSearchActivity) {
+    //                 // 如果是 MessageSearchActivity，不显示头部
+    //                 true
+    //             } else {
+    //                 // 否则使用 showHeader 的值
+    //                 showHeader
+    //             }
+    //         }
+    override fun getHeader(): GenericTextHeaderItem? = if (context is MessageSearchActivity) {
+            null
+        } else {
+            MessagesTextHeaderItem(context, viewThemeUtils).apply { isHidden = showHeader }
+        }
 
     override fun setHeader(header: GenericTextHeaderItem?) {
         // nothing, header is always the same

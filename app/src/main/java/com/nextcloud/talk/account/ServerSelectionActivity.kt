@@ -93,6 +93,9 @@ class ServerSelectionActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
 
+        // 设置默认服务器地址 add by ray on 2026/04/13
+        binding.serverEntryTextInputEditText.setText("https://talk.clpsgroup.com.cn")
+
         binding.hostUrlInputHelperText.text = String.format(
             resources!!.getString(R.string.nc_server_helper_text),
             // resources!!.getString(R.string.nc_server_product_name)

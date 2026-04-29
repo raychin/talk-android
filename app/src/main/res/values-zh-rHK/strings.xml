@@ -873,8 +873,8 @@ How to translate with transifex:
     <string name="show_ban_reason">顯示封鎖原因</string>
     <string name="error_unbanning">解除封鎖參與者嗰陣出錯</string>
     <string name="connection_lost">連唔到伺服器</string>
-    <string name="archive_conversation">封存對話</string>
-    <string name="unarchive_conversation">取消封存對話</string>
+    <string name="archive_conversation">封存</string>
+    <string name="unarchive_conversation">取消封存</string>
     <string name="archived">已封存</string>
     <string name="archive_hint">對話封存之後，預設會隱藏。揀篩選條件「已封存」就可以睇返已封存嘅對話。直接提及仍然會收到。</string>
     <string name="unarchive_hint">對話取消封存之後，預設會再次顯示。</string>
@@ -906,4 +906,50 @@ How to translate with transifex:
     <string name="clps_select_messages">多選</string>
     <string name="clps_selector_no_text">選擇訊息</string>
     <string name="clps_selector_text">已選取 %1$d 則訊息</string>
+
+    <string name="clps_recall_messages">撤回</string>
+    <string name="message_hidden_by_you">你撤回呢個訊息</string>
+    <string name="clps_recall_message_leaked_to_matterbridge">訊息已成功撤回，但可能已經外洩去其他服務</string>
+
+    <!-- MultiMessage Detail -->
+    <string name="clps_multi_message_detail_title">%d 條轉發嘅訊息</string>
+    <string name="clps_multi_message_total_count">共 %d 條訊息</string>
+    <string name="clps_multi_message_load_error">載入訊息失敗，請稍後再試</string>
+    <string name="clps_multi_message_navigate_hint">㩒吓睇完整訊息清單</string>
+
+    <!-- Message type display text -->
+    <string name="clps_chat_history">[聊天記錄]</string>
+    <string name="clps_voice_message">[語音訊息]</string>
+    <string name="clps_file_attachment">[檔案]</string>
+    <string name="clps_location_message">[位置]</string>
+    <string name="clps_poll_message">[投票]</string>
+    <string name="clps_deck_card">[Deck 卡片]</string>
+    <string name="clps_gif_message">[GIF]</string>
+    <string name="clps_image_message">[圖片]</string>
+    <string name="clps_video_message">[影片]</string>
+    <string name="clps_audio_message">[音頻]</string>
+    <string name="clps_link_message">[連結]</string>
+
+    <!-- Forward Menu -->
+    <string name="clps_forward_sequential">逐條轉發</string>
+    <string name="clps_forward_merged">合併轉發</string>
+
+    <string name="nc_send">傳送</string>
+    <string name="nc_common_contact">聯絡人</string>
+
+    <!-- Forward confirm bottom sheet -->
+    <string name="forward_send_to">傳送去</string>
+    <string name="forward_comment_hint">新增評論</string>
+    <string name="forward_merged_message">合併訊息</string>
+    <string name="forward_multiple_messages">%d 條訊息</string>
+
+    <!-- Forward confirmation -->
+    <string name="forward_confirm_title">轉發訊息</string>
+    <string name="forward_confirm_send_sequential">將呢啲訊息逐條轉發去 %1$s？</string>
+    <string name="forward_confirm_send_merged">將呢啲訊息合併轉發去 %1$s？</string>
+
+    <string name="clps_items_image">圖片</string>
+    <string name="clps_items_file">檔案</string>
+
+    <string name="clps_message_delete_are_you_sure">此動作會刪除操作人自身帳號下的訊息記錄，但不影響其他使用者，你真係想刪除呢個訊息？</string>
 </resources>

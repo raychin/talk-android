@@ -22,6 +22,7 @@ import autodagger.AutoInjector
 import coil.load
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
+import com.nextcloud.talk.adapters.messages.clps.MessageCheckboxHelper
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.ChatActivity
@@ -75,6 +76,15 @@ class IncomingVoiceMessageViewHolder(incomingView: View, payload: Any) :
     @SuppressLint("SetTextI18n")
     override fun onBind(message: ChatMessage) {
         super.onBind(message)
+
+        // 消息多选功能 暂时停用
+        // MessageCheckboxHelper.initMessageCheckbox(
+        //     messageCheckbox = itemView.findViewById(R.id.messageCheckbox),
+        //     rootView = itemView,
+        //     message = message,
+        //     commonMessageInterface = commonMessageInterface
+        // )
+
         if (isBound) {
             handleIsPlayingVoiceMessageState(message)
             return

@@ -45,7 +45,7 @@ How to translate with transifex:
 
     <!-- Server selection -->
     <string name="nc_server_connect">测试服务器连接</string>
-    <string name="nc_server_helper_text">在浏览器中打开 %1$s Web 界面时的链接。</string>
+    <string name="nc_server_helper_text">在浏览器中打开 %1$s 网页界面时的链接。</string>
     <string name="nc_server_testing_connection">正在测试连接</string>
     <string name="nc_server_unsupported">服务器未安装受支持的 Talk 应用</string>
 
@@ -873,8 +873,8 @@ How to translate with transifex:
     <string name="show_ban_reason">显示封禁原因</string>
     <string name="error_unbanning">解除封禁参与者时出错</string>
     <string name="connection_lost">无法连接到服务器</string>
-    <string name="archive_conversation">归档对话</string>
-    <string name="unarchive_conversation">取消归档对话</string>
+    <string name="archive_conversation">归档</string>
+    <string name="unarchive_conversation">取消归档</string>
     <string name="archived">已归档</string>
     <string name="archive_hint">对话归档后，默认会隐藏。选择筛选条件“已归档”即可查看已归档的对话。直接提及仍会收到。</string>
     <string name="unarchive_hint">对话取消归档后，默认会再次显示。</string>
@@ -906,4 +906,50 @@ How to translate with transifex:
     <string name="clps_select_messages">多选</string>
     <string name="clps_selector_no_text">选择消息</string>
     <string name="clps_selector_text">已选择 %1$d 条消息</string>
+
+    <string name="clps_recall_messages">撤回</string>
+    <string name="message_hidden_by_you">您已撤回此消息</string>
+    <string name="clps_recall_message_leaked_to_matterbridge">消息已成功撤回，但可能已泄露到其他服务</string>
+
+    <!-- MultiMessage Detail -->
+    <string name="clps_multi_message_detail_title">%d 条转发的消息</string>
+    <string name="clps_multi_message_total_count">共 %d 条消息</string>
+    <string name="clps_multi_message_load_error">加载消息失败，请稍后重试</string>
+    <string name="clps_multi_message_navigate_hint">点击查看完整消息列表</string>
+
+    <!-- Message type display text  -->
+    <string name="clps_chat_history">[聊天记录]</string>
+    <string name="clps_voice_message">[语音消息]</string>
+    <string name="clps_file_attachment">[文件]</string>
+    <string name="clps_location_message">[位置]</string>
+    <string name="clps_poll_message">[投票]</string>
+    <string name="clps_deck_card">[Deck 卡片]</string>
+    <string name="clps_gif_message">[GIF]</string>
+    <string name="clps_image_message">[图片]</string>
+    <string name="clps_video_message">[视频]</string>
+    <string name="clps_audio_message">[音频]</string>
+    <string name="clps_link_message">[链接]</string>
+
+    <!-- Forward Menu -->
+    <string name="clps_forward_sequential">逐条转发</string>
+    <string name="clps_forward_merged">合并转发</string>
+
+    <string name="nc_send">发送</string>
+    <string name="nc_common_contact">联系人</string>
+
+    <!-- Forward confirm bottom sheet -->
+    <string name="forward_send_to">发送给</string>
+    <string name="forward_comment_hint">添加评论</string>
+    <string name="forward_merged_message">合并消息</string>
+    <string name="forward_multiple_messages">%d 条消息</string>
+
+    <!-- Forward confirmation -->
+    <string name="forward_confirm_title">转发消息</string>
+    <string name="forward_confirm_send_sequential">将这些消息逐条转发给 %1$s？</string>
+    <string name="forward_confirm_send_merged">将这些消息合并转发给 %1$s？</string>
+
+    <string name="clps_items_image">图片</string>
+    <string name="clps_items_file">文件</string>
+
+    <string name="clps_message_delete_are_you_sure">此操作会删除操作人自身账号下的消息记录，但不影响其他用户，确定要删除此消息吗？</string>
 </resources>

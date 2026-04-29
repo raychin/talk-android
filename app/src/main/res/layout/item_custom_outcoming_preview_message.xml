@@ -17,7 +17,21 @@
     android:layout_marginEnd="14dp"
     android:layout_marginBottom="2dp">
 
+    <CheckBox
+        android:id="@+id/messageCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="-8dp"
+        android:button="@drawable/checkbox_circle_selector"
+        android:buttonTint="@null"
+        android:background="@null"
+        android:visibility="gone"
+        android:clickable="false"
+        android:focusable="false"
+        android:contentDescription="@string/app_name"/>
     <LinearLayout
+        android:layout_toEndOf="@id/messageCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"

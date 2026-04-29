@@ -94,7 +94,8 @@ class UnifiedSearchRepositoryImpl(private val api: NcApi) : UnifiedSearchReposit
                 messageId = messageId,
                 thumbnail = thumbnail,
                 thumbnailSize = thumbnailSize,
-                timestamp = timestamp
+                timestamp = timestamp,
+                messageParameters = null
             )
         }
     }

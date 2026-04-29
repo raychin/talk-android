@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 22,
-    "identityHash": "6ec932f7195d06ac875e23e0a71e8099",
+    "identityHash": "bac4051e0ed1bc6af751a16e3c9fbdb6",
     "entities": [
       {
         "tableName": "User",
@@ -412,16 +412,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "hiddenPinnedId",
-            "columnName": "hiddenPinnedId",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "lastPinnedId",
-            "columnName": "lastPinnedId",
-            "affinity": "INTEGER"
-          },
-          {
             "fieldPath": "messageDraft",
             "columnName": "messageDraft",
             "affinity": "TEXT"
@@ -664,6 +654,11 @@
             "fieldPath": "pinnedUntil",
             "columnName": "pinnedUntil",
             "affinity": "INTEGER"
+            "fieldPath": "hidden",
+            "columnName": "hidden",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {

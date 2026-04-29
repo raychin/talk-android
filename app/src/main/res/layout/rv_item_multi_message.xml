@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2022 Tim Krüger <t@timkrueger.me>
+  ~ SPDX-FileCopyrightText: 2021 Andy Scherzinger <info@andy-scherzinger.de>
+  ~ SPDX-FileCopyrightText: 2017-2018 Mario Danic <mario@lovelyhq.com>
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+  ~
+  ~ Adapted from https://github.com/stfalcon-studio/ChatKit/blob/master/chatkit/src/main/res/layout/item_dialog.xml
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/double_margin_between_elements"
+    tools:background="@color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/conversation_top_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:ignore="MissingConstraints">
+        <ImageView
+            android:id="@+id/thumbnail"
+            android:layout_width="@dimen/small_avatar_item_height"
+            android:layout_height="@dimen/small_avatar_item_height"
+            android:layout_marginHorizontal="@dimen/margin_between_elements"
+            android:importantForAccessibility="no"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.emoji2.widget.EmojiTextView
+            android:id="@+id/conversation_title"
+            android:layout_width="0dp"
+            android:layout_marginHorizontal="@dimen/margin_between_elements"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:textColor="@color/conversation_item_header"
+            android:textSize="@dimen/two_line_primary_text_size"
+            app:layout_constraintStart_toEndOf="@+id/thumbnail"
+            app:layout_constraintEnd_toStartOf="@+id/conversation_time"
+            app:layout_constraintTop_toTopOf="@+id/thumbnail"
+            tools:text="Message title goes here" />
+
+        <androidx.emoji2.widget.EmojiTextView
+            android:id="@+id/conversation_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="2dp"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/grey_600"
+            android:textSize="@dimen/chat_system_message_text_size"
+            app:layout_constraintStart_toEndOf="@+id/conversation_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/thumbnail"
+            tools:text="Message time goes here" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include
+        android:id="@+id/message_quote"
+        layout="@layout/item_message_quote"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="@dimen/margin_between_elements"
+        app:layout_constraintStart_toStartOf="@+id/conversation_top_container"
+        app:layout_constraintTop_toBottomOf="@+id/conversation_top_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/thumbnail_img"
+        android:layout_width="@dimen/small_item_height"
+        android:layout_height="@dimen/small_item_height"
+        android:importantForAccessibility="no"
+        android:layout_marginVertical="6dp"
+        android:layout_marginStart="40dp"
+        app:layout_constraintStart_toStartOf="@+id/conversation_top_container"
+        app:layout_constraintTop_toBottomOf="@+id/message_quote" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="@+id/thumbnail_img"
+        app:layout_constraintEnd_toEndOf="@+id/thumbnail_img"
+        app:layout_constraintTop_toTopOf="@+id/thumbnail_img"
+        app:layout_constraintBottom_toBottomOf="@+id/thumbnail_img" />
+
+    <androidx.emoji2.widget.EmojiTextView
+        android:id="@+id/message_excerpt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginHorizontal="@dimen/margin_between_elements"
+        android:gravity="start|top"
+        android:textColor="@color/textColorMaxContrast"
+        android:textSize="14sp"
+        android:textAlignment="viewStart"
+        android:textIsSelectable="false"
+        android:lineSpacingExtra="1dp"
+        android:lineSpacingMultiplier="1.1"
+        app:layout_constraintStart_toEndOf="@+id/thumbnail_img"
+        app:layout_constraintTop_toBottomOf="@+id/message_quote"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="...this is a message result from unified search, which includes ellipses..." />
+
+    <androidx.emoji2.widget.EmojiTextView
+        android:id="@+id/thumbnail_size"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginHorizontal="@dimen/margin_between_elements"
+        android:ellipsize="end"
+        android:gravity="start|top"
+        android:lines="1"
+        android:singleLine="true"
+        android:textColor="@color/grey_600"
+        android:textSize="@dimen/sm_text_size"
+        app:layout_constraintStart_toEndOf="@+id/thumbnail_img"
+        app:layout_constraintTop_toBottomOf="@+id/message_excerpt"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Message thumbnail size goes here" />
+
+    <androidx.emoji2.widget.EmojiTextView
+        android:id="@+id/message_content"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginHorizontal="@dimen/margin_between_elements"
+        android:gravity="start|top"
+        android:textColor="@color/textColorMaxContrast"
+        android:textSize="14sp"
+        android:textAlignment="viewStart"
+        android:textIsSelectable="false"
+        android:lineSpacingExtra="1dp"
+        android:lineSpacingMultiplier="1.1"
+        app:layout_constraintStart_toStartOf="@+id/conversation_top_container"
+        app:layout_constraintTop_toBottomOf="@+id/thumbnail_img"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="...this is a message result from unified search, which includes ellipses..." />
+
+    <LinearLayout
+        android:id="@+id/message_reference"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@+id/conversation_top_container"
+        app:layout_constraintTop_toBottomOf="@+id/message_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="start"
+        android:layout_marginTop="6dp"
+        android:visibility="gone"
+        tools:ignore="MissingConstraints">
+        <include
+            android:id="@+id/referenceInclude"
+            layout="@layout/reference_inside_message" />
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/bottom_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="message_content, message_reference, thumbnail_img, thumbnail_size,message_excerpt" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bottom_barrier"
+        android:layout_marginTop="8dp"
+        android:background="@color/border_color" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

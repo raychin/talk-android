@@ -28,6 +28,7 @@ import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
 import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.DialogMessageActionsBinding
@@ -68,6 +69,7 @@ class MessageActionsDialog(
     private val user: User?,
     private val currentConversation: ConversationModel?,
     private val showMessageDeletionButton: Boolean,
+    private val showMessageRecallButton: Boolean,
     private val hasChatPermission: Boolean,
     private val hasReactPermission: Boolean,
     private val spreedCapabilities: SpreedCapability
@@ -141,6 +143,8 @@ class MessageActionsDialog(
         viewThemeUtils.material.colorBottomSheetDragHandle(dialogMessageActionsBinding.bottomSheetDragHandle)
         initEmojiBar(hasReactPermission)
         initMenuItemCopy(!message.isDeleted)
+        initEmojiBar(hasChatPermission)
+        initMenuItemCopy(!message.isDeleted && !message.isMultiMessage())
         initMenuItems(networkMonitor.isOnline.value)
     }
 
@@ -162,8 +166,15 @@ class MessageActionsDialog(
                     isOnline
             )
             initMenuOpenThread(message.isThread && chatActivity.conversationThreadId == null)
-            initMenuEditMessage(isMessageEditable)
+            initMenuEditMessage(isMessageEditable && !message.isMultiMessage())
             initMenuDeleteMessage(showMessageDeletionButton && isOnline)
+
+            /**
+             * 撤回消息
+             * add by ray on 2026/04/02
+             */
+            initMenuRecallMessage(showMessageRecallButton && isOnline)
+
             initMenuForwardMessage(
                 ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() &&
                     !(message.isDeletedCommentMessage || message.isDeleted) &&
@@ -171,9 +182,9 @@ class MessageActionsDialog(
             )
 
             initMenuSelectMessages(
-                // TODO RAY 能顯示多選的消息需要同步
-                ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() &&
-                    !(message.isDeletedCommentMessage || message.isDeleted) &&
+                // 能顯示多選的消息需要同步，语音消息隐藏
+                // ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() &&
+                    !(message.isDeletedCommentMessage || message.isDeleted || message.isVoiceMessage) &&
                     isOnline
             )
 
@@ -193,7 +204,7 @@ class MessageActionsDialog(
                     ChatMessage.MessageType.SYSTEM_MESSAGE != message.getCalculateMessageType() &&
                     isOnline
             )
-            initMenuShare(messageHasFileAttachment || messageHasRegularText && isOnline)
+            initMenuShare(messageHasFileAttachment || messageHasRegularText && isOnline && !message.isMultiMessage())
             initMenuItemOpenNcApp(
                 ChatMessage.MessageType.SINGLE_NC_ATTACHMENT_MESSAGE == message.getCalculateMessageType() &&
                     isOnline
@@ -449,7 +460,7 @@ class MessageActionsDialog(
     private fun initMenuDeleteMessage(visible: Boolean) {
         if (visible) {
             dialogMessageActionsBinding.menuDeleteMessage.setOnClickListener {
-                val areYouSure = context.resources.getString(R.string.message_delete_are_you_sure)
+                val areYouSure = context.resources.getString(R.string.clps_message_delete_are_you_sure)
                 val deleteMessage = context.resources.getString(R.string.nc_delete_message)
                 val delete = context.resources.getString(R.string.nc_delete)
                 val cancel = context.resources.getString(R.string.nc_cancel)
@@ -485,6 +496,54 @@ class MessageActionsDialog(
         }
         dialogMessageActionsBinding.menuDeleteMessage.visibility = getVisibility(visible)
     }
+
+    // ... ray add code ...
+    /**
+     * 消息撤回菜單功能，參考消息刪除
+     * add by ray on 2026/04/02
+     */
+    private fun initMenuRecallMessage(visible: Boolean) {
+        if (visible) {
+            dialogMessageActionsBinding.menuRecallMessage.setOnClickListener {
+                chatActivity.recallMessage(message)
+                dismiss()
+                // val areYouSure = context.resources.getString(R.string.message_delete_are_you_sure)
+                // val deleteMessage = context.resources.getString(R.string.nc_delete_message)
+                // val delete = context.resources.getString(R.string.nc_delete)
+                // val cancel = context.resources.getString(R.string.nc_cancel)
+                // val builder = MaterialAlertDialogBuilder(context)
+                // builder
+                //     .setIcon(
+                //         viewThemeUtils.dialog
+                //             .colorMaterialAlertDialogIcon(context, R.drawable.ic_delete_black_24dp)
+                //     )
+                //     .setMessage(areYouSure)
+                //     .setTitle(deleteMessage)
+                //     .setPositiveButton(delete) { dialog, which ->
+                //         chatActivity.deleteMessage(message)
+                //         dismiss()
+                //     }
+                //     .setNegativeButton(cancel) { dialog, which ->
+                //         // unused atm
+                //     }
+                //     .let { dialogBuilder ->
+                //         viewThemeUtils.dialog
+                //             .colorMaterialAlertDialogBackground(context, dialogBuilder)
+                //     }
+                //
+                // val dialog: AlertDialog = builder.create()
+                // dialog.setOnShowListener {
+                //     viewThemeUtils.platform.colorTextButtons(
+                //         dialog.getButton(BUTTON_POSITIVE),
+                //         dialog.getButton(BUTTON_NEGATIVE)
+                //     )
+                // }
+                // dialog.show()
+            }
+        }
+        dialogMessageActionsBinding.menuRecallMessage.visibility = getVisibility(visible)
+    }
+    // ... ray add code ...
 
     private fun initMenuEditMessage(visible: Boolean) {
         dialogMessageActionsBinding.menuEditMessage.setOnClickListener {

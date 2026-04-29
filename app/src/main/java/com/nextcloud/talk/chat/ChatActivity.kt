@@ -62,6 +62,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.cardview.widget.CardView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -141,7 +142,11 @@ import com.nextcloud.talk.adapters.messages.UnreadNoticeMessageViewHolder
 import com.nextcloud.talk.adapters.messages.VoiceMessageInterface
 import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
+import com.nextcloud.talk.chat.clps.ChatBottomMessageMenuFragment
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
+import com.nextcloud.talk.chat.data.model.clps.isSharedMessagesJson
+import com.nextcloud.talk.chat.data.model.clps.sharedMessagesJsonToMultiMessage
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.chat.viewmodels.MessageInputViewModel
 import com.nextcloud.talk.contextchat.ContextChatView
@@ -424,6 +429,11 @@ class ChatActivity :
 
     private val filesToUpload: MutableList<String> = ArrayList()
     lateinit var sharedText: String
+    private var sharedMessageIds: ArrayList<String>? = null
+    var sharedMessagesJson: String? = null
+    private var isSequentialMode: Boolean = false
+    private var forwardComment: String? = null
+    private var hasHandledSharedMessages: Boolean = false
 
     lateinit var participantPermissions: ParticipantPermissions
 
@@ -450,6 +460,7 @@ class ChatActivity :
     }
 
     private lateinit var messageInputFragment: MessageInputFragment
+    private lateinit var chatBottomMessageMenuFragment: ChatBottomMessageMenuFragment
 
     val typingParticipants = HashMap<String, TypingParticipant>()
 
@@ -570,6 +581,10 @@ class ChatActivity :
 
                     messageInputFragment = getMessageInputFragment()
                     messageInputViewModel.setData(chatViewModel.getChatRepository())
+        messageInputFragment = getMessageInputFragment()
+        chatBottomMessageMenuFragment = getChatBottomMessageMenuFragment()
+        messageInputViewModel = ViewModelProvider(this, viewModelFactory)[MessageInputViewModel::class.java]
+        messageInputViewModel.setData(chatViewModel.getChatRepository())
 
                     initObservers()
 
@@ -591,8 +606,40 @@ class ChatActivity :
 
     private fun getMessageInputFragment(): MessageInputFragment {
         val internalId = conversationUser!!.id.toString() + "@" + roomToken
+
+        // TODO RAY 判断转发消息，直接发送，不需要到输入框
         return MessageInputFragment().apply {
             arguments = Bundle().apply {
+                putString(CONVERSATION_INTERNAL_ID, internalId)
+                putString(BundleKeys.KEY_SHARED_TEXT, sharedText)
+            }
+        }
+    }
+
+    // 合并消息标题 add by ray on 2026/04/21
+    fun multiMessageTitle(): String {
+        return if (currentConversation != null) {
+            if (isOneToOneConversation()) {
+                // 单人会话：XX和XX的聊天记录
+                val currentUser = conversationUser?.displayName ?: ""
+                val otherUser = currentConversation?.displayName ?: ""
+                getString(R.string.clps_chat_history_person, currentUser, otherUser)
+            } else {
+                // 多人会话：会话标题的聊天记录
+                val conversationName = currentConversation?.displayName ?: "群聊"
+                getString(R.string.clps_chat_history_persons, conversationName)
+            }
+        } else {
+            getString(R.string.clps_chat_history)
+        }
+    }
+
+    private fun getChatBottomMessageMenuFragment(): ChatBottomMessageMenuFragment {
+        val internalId = conversationUser!!.id.toString() + "@" + roomToken
+
+        return ChatBottomMessageMenuFragment().apply {
+            arguments = Bundle().apply {
+                putString(KEY_ROOM_TOKEN, roomToken)
                 putString(CONVERSATION_INTERNAL_ID, internalId)
                 putString(BundleKeys.KEY_SHARED_TEXT, sharedText)
             }
@@ -633,6 +680,13 @@ class ChatActivity :
 
         sharedText = extras?.getString(BundleKeys.KEY_SHARED_TEXT).orEmpty()
 
+        sharedMessageIds = extras?.getStringArrayList(BundleKeys.KEY_SHARED_MESSAGE_IDS)
+        sharedMessagesJson = extras?.getString(BundleKeys.KEY_FORWARD_MESSAGES_JSON)
+        isSequentialMode = extras?.getBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false) == true
+        forwardComment = extras?.getString(BundleKeys.KEY_FORWARD_COMMENT)
+        // 重置防抖标志，允许处理新的共享消息
+        hasHandledSharedMessages = sharedMessageIds.isNullOrEmpty()
+
         Log.d(TAG, "   roomToken = $roomToken")
         if (roomToken.isEmpty()) {
             Log.d(TAG, "   roomToken was null or empty!")
@@ -659,6 +713,9 @@ class ChatActivity :
         active = true
         this.lifecycle.addObserver(AudioUtils)
         this.lifecycle.addObserver(chatViewModel)
+
+        // 合并转发功能 add by ray on 2026/04/22
+        handleSharedMessageIdsIfNeeded()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -675,6 +732,93 @@ class ChatActivity :
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    private fun handleSharedMessageIdsIfNeeded() {
+        // 防抖检查：如果已经处理过或没有消息ID，直接返回
+        if (hasHandledSharedMessages) {
+            Log.d(TAG, "handleSharedMessageIdsIfNeeded already executed, skipping")
+            return
+        }
+
+        // 立即设置标志位，防止重复调用
+        hasHandledSharedMessages = true
+
+        // 保存引用并清空原变量
+        // val messagesToSend = ArrayList(sharedMessageIds!!)
+
+        // messageInputFragment.sendMessage(sharedMessagesJson!!, false)
+        if (isSequentialMode) {
+            // TODO RAY 顺序发送消息，还需要判断是否{file}
+            val multiMessage = sharedMessagesJsonToMultiMessage()
+            multiMessage.message?.forEach { msg ->
+                if (msg.message != "{file}") {
+                    if (msg.isMultiMessage()) {
+                        sendForwardChatMessage(msg.message!!, false)
+                    } else {
+                        sendMessage(msg.message!!, false)
+                    }
+                } else {
+                    // TODO RAY 文件类消息处理
+                }
+            }
+        } else {
+            // 判断是否可以转json
+            // 发送合并消息json
+            if (isSharedMessagesJson()) {
+                sendForwardChatMessage(sharedMessagesJson!!, false)
+            } else {
+                sendMessage(sharedMessagesJson!!, false)
+            }
+        }
+
+        if (forwardComment!!.isNotEmpty()) {
+            sendMessage(forwardComment!!, false)
+            forwardComment = null
+        }
+
+        sharedMessageIds = null
+        sharedMessagesJson = null
+    }
+
+    /**
+     * 发送消息
+     * add by ray on 2026/04/22
+     */
+    fun sendMessage(message: String, sendWithoutNotification: Boolean) {
+        messageInputViewModel.sendChatMessage(
+            credentials = conversationUser!!.getCredentials(),
+            url = ApiUtils.getUrlForChat(
+                chatApiVersion,
+                conversationUser!!.baseUrl!!,
+                roomToken
+            ),
+            message = message,
+            displayName = conversationUser!!.displayName ?: "",
+            replyTo = getReplyToMessageId(),
+            sendWithoutNotification = sendWithoutNotification,
+            threadTitle = chatViewModel.messageDraft.threadTitle
+        )
+    }
+
+    /**
+     * 发送消息
+     * add by ray on 2026/04/22
+     */
+    fun sendForwardChatMessage(message: String, sendWithoutNotification: Boolean) {
+        messageInputViewModel.sendForwardChatMessage(
+            credentials = conversationUser!!.getCredentials(),
+            url = ApiUtils.getUrlForChat(
+                chatApiVersion,
+                conversationUser!!.baseUrl!!,
+                roomToken
+            ),
+            message = message,
+            displayName = conversationUser!!.displayName ?: "",
+            replyTo = getReplyToMessageId(),
+            sendWithoutNotification = sendWithoutNotification,
+            threadTitle = chatViewModel.messageDraft.threadTitle
+        )
+    }
+
     @SuppressLint("NotifyDataSetChanged", "SetTextI18n", "ResourceAsColor")
     @Suppress("LongMethod")
     private fun initObservers() {
@@ -769,11 +913,16 @@ class ChatActivity :
                         chatApiVersion = ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(1))
                         participantPermissions = ParticipantPermissions(spreedCapabilities, currentConversation!!)
 
+                        val bottomFragment = if (selectorMode) {
+                            chatBottomMessageMenuFragment
+                        } else {
+                            messageInputFragment
+                        }
                         supportFragmentManager.commit {
                             setReorderingAllowed(true) // optimizes out redundant replace operations
-                            replace(R.id.fragment_container_activity_chat, messageInputFragment)
+                            replace(R.id.fragment_container_activity_chat, bottomFragment)
                             runOnCommit {
-                                if (focusInput) {
+                                if (!selectorMode && focusInput) {
                                     // fix: ANR问题，将焦点请求移到下一个消息循环，避免阻塞当前操作 fix by ray on 2026/02/25
                                     binding.root.post {
                                         messageInputFragment.binding.fragmentMessageInputView.requestFocus()
@@ -1030,7 +1179,7 @@ class ChatActivity :
                     if (state.msg.ocs!!.meta!!.statusCode == HttpURLConnection.HTTP_ACCEPTED) {
                         Snackbar.make(
                             binding.root,
-                            R.string.nc_delete_message_leaked_to_matterbridge,
+                            R.string.clps_recall_message_leaked_to_matterbridge,
                             Snackbar.LENGTH_LONG
                         ).show()
                     }
@@ -1048,6 +1197,34 @@ class ChatActivity :
                 else -> {}
             }
         }
+
+        chatViewModel.hideChatMessageViewState.observe(this) { state ->
+            Log.e("Ray", "hideChatMessageViewState = ${state.toString()}")
+            when (state) {
+                is ChatViewModel.HideChatMessageSuccessState -> {
+                    if (state.msg.ocs!!.meta!!.statusCode == HttpURLConnection.HTTP_ACCEPTED) {
+                        Snackbar.make(
+                            binding.root,
+                            R.string.nc_delete_message_leaked_to_matterbridge,
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+
+                    // val id = state.msg.ocs!!.data!!.parentMessage!!.id.toString()
+                    val id = state.msg.ocs!!.data!!.id.toString()
+                    val index = adapter?.getMessagePositionById(id) ?: 0
+                    val message = adapter?.items?.get(index)?.item as ChatMessage
+                    setMessageAsHidden(message)
+                }
+
+                is ChatViewModel.HideChatMessageErrorState -> {
+                    Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
+                }
+
+                else -> {}
+            }
+        }
+
 
         chatViewModel.createRoomViewState.observe(this) { state ->
             when (state) {
@@ -1270,9 +1447,16 @@ class ChatActivity :
                     replace(R.id.fragment_container_activity_chat, MessageInputVoiceRecordingFragment())
                 }
             } else {
-                supportFragmentManager.commit {
-                    setReorderingAllowed(true)
-                    replace(R.id.fragment_container_activity_chat, getMessageInputFragment())
+                if (selectorMode) {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace(R.id.fragment_container_activity_chat, getChatBottomMessageMenuFragment())
+                    }
+                } else {
+                    supportFragmentManager.commit {
+                        setReorderingAllowed(true)
+                        replace(R.id.fragment_container_activity_chat, getMessageInputFragment())
+                    }
                 }
             }
         }
@@ -1703,6 +1887,11 @@ class ChatActivity :
             val nextSpeed = (button as PlaybackSpeedControl).getSpeed().next()
             chatViewModel.setPlayBack(nextSpeed)
             appPreferences.savePreferredPlayback(conversationUser!!.userId, nextSpeed)
+        }
+
+        Log.e("Ray", "onResume selectorMode = $selectorMode")
+        if (selectorMode) {
+            forwardSelectorMode(true)
         }
     }
 
@@ -3051,6 +3240,7 @@ class ChatActivity :
         if (mentionAutocomplete != null && mentionAutocomplete!!.isPopupShowing) {
             mentionAutocomplete?.dismissPopup()
         }
+        // TODO RAY 性能问题，所以清空？导致回到页面需要执行initAdapter
         adapter = null
     }
 
@@ -4281,6 +4471,7 @@ class ChatActivity :
                 conversationUser,
                 currentConversation,
                 isShowMessageDeletionButton(message),
+                isShowMessageRecallButton(message),
                 participantPermissions.hasChatPermission(),
                 participantPermissions.hasReactPermission(),
                 spreedCapabilities
@@ -4292,6 +4483,40 @@ class ChatActivity :
         ChatMessage.MessageType.SYSTEM_MESSAGE == message.getCalculateMessageType()
 
     fun deleteMessage(message: IMessage) {
+        if (!participantPermissions.hasChatPermission()) {
+            Log.w(
+                TAG,
+                "Deletion of message is skipped because of restrictions by permissions. " +
+                    "This method should not have been called!"
+            )
+            Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_LONG).show()
+        } else {
+            var apiVersion = 1
+            // FIXME Fix API checking with guests?
+            if (conversationUser != null) {
+                apiVersion = ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(1))
+            }
+
+            // TODO RAY 刪除按鈕修改為hide
+            chatViewModel.hideChatMessages(
+                credentials!!,
+                ApiUtils.getUrlForChatHideMessage(
+                    apiVersion,
+                    conversationUser?.baseUrl!!,
+                    roomToken,
+                    message.id!!
+                ),
+                message.id!!
+            )
+        }
+    }
+
+    // ... ray add code ...
+    /**
+     * 消息撤回 -> 使用delete接口
+     * add by ray on 2026/04/02
+     */
+    fun recallMessage(message: IMessage) {
         if (!participantPermissions.hasChatPermission()) {
             Log.w(
                 TAG,
@@ -4318,6 +4543,7 @@ class ChatActivity :
             )
         }
     }
+    // ... ray add code ...
 
     fun replyPrivately(message: IMessage?) {
         val apiVersion =
@@ -4338,8 +4564,17 @@ class ChatActivity :
     fun forwardMessage(message: IMessage?) {
         val bundle = Bundle()
         bundle.putBoolean(BundleKeys.KEY_FORWARD_MSG_FLAG, true)
-        bundle.putString(BundleKeys.KEY_FORWARD_MSG_TEXT, message?.text)
+        // bundle.putString(BundleKeys.KEY_FORWARD_MSG_TEXT, message?.text)
         bundle.putString(BundleKeys.KEY_FORWARD_HIDE_SOURCE_ROOM, roomToken)
+
+        val chatMessage = message as ChatMessage
+        if (chatMessage.isMultiMessage()) {
+            bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, chatMessage.message)
+        } else {
+            bundle.putString(BundleKeys.KEY_FORWARD_MESSAGES_JSON, message?.text)
+        }
+        bundle.putStringArrayList(BundleKeys.KEY_FORWARD_MESSAGE_IDS, arrayListOf("11111"))
+        bundle.putBoolean(BundleKeys.KEY_FORWARD_SEQUENTIAL_MODE, false)
 
         val intent = Intent(this, ConversationsListActivity::class.java)
         intent.putExtras(bundle)
@@ -4347,23 +4582,43 @@ class ChatActivity :
     }
 
     private var selectorMode = false
-    // ... existing code ...
+    var selectedMessageIds: MutableSet<String?> = HashSet<String?>()
+    var selectedMessages: ArrayList<ChatMessage?> = ArrayList<ChatMessage?>()
+
     fun selectMessages(message: IMessage?) {
-        // TODO RAY 多選完成後，參照forwardMessage跳轉到分享頁面
-        toggleMessageSelection(message as ChatMessage, true)
         forwardSelectorMode(true)
+        // 多選完成後，參照forwardMessage跳轉到分享頁面
+        toggleMessageSelection(message as ChatMessage, true)
     }
 
     fun forwardSelectorMode(showForward: Boolean) {
         selectorMode = showForward
-        adapter?.setSelectionMode(showForward)
+        adapter?.setSelectionMode(showForward, selectedMessageIds, selectedMessages)
+        selectedMessageIds.clear()
+        selectedMessages.clear()
+        // adapter?.isSelectionMode = showForward
         binding.chatTitleMessagesSelector.root.visibility = if (showForward) View.VISIBLE else View.GONE
         binding.chatToolbar.visibility = if (showForward) View.GONE else View.VISIBLE
         binding.chatTitleMessagesSelector.cancelView.setOnClickListener {
             forwardSelectorMode(false)
         }
-        // TODO RAY 隐藏底部输入栏，待处理会重置问题
-        binding.fragmentContainerActivityChat.visibility = if (showForward) View.GONE else View.VISIBLE
+        val bottomFragment = if (selectorMode) {
+            chatBottomMessageMenuFragment
+        } else {
+            messageInputFragment
+        }
+        supportFragmentManager.commit {
+            setReorderingAllowed(true) // optimizes out redundant replace operations
+            replace(R.id.fragment_container_activity_chat, bottomFragment)
+            runOnCommit {
+                if (!selectorMode && focusInput) {
+                    // fix: ANR问题，将焦点请求移到下一个消息循环，避免阻塞当前操作 fix by ray on 2026/02/25
+                    binding.root.post {
+                        messageInputFragment.binding.fragmentMessageInputView.requestFocus()
+                    }
+                }
+            }
+        }
     }
 
     override fun onSelectMessage(chatMessage: ChatMessage) {
@@ -4378,6 +4633,10 @@ class ChatActivity :
             adapter?.toggleMessageSelection(chatMessage)
         }
 
+        selectedMessageIds.clear()
+        selectedMessages.clear()
+        selectedMessageIds.addAll(adapter?.selectedMessageIds ?: emptySet())
+        selectedMessages.addAll(adapter?.raySelectedMessages ?: emptyList())
         binding.chatTitleMessagesSelector.selectorText.text = if (getMessageSelectionCount() > 0) {
             String.format(
                 context.resources.getString(R.string.clps_selector_text),
@@ -4392,9 +4651,9 @@ class ChatActivity :
         return adapter?.getSelectedCount() ?: 0
     }
 
-    fun getSelectedMessageIds(): Set<String> {
-        return adapter?.getSelectedMessageIds() ?: emptySet()
-    }
+    // fun getSelectedMessageIds(): Set<String> {
+    //     return adapter?.getSelectedMessageIds() ?: emptySet()
+    // }
 
     fun clearMessageSelection() {
         adapter?.clearSelection()
@@ -4711,6 +4970,8 @@ class ChatActivity :
             currentConversation?.type != ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL ||
             isShowMessageDeletionButton(message) ||
             // delete
+            isShowMessageRecallButton(message) ||
+            // recall add by ray on 2026/04/02
             ChatMessage.MessageType.REGULAR_TEXT_MESSAGE == message.getCalculateMessageType() ||
             // forward
             message.previousMessageId > NO_PREVIOUS_MESSAGE_ID &&
@@ -4721,11 +4982,26 @@ class ChatActivity :
     private fun setMessageAsDeleted(message: IMessage?) {
         val messageTemp = message as ChatMessage
         messageTemp.isDeleted = true
+        messageTemp.message = getString(R.string.message_hidden_by_you)
+
+        messageTemp.isOneToOneConversation =
+            currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
+        messageTemp.activeUser = conversationUser
+
+        adapter?.update(messageTemp)
+    }
+
+    private fun setMessageAsHidden(message: IMessage?) {
+        val messageTemp = message as ChatMessage
+        Log.e("Ray", "setMessageAsHidden message = ${messageTemp.message}")
+        messageTemp.isHidden = true
         messageTemp.message = getString(R.string.message_deleted_by_you)
 
         messageTemp.isOneToOneConversation =
             currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
         messageTemp.activeUser = conversationUser
+
+        Log.e("Ray", "setMessageAsHidden messageTemp = ${messageTemp.message}")
 
         adapter?.update(messageTemp)
     }
@@ -4803,25 +5079,88 @@ class ChatActivity :
     private fun isShowMessageDeletionButton(message: ChatMessage): Boolean {
         val isUserAllowedByPrivileges = userAllowedByPrivilages(message)
 
-        val isOlderThanSixHours = message
-            .createdAt
-            .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_DELETE_MESSAGE))
+        // 群主不需要删除
+        var currentUserIsOwner = false
+        if (currentConversation?.type == ConversationEnums.ConversationType.ROOM_GROUP_CALL ||
+            currentConversation?.type == ConversationEnums.ConversationType.ROOM_PUBLIC_CALL) {
+            val isOwnerOrModerator = Participant.ParticipantType.OWNER == currentConversation?.participantType
+            if (isOwnerOrModerator) {
+                // showRecall = true
+                currentUserIsOwner = true
+            }
+        }
+
+        // val isOlderThanSixHours = message
+        //     .createdAt
+        //     .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_DELETE_MESSAGE))
+        // 删除不需要时间限制 modify by ray on 2026/04/23
+        val isOlderThanSixHours = false
         val hasDeleteMessagesUnlimitedCapability = hasSpreedFeatureCapability(
             spreedCapabilities,
             SpreedFeatures.DELETE_MESSAGES_UNLIMITED
         )
 
         return when {
-            !isUserAllowedByPrivileges -> false
+            // 他人消息也可以删除 remove by ray on 2026/04/23
+            // !isUserAllowedByPrivileges -> false
+            currentUserIsOwner -> false
             !hasDeleteMessagesUnlimitedCapability && isOlderThanSixHours -> false
             message.systemMessageType != ChatMessage.SystemMessageType.DUMMY -> false
-            message.isDeleted -> false
+            message.isHidden -> false
             !hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.DELETE_MESSAGES) -> false
             !participantPermissions.hasChatPermission() -> false
             hasDeleteMessagesUnlimitedCapability -> true
             else -> true
         }
     }
+
+    // ... ray add code ...
+    /**
+     * 是否顯示撤回菜單
+     * add by ray on 2026/04/02
+     */
+    private fun isShowMessageRecallButton(message: ChatMessage): Boolean {
+        val isUserAllowedByPrivileges = userAllowedByPrivilages(message)
+
+        // 群聊天时，群主也可以撤回所有消息
+        var currentUserIsOwner = false
+        if (currentConversation?.type == ConversationEnums.ConversationType.ROOM_GROUP_CALL ||
+            currentConversation?.type == ConversationEnums.ConversationType.ROOM_PUBLIC_CALL) {
+            val isOwnerOrModerator = Participant.ParticipantType.OWNER == currentConversation?.participantType
+                // ||
+                // Participant.ParticipantType.MODERATOR == currentConversation?.participantType
+            if (isOwnerOrModerator) {
+                currentUserIsOwner = true
+            }
+        }
+        Log.e("Ray", "currentUserIsOwner =  $currentUserIsOwner")
+
+        // TODO RAY 撤回修改为5分钟
+        val isOlderThanSixHours = message
+            .createdAt
+            .before(Date(System.currentTimeMillis() - AGE_THRESHOLD_FOR_RECALL_MESSAGE))
+        // val hasDeleteMessagesUnlimitedCapability = hasSpreedFeatureCapability(
+        //     spreedCapabilities,
+        //     // TODO RAY 這裏狀態是什麽
+        //     SpreedFeatures.DELETE_MESSAGES_UNLIMITED
+        // )
+        val hasDeleteMessagesUnlimitedCapability = false
+
+        return when {
+            currentUserIsOwner -> true
+            !isUserAllowedByPrivileges -> false
+            !hasDeleteMessagesUnlimitedCapability && isOlderThanSixHours -> false
+            message.systemMessageType != ChatMessage.SystemMessageType.DUMMY -> false
+            // TODO RAY 這裏狀態是什麽
+            message.isDeleted -> false
+            // TODO RAY 這裏狀態是什麽
+            !hasSpreedFeatureCapability(spreedCapabilities, SpreedFeatures.DELETE_MESSAGES) -> false
+            !participantPermissions.hasChatPermission() -> false
+            hasDeleteMessagesUnlimitedCapability -> true
+            else -> true
+        }
+    }
+    // ... ray add code ...
 
     fun userAllowedByPrivilages(message: ChatMessage): Boolean {
         if (conversationUser == null) return false
@@ -5100,6 +5439,7 @@ class ChatActivity :
         private const val GET_ROOM_INFO_DELAY_LOBBY: Long = 5000
         private const val MILLIS_250 = 250L
         private const val AGE_THRESHOLD_FOR_DELETE_MESSAGE: Int = 21600000 // (6 hours in millis = 6 * 3600 * 1000)
+        private const val AGE_THRESHOLD_FOR_RECALL_MESSAGE: Int = 300000 // (5 minutes in millis = 5 * 60 * 1000)
         private const val REQUEST_SHARE_FILE_PERMISSION: Int = 221
         private const val REQUEST_RECORD_AUDIO_PERMISSION = 222
         private const val REQUEST_READ_CONTACT_PERMISSION = 234

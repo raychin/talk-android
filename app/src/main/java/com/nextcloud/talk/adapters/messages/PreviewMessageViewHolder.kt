@@ -27,6 +27,7 @@ import autodagger.AutoInjector
 import com.google.android.material.card.MaterialCardView
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
+import com.nextcloud.talk.adapters.messages.clps.MessageCheckboxHelper
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.ChatActivity
@@ -98,6 +99,15 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
     @Suppress("NestedBlockDepth", "ComplexMethod", "LongMethod")
     override fun onBind(message: ChatMessage) {
         super.onBind(message)
+
+        // 消息多选功能
+        MessageCheckboxHelper.initMessageCheckbox(
+            messageCheckbox = itemView.findViewById(R.id.messageCheckbox),
+            rootView = itemView,
+            message = message,
+            commonMessageInterface = commonMessageInterface
+        )
+
         image.minimumHeight = DisplayUtils.convertDpToPixel(MIN_IMAGE_HEIGHT, context!!).toInt()
 
         if (message.lastEditTimestamp != 0L && !message.isDeleted) {
@@ -107,6 +117,17 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
             time.text = dateUtils.getLocalTimeStringFromTimestamp(message.timestamp)
             messageEditIndicator.visibility = View.GONE
         }
+        if (message.selectedIndividualHashMap!!.containsKey(KEY_MIMETYPE)) {
+            val mimetype = message.selectedIndividualHashMap!![KEY_MIMETYPE]
+            // 判断是否为非图片类型，如果是则直接显示文件图标并阻止图片加载
+            if (!isImageMimetype(mimetype)) {
+                if (image != null && imageLoader != null) {
+                    imageLoader.loadImage(image, "", getPayloadForImageLoader(message))
+                }
+            }
+        }
+
+        time.text = dateUtils.getLocalTimeStringFromTimestamp(message.timestamp)
 
         viewThemeUtils!!.platform.colorCircularProgressBar(progressBar!!, ColorRole.PRIMARY)
         clickView = image
@@ -214,6 +235,16 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
             previewMessageInterface!!.onPreviewMessageLongClick(message)
             true
         }
+    }
+
+    /**
+     * 判断 MIME 类型是否为图片类型
+     */
+    private fun isImageMimetype(mimetype: String?): Boolean {
+        if (mimetype == null) {
+            return false
+        }
+        return mimetype.startsWith("image/")
     }
 
     private fun longClickOnReaction(chatMessage: ChatMessage) {

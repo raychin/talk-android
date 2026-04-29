@@ -22,12 +22,15 @@ import android.view.View
 import android.widget.RelativeLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.text.toSpanned
 import coil.dispose
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.ConversationItem.ConversationItemViewHolder
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.chat.data.model.ChatMessage.MessageType
+import com.nextcloud.talk.chat.data.model.clps.getWeChatStyleDisplayText
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
 import com.nextcloud.talk.data.database.mappers.asModel
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.RvItemConversationWithLastMessageBinding
@@ -357,6 +360,11 @@ class ConversationItem(
 
     private val lastMessageDisplayText: CharSequence
         get() {
+            // 检查是否为 MultiMessage 消息
+            if (chatMessage?.isMultiMessage() == true) {
+                return chatMessage.getWeChatStyleDisplayText()!!.toSpanned()
+            }
+
             if (chatMessage?.getCalculateMessageType() == MessageType.REGULAR_TEXT_MESSAGE ||
                 chatMessage?.getCalculateMessageType() == MessageType.SYSTEM_MESSAGE ||
                 chatMessage?.getCalculateMessageType() == MessageType.SINGLE_LINK_MESSAGE

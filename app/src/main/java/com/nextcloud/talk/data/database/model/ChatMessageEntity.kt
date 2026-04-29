@@ -71,6 +71,7 @@ data class ChatMessageEntity(
     @ColumnInfo(name = "threadTitle") var threadTitle: String? = null,
     @ColumnInfo(name = "threadReplies") var threadReplies: Int? = 0,
     @ColumnInfo(name = "timestamp") var timestamp: Long = 0,
+    @ColumnInfo(name = "hidden", defaultValue = "0") var hidden: Boolean = false,
     @ColumnInfo(name = "pinnedActorType") var pinnedActorType: String? = null,
     @ColumnInfo(name = "pinnedActorId") var pinnedActorId: String? = null,
     @ColumnInfo(name = "pinnedActorDisplayName") var pinnedActorDisplayName: String? = null,

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Nextcloud Talk - Android Client
+  ~
+  ~ SPDX-FileCopyrightText: 2026
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/colorPrimary">
+    <item>
+        <shape>
+            <solid android:color="@color/bg_default" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+</ripple>

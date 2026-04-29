@@ -12,8 +12,11 @@ package com.nextcloud.talk.chat.data.model
 import android.text.TextUtils
 import android.util.Log
 import com.bluelinelabs.logansquare.annotation.JsonIgnore
+import com.google.gson.annotations.SerializedName
 import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
+import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
+import com.nextcloud.talk.chat.data.model.clps.parseAndDisplayMultiMessageTitle
 import com.nextcloud.talk.data.database.model.SendStatus
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.models.json.chat.ChatUtils.Companion.getParsedMessage
@@ -38,6 +41,7 @@ data class ChatMessage(
     var selectedIndividualHashMap: Map<String?, String?>? = null,
 
     var isDeleted: Boolean = false,
+    var isHidden: Boolean = false,
 
     var jsonMessageId: Int = 0,
 
@@ -145,6 +149,11 @@ data class ChatMessage(
     var pinnedUntil: Long? = null,
 
     var sendAt: Int? = null
+    var silent: Boolean = false,
+
+    // 修复引用消息显示问题
+    @SerializedName("parent")
+    var parentMessage: ChatMessage? = null
 
 ) : MessageContentType,
     MessageContentType.Image {
@@ -211,6 +220,10 @@ data class ChatMessage(
 
     @Suppress("ReturnCount")
     fun isLinkPreview(): Boolean {
+        // fix: 合并消息包含链接消息不设为链接消息
+        if (isMultiMessage()) {
+            return false
+        }
         if (CapabilitiesUtil.isLinkPreviewAvailable(activeUser!!)) {
             val regexStringFromServer = activeUser?.capabilities?.coreCapability?.referenceRegex
 
@@ -289,7 +302,12 @@ data class ChatMessage(
 
     override fun getText(): String =
         if (message != null) {
-            getParsedMessage(message, messageParameters)!!
+            // 判断文本消息，并且是合并消息
+            if (isMultiMessage()) {
+                parseAndDisplayMultiMessageTitle().toString()
+            } else {
+                getParsedMessage(message, messageParameters)!!
+            }
         } else {
             ""
         }
@@ -344,7 +362,7 @@ data class ChatMessage(
 
     override fun getSystemMessage(): String = EnumSystemMessageTypeConverter().convertToString(systemMessageType)
 
-    private fun isHashMapEntryEqualTo(map: HashMap<String?, String?>, key: String, searchTerm: String): Boolean =
+    fun isHashMapEntryEqualTo(map: HashMap<String?, String?>, key: String, searchTerm: String): Boolean =
         map != null && MessageDigest.isEqual(map[key]!!.toByteArray(), searchTerm.toByteArray())
 
     // needed a equals and hashcode function to fix detekt errors
@@ -362,6 +380,9 @@ data class ChatMessage(
         get() = "command" == messageType
     val isDeletedCommentMessage: Boolean
         get() = "comment_deleted" == messageType
+    // 单独添加hide
+    val isHiddenCommentMessage: Boolean
+        get() = "comment_hidden" == messageType
 
     enum class MessageType {
         REGULAR_TEXT_MESSAGE,
@@ -419,6 +440,7 @@ data class ChatMessage(
         GUEST_MODERATOR_PROMOTED,
         GUEST_MODERATOR_DEMOTED,
         MESSAGE_DELETED,
+        MESSAGE_HIDDEN,
         MESSAGE_EDITED,
         FILE_SHARED,
         OBJECT_SHARED,

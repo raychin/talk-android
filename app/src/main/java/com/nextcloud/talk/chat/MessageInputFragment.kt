@@ -507,6 +507,7 @@ class MessageInputFragment : Fragment() {
         }
 
         binding.fragmentMessageInputView.button?.setOnClickListener {
+            // 发送按钮点击发送消息 add by ray on 2026/04/20
             submitMessage(false)
         }
 
@@ -538,6 +539,7 @@ class MessageInputFragment : Fragment() {
         }
 
         binding.fragmentMessageInputView.button?.setOnLongClickListener {
+            // 长按发送按钮显示菜单 add by ray on 2026/04/20
             showSendButtonMenu()
             true
         }
@@ -1005,6 +1007,8 @@ class MessageInputFragment : Fragment() {
 
     private fun sendMessage(message: String, sendWithoutNotification: Boolean) {
         messageInputViewModel.sendChatMessage(
+        // 发送文本消息 add by ray on 2026/04/20
+        chatActivity.messageInputViewModel.sendChatMessage(
             credentials = chatActivity.conversationUser!!.getCredentials(),
             url = ApiUtils.getUrlForChat(
                 chatActivity.chatApiVersion,

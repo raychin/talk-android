@@ -152,4 +152,6 @@ interface ChatMessageRepository : LifecycleAwareManager {
     suspend fun deleteScheduledChatMessage(credentials: String, url: String): Flow<Result<GenericOverall>>
 
     suspend fun getScheduledChatMessages(credentials: String, url: String): Flow<Result<List<ChatMessage>>>
+
+    suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long)
 }

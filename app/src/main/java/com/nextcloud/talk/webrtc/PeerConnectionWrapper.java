@@ -123,6 +123,7 @@ public class PeerConnectionWrapper {
 
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServerList);
         configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+//        configuration.iceTransportsType = PeerConnection.IceTransportsType.RELAY;
         peerConnection = peerConnectionFactory.createPeerConnection(configuration, new InitialPeerConnectionObserver());
 
         this.signalingMessageReceiver = signalingMessageReceiver;
@@ -552,6 +553,74 @@ public class PeerConnectionWrapper {
 
         @Override
         public void onIceCandidate(IceCandidate iceCandidate) {
+
+//            Log.e("onIceCandidate: ", iceCandidate.sdp + " over " + peerConnection.hashCode() + " " + sessionId);
+//            Log.e("onIceCandidate: ", peerConnection.toString());
+//            Log.e("onIceCandidate: ", iceCandidate.adapterType.toString());
+//            if (iceCandidate.sdp.contains("host")) {
+//                Log.d("onIceCandidate: ", "host");
+//                return;
+//            }
+
+            /*
+             * 1.host时，不发送信令
+             * 2.提高relay的优先级
+             */
+
+            // 解析ICE candidate类型
+            String candidate = iceCandidate.sdp;
+            String type = "";
+            String[] parts = candidate.split(" ");
+            for (int i = 0; i < parts.length; i++) {
+                if (parts[i].equals("typ")) {
+                    type = parts[i + 1];
+                    break;
+                }
+            }
+
+            // 过滤逻辑
+            if (type.equals("host")) {
+                // 丢弃host类型的candidate
+                return;
+            }
+
+            // 调整优先级
+            String modifiedCandidate = candidate;
+            if (type.equals("relay")) {
+                // 提升relay类型的优先级
+                // 找到优先级字段并修改
+                for (int i = 0; i < parts.length; i++) {
+                    if (i > 0 && parts[i - 1].equals("UDP")) {
+                        // 优先级字段在UDP后面
+                        try {
+                            int priority = Integer.parseInt(parts[i]);
+                            // 提升优先级到最高
+                            parts[i] = String.valueOf(2147483647); // 最大32位整数
+                            modifiedCandidate = String.join(" ", parts);
+                            break;
+                        } catch (NumberFormatException e) {
+                            // 忽略解析错误
+                        }
+                    }
+                }
+            } else if (type.equals("srflx")) {
+                // 降低srflx类型的优先级
+                for (int i = 0; i < parts.length; i++) {
+                    if (i > 0 && parts[i - 1].equals("UDP")) {
+                        // 优先级字段在UDP后面
+                        try {
+                            int priority = Integer.parseInt(parts[i]);
+                            // 降低优先级
+                            parts[i] = String.valueOf(priority / 2);
+                            modifiedCandidate = String.join(" ", parts);
+                            break;
+                        } catch (NumberFormatException e) {
+                            // 忽略解析错误
+                        }
+                    }
+                }
+            }
+
             NCSignalingMessage ncSignalingMessage = createBaseSignalingMessage("candidate");
             NCMessagePayload ncMessagePayload = new NCMessagePayload();
             ncMessagePayload.setType("candidate");
@@ -559,7 +628,8 @@ public class PeerConnectionWrapper {
             NCIceCandidate ncIceCandidate = new NCIceCandidate();
             ncIceCandidate.setSdpMid(iceCandidate.sdpMid);
             ncIceCandidate.setSdpMLineIndex(iceCandidate.sdpMLineIndex);
-            ncIceCandidate.setCandidate(iceCandidate.sdp);
+//            ncIceCandidate.setCandidate(iceCandidate.sdp);
+            ncIceCandidate.setCandidate(modifiedCandidate);
             ncMessagePayload.setIceCandidate(ncIceCandidate);
 
             ncSignalingMessage.setPayload(ncMessagePayload);

@@ -181,7 +181,10 @@ fun ContextChatSuccessView(
                         SideEffect {
                             adapter.addMessages(messages.toMutableList(), true)
                         }
+                        // 悬浮显示日期在消息列表
                         adapter.GetView()
+                        // // 固定显示日期在消息列表
+                        // adapter.GetViewFixed()
                     }
                 }
             }

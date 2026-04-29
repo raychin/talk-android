@@ -96,5 +96,6 @@
     <color name="border_color">#EDEDED</color>
     <color name="black_common">#2B2B2B</color>
     <color name="blue_00499E">#00499E</color>
+    <color name="bg_input_comment">#F5F5F5</color>
 
 </resources>

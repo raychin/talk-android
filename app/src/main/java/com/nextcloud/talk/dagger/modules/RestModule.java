@@ -52,14 +52,17 @@ import okhttp3.Cache;
 import okhttp3.ConnectionSpec;
 import okhttp3.Credentials;
 import okhttp3.Dispatcher;
+import okhttp3.Headers;
 import okhttp3.Interceptor;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.Route;
 import okhttp3.internal.tls.OkHostnameVerifier;
 import okhttp3.logging.HttpLoggingInterceptor;
+import okio.Buffer;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
@@ -244,6 +247,7 @@ public class RestModule {
         @Override
         public Response intercept(@NonNull Chain chain) throws IOException {
             Request original = chain.request();
+
             Request request = original.newBuilder()
                 .header("User-Agent", ApiUtils.getUserAgent())
                 .header("Accept", "application/json")
@@ -251,6 +255,15 @@ public class RestModule {
                 .header("ngrok-skip-browser-warning", "true")
                 .method(original.method(), original.body())
                 .build();
+
+
+
+            // 生成并打印 curl 命令
+            String curlCommand = buildCurl(request);
+            Log.d("RayCURL", "CURL=====================");
+            Log.d("RayCURL", original.url().toString());
+            Log.d("RayCURL", curlCommand);
+            Log.d("RayCURL", "CURL=====================");
 
 //            // 添加apps/notifications/api/v2/push接口断点，查看返回数据
 //            Response response = chain.proceed(request);
@@ -260,6 +273,46 @@ public class RestModule {
 //            return response;
             return chain.proceed(request);
         }
+    }
+
+    private static String buildCurl(Request request) throws IOException {
+        List<String> parts = new ArrayList<>();
+        parts.add("curl");
+
+        // 方法
+        if (!request.method().equals("GET")) {
+            parts.add("-X " + request.method());
+        }
+
+        // 请求头
+        Headers headers = request.headers();
+        for (int i = 0; i < headers.size(); i++) {
+            String name = headers.name(i);
+            String value = headers.value(i);
+            // 跳过 Host 头（curl会自动添加）
+            if (name.equalsIgnoreCase("Host")) {
+                continue;
+            }
+            parts.add("-H \"" + name + ": " + value + "\"");
+        }
+
+        // 请求体
+        RequestBody body = request.body();
+        if (body != null) {
+            Buffer buffer = new Buffer();
+            body.writeTo(buffer);
+            String bodyString = buffer.readString(StandardCharsets.UTF_8);
+            // 转义双引号和反斜杠
+            String escaped = bodyString
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"");
+            parts.add("--data \"" + escaped + "\"");
+        }
+
+        // URL
+        parts.add("\"" + request.url().toString() + "\"");
+
+        return String.join(" ", parts);
     }
 
     public static class HttpAuthenticator implements Authenticator {

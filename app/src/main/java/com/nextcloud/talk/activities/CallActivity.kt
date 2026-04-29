@@ -541,6 +541,14 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun processExtras(extras: Bundle) {
+        /**
+         * 判断是否通话发起人方法总结 add by ray on 2026/03/24
+         * 判断需求	                        方法
+         * 在 CallActivity 中判断当前角色	    isIncomingCallFromNotification — true = 接收人，false = 发起人
+         * 在全局判断是否正在拨号	            ApplicationWideCurrentRoomHolder.getInstance().isDialing
+         * 构造调用方是否为通知	检查 Bundle       是否包含 KEY_FROM_NOTIFICATION_START_CALL 键且值为 true
+         * 如果你需要在某些场景下做区分处理，直接使用 isIncomingCallFromNotification 即可。
+         */
         roomId = extras.getString(KEY_ROOM_ID, "")
         roomToken = extras.getString(KEY_ROOM_TOKEN, "")
         conversationPassword = extras.getString(KEY_CONVERSATION_PASSWORD, "")
@@ -548,8 +556,21 @@ class CallActivity : CallBaseActivity() {
         isVoiceOnlyCall = extras.getBoolean(KEY_CALL_VOICE_ONLY, false)
         isCallWithoutNotification = extras.getBoolean(KEY_CALL_WITHOUT_NOTIFICATION, false)
         canPublishAudioStream = extras.getBoolean(KEY_PARTICIPANT_PERMISSION_CAN_PUBLISH_AUDIO)
+        // // 根据通话类型初始化麦克风状态 --- 1
+        // // 发起通话时默认开启麦克风，来电时也默认开启
+        // microphoneOn = canPublishAudioStream
+        // Log.d("Ray", "canPublishAudioStream = ${canPublishAudioStream}")
+        // Log.d("Ray", "microphoneOn = ${microphoneOn}")
+
         canPublishVideoStream = extras.getBoolean(KEY_PARTICIPANT_PERMISSION_CAN_PUBLISH_VIDEO)
         isModerator = extras.getBoolean(KEY_IS_MODERATOR, false)
+        /**
+         * 判断单人通话 add by ray on 2026/03/24
+         * 场景	                        判断方式
+         * 有 currentConversation 对象	currentConversation.type == ROOM_TYPE_ONE_TO_ONE_CALL
+         * 从 Bundle 恢复	            extras.getBoolean(KEY_ROOM_ONE_TO_ONE, false)
+         * 工具方法	                    ConversationUtils.isLockedOneToOne() 判断是否锁定的单人会话
+         */
         isOneToOneConversation = extras.getBoolean(KEY_ROOM_ONE_TO_ONE, false)
 
         if (extras.containsKey(KEY_FROM_NOTIFICATION_START_CALL)) {
@@ -706,6 +727,13 @@ class CallActivity : CallBaseActivity() {
                 onMicrophoneClick()
                 true
             }
+
+            // // 确保发起通话时默认打开麦克风 --- 1
+            // if (microphoneOn && localStream != null && localStream!!.audioTracks.isNotEmpty()) {
+            //     localStream!!.audioTracks[0].setEnabled(true)
+            //     localCallParticipantModel.isAudioEnabled = true
+            //     binding!!.microphoneButton.setImageResource(R.drawable.ic_mic_white_24px)
+            // }
         } else {
             binding!!.microphoneButton.setOnClickListener {
                 Snackbar.make(binding!!.root, R.string.nc_not_allowed_to_activate_audio, Snackbar.LENGTH_SHORT).show()
@@ -837,6 +865,7 @@ class CallActivity : CallBaseActivity() {
         audioConstraints = MediaConstraints()
         videoConstraints = MediaConstraints()
         localStream = peerConnectionFactory!!.createLocalMediaStream("NCMS")
+        Log.d("Ray", "localStream initialized...")
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
@@ -975,7 +1004,7 @@ class CallActivity : CallBaseActivity() {
         val permissionsToRequest: MutableList<String> = ArrayList()
         val rationaleList: MutableList<String> = ArrayList()
         if (permissionUtil!!.isMicrophonePermissionGranted()) {
-            Log.d(TAG, "Microphone permission already granted")
+            Log.d("Ray", "Microphone permission already granted")
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
             permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
             rationaleList.add(resources.getString(R.string.nc_microphone_permission_hint))
@@ -985,7 +1014,7 @@ class CallActivity : CallBaseActivity() {
 
         if (!isVoiceOnlyCall) {
             if (permissionUtil!!.isCameraPermissionGranted()) {
-                Log.d(TAG, "Camera permission already granted")
+                Log.d("Ray", "Camera permission already granted")
             } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
                 permissionsToRequest.add(Manifest.permission.CAMERA)
                 rationaleList.add(resources.getString(R.string.nc_camera_permission_hint))
@@ -1021,11 +1050,24 @@ class CallActivity : CallBaseActivity() {
         // updateSelfVideoViewPosition(true)
         checkRecordingConsentAndInitiateCall()
 
+        // if (permissionUtil!!.isMicrophonePermissionGranted()) {
+        //     if (!microphoneOn) {
+        //         onMicrophoneClick()
+        //     }
+        // }
         if (permissionUtil!!.isMicrophonePermissionGranted()) {
             CallForegroundService.start(applicationContext, conversationName, intent.extras)
+            Log.d("Ray", "Microphone permission granted, checking if need to enable")
+
             if (!microphoneOn) {
+                Log.d("Ray", "Microphone is off, calling onMicrophoneClick to enable")
                 onMicrophoneClick()
+            } else {
+                Log.d("Ray", "Microphone already on")
+                toggleMedia(true, false)
             }
+        } else {
+            Log.w("Ray", "Microphone permission not granted in prepareCall")
         }
 
         if (isVoiceOnlyCall) {
@@ -1037,6 +1079,7 @@ class CallActivity : CallBaseActivity() {
                 binding!!.cameraButton.visibility = View.GONE
             }
         }
+        Log.d("Ray", "prepareCall completed: microphoneOn=$microphoneOn, videoOn=$videoOn")
     }
 
     private fun showRationaleDialog(permissionToRequest: String, rationale: String) {
@@ -1132,11 +1175,13 @@ class CallActivity : CallBaseActivity() {
         localAudioTrack = peerConnectionFactory!!.createAudioTrack("NCa0", audioSource)
         localAudioTrack!!.setEnabled(false)
         localStream!!.addTrack(localAudioTrack)
+        Log.d("Ray", "microphoneInitialization...")
         localCallParticipantModel.isAudioEnabled = false
     }
 
     @SuppressLint("MissingPermission")
     private fun startMicInputDetection() {
+        Log.d("Ray", "111==micInputAudioRecorder")
         if (permissionUtil!!.isMicrophonePermissionGranted() && micInputAudioRecordThread == null) {
             micInputAudioRecorder = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
@@ -1162,6 +1207,7 @@ class CallActivity : CallBaseActivity() {
             )
             micInputAudioRecordThread!!.start()
         }
+        Log.d("Ray", "micInputAudioRecorder = ${micInputAudioRecorder.state}")
     }
 
     private fun createCameraCapturer(enumerator: CameraEnumerator?): VideoCapturer? {
@@ -1319,6 +1365,7 @@ class CallActivity : CallBaseActivity() {
             if (localStream != null && localStream!!.audioTracks.size > 0) {
                 localStream!!.audioTracks[0].setEnabled(enable)
                 localCallParticipantModel.isAudioEnabled = enable
+                Log.d("Ray", "Toggle audio: $enable")
             }
         }
     }
@@ -1412,6 +1459,9 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun addIceServers(signalingSettingsOverall: SignalingSettingsOverall, apiVersion: Int) {
+        // 清空信令服务
+        iceServers!!.clear()
+
         if (signalingSettingsOverall.ocs!!.settings!!.stunServers != null) {
             val stunServers = signalingSettingsOverall.ocs!!.settings!!.stunServers
             if (apiVersion == ApiUtils.API_V3) {
@@ -1497,6 +1547,8 @@ class CallActivity : CallBaseActivity() {
 
     private fun joinRoomAndCall() {
         callSession = ApplicationWideCurrentRoomHolder.getInstance().session
+        Log.e("Ray", "ApplicationWideCurrentRoomHolder.getInstance().session = ${ApplicationWideCurrentRoomHolder
+            .getInstance().session}")
         val apiVersion = ApiUtils.getConversationApiVersion(conversationUser, intArrayOf(ApiUtils.API_V4, 1))
         Log.d(TAG, "joinRoomAndCall")
         Log.d(TAG, "   baseUrl= $baseUrl")
@@ -1520,7 +1572,7 @@ class CallActivity : CallBaseActivity() {
                         val conversation = roomOverall.ocs!!.data
                         callRecordingViewModel!!.setRecordingState(conversation!!.callRecording)
                         callSession = conversation.sessionId
-                        Log.d(TAG, " new callSession by joinRoom= $callSession")
+                        Log.d("Ray", "joinRoomAndCall new callSession by joinRoom= $callSession")
 
                         setInitialApplicationWideCurrentRoomHolderValues(conversation)
 
@@ -1572,6 +1624,7 @@ class CallActivity : CallBaseActivity() {
                         val conversation = roomOverall.ocs!!.data
                         callRecordingViewModel!!.setRecordingState(conversation!!.callRecording)
                         callSession = conversation.sessionId
+                        Log.e("Ray", "performCall conversation.sessionId = ${conversation.sessionId}", )
 
                         setInitialApplicationWideCurrentRoomHolderValues(conversation)
 
@@ -1580,6 +1633,9 @@ class CallActivity : CallBaseActivity() {
                         if (currentCallStatus !== CallStatus.LEAVING) {
                             if (currentCallStatus !== CallStatus.IN_CONVERSATION) {
                                 setCallState(CallStatus.JOINED)
+
+                                // // 确保加入通话后启用麦克风 --- 1
+                                // enableMicrophoneIfNeeded()
                             }
                             ApplicationWideCurrentRoomHolder.getInstance().isInCall = true
                             ApplicationWideCurrentRoomHolder.getInstance().isDialing = false
@@ -1626,6 +1682,7 @@ class CallActivity : CallBaseActivity() {
         }
 
         val apiVersion = ApiUtils.getCallApiVersion(conversationUser, intArrayOf(ApiUtils.API_V4, 1))
+        Log.e("Ray", "performCall joinCall= ${ApiUtils.getUrlForCall(apiVersion, baseUrl, roomToken!!)}")
         ncApi!!.joinCall(
             credentials,
             ApiUtils.getUrlForCall(apiVersion, baseUrl, roomToken!!),
@@ -1656,6 +1713,27 @@ class CallActivity : CallBaseActivity() {
                 }
             })
     }
+
+    /**
+     * 在成功加入通话后检查并启用麦克风
+     */
+    private fun enableMicrophoneIfNeeded() {
+        if (canPublishAudioStream && permissionUtil!!.isMicrophonePermissionGranted()) {
+            // 如果是发起通话（非来电），默认应该开启麦克风
+            if (!isIncomingCallFromNotification) {
+                microphoneOn = true
+
+                if (localStream != null && localStream!!.audioTracks.isNotEmpty()) {
+                    localStream!!.audioTracks[0].setEnabled(true)
+                    localCallParticipantModel.isAudioEnabled = true
+                    binding!!.microphoneButton.setImageResource(R.drawable.ic_mic_white_24px)
+
+                    Log.d(TAG, "Microphone automatically enabled for outgoing call")
+                }
+            }
+        }
+    }
+    // ... ray add code ...
 
     private fun setInitialApplicationWideCurrentRoomHolderValues(conversation: Conversation) {
         ApplicationWideCurrentRoomHolder.getInstance().userInRoom = conversationUser
@@ -2103,38 +2181,52 @@ class CallActivity : CallBaseActivity() {
 
         // The signaling session is the same as the Nextcloud session only when the MCU is not used.
         var currentSessionId = callSession
+        Log.e("Ray", "webSocketClient!!.sessionId = ${webSocketClient!!.sessionId}")
+        Log.e("Ray", "isOneToOneConversation = $isOneToOneConversation")
+        Log.e("Ray", "hasExternalSignalingServer = $hasExternalSignalingServer")
+
         if (hasMCU) {
             currentSessionId = webSocketClient!!.sessionId
         }
-        else {
-            /**
-             * fix: 修复独立通讯信用服务器接通通话自动退出通话问题问题
-             * TODO RAY 待优化加上信令服务器判断逻辑
-             * add by ray on 2026/03/03
-             */
-            joined.forEach {
-                Log.d("Ray", "   joined: ${it.userId}")
-                if (it.userId == conversationUser.userId) {
-                    it.sessionId = currentSessionId
-                    Log.d("Ray", "   joined: ${it.sessionId}")
+
+        // 另一种方案，判断账户环境conversationUser.baseUrl.toUri().host == "talk.clpsgroup.com.cn"
+        if (hasExternalSignalingServer) {
+            if (isOneToOneConversation) {
+                // 生产环境有信令服务，单人通话需要改为当前webSocketClient的sessionId，保证加入通话正常
+                currentSessionId = webSocketClient!!.sessionId
+            } else {
+                // 多人通话
+                Log.d("Ray", "isIncomingCallFromNotification = ${isIncomingCallFromNotification}")
+                Log.d("Ray", "isOneToOneConversation = ${isOneToOneConversation}")
+                /**
+                 * fix: 修复独立通讯信用服务器接通通话自动退出通话问题问题
+                 * add by ray on 2026/03/03
+                 */
+                joined.forEach {
+                    Log.d("Ray", "   joined: ${it.userId}")
+                    if (it.userId == conversationUser.userId) {
+                        it.sessionId = currentSessionId
+                        Log.d("Ray", "   joined: ${it.sessionId}")
+                    }
                 }
-            }
-            updated.forEach {
-                Log.d("Ray", "   updated: ${it.userId}")
-                if (it.userId == conversationUser.userId) {
-                    it.sessionId = currentSessionId
-                    Log.d("Ray", "   updated: ${it.sessionId}")
+                updated.forEach {
+                    Log.d("Ray", "   updated: ${it.userId}")
+                    if (it.userId == conversationUser.userId) {
+                        it.sessionId = currentSessionId
+                        Log.d("Ray", "   updated: ${it.sessionId}")
+                    }
                 }
-            }
-            unchanged.forEach {
-                Log.d("Ray", "   unchanged: ${it.userId}")
-                if (it.userId == conversationUser.userId) {
-                    it.sessionId = currentSessionId
-                    Log.d("Ray", "   unchanged: ${it.sessionId}")
+                unchanged.forEach {
+                    Log.d("Ray", "   unchanged: ${it.userId}")
+                    if (it.userId == conversationUser.userId) {
+                        it.sessionId = currentSessionId
+                        Log.d("Ray", "   unchanged: ${it.sessionId}")
+                    }
                 }
+                Log.d("Ray", "---------------------------------------------")
             }
         }
-        Log.d(TAG, "   currentSessionId is $currentSessionId")
+        Log.d("Ray", "   currentSessionId is $currentSessionId")
 
         val participantsInCall: MutableList<Participant> = ArrayList()
         participantsInCall.addAll(joined)
@@ -2175,6 +2267,15 @@ class CallActivity : CallBaseActivity() {
             ApplicationWideCurrentRoomHolder.getInstance().isInCall
         ) {
             Log.d(TAG, "Most probably a moderator ended the call for all.")
+            hangup(shutDownView = true, endCallForAll = false)
+            return
+        }
+
+        /**
+         * feat: 一对一通话，对方挂断后自动挂断 add by ray on 2026/03/24
+         */
+        if (isOneToOneConversation && left.isNotEmpty()) {
+            Log.d("Ray", "isOneToOneConversation left hangup call")
             hangup(shutDownView = true, endCallForAll = false)
             return
         }

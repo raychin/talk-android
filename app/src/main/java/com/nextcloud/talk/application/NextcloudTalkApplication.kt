@@ -12,6 +12,7 @@ package com.nextcloud.talk.application
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
 import android.util.Log
@@ -120,6 +121,31 @@ class NextcloudTalkApplication :
         } catch (e: UnsatisfiedLinkError) {
             Log.w(TAG, e)
         }
+        try {
+            val builder = PeerConnectionFactory.InitializationOptions.builder(this)
+                .setFieldTrials("WebRTC-Audio-Red-For-Opus/Enabled/")
+
+            if (isHuaweiDevice()) {
+                builder.setFieldTrials(
+                    "WebRTC-Audio-Red-For-Opus/Enabled/" +
+                        "WebRTC-Audio-SpeculativeUpscale/Disabled/"
+                )
+                Log.d("Ray", "Applied Huawei-specific WebRTC optimizations")
+            }
+
+            PeerConnectionFactory.initialize(builder.createInitializationOptions())
+            Log.d("Ray", "WebRTC initialized successfully")
+        } catch (e: UnsatisfiedLinkError) {
+            Log.e("Ray", "WebRTC initialization failed: UnsatisfiedLinkError", e)
+        } catch (e: Exception) {
+            Log.e("Ray", "WebRTC initialization failed", e)
+        }
+    }
+    private fun isHuaweiDevice(): Boolean {
+        return Build.MANUFACTURER.lowercase().contains("huawei") ||
+            Build.MANUFACTURER.lowercase().contains("honor") ||
+            Build.BRAND.lowercase().contains("huawei") ||
+            Build.BRAND.lowercase().contains("honor")
     }
 
     override val workManagerConfiguration: Configuration
