@@ -265,6 +265,7 @@ data class MessageMultiItem(
             holder.binding.messageContent.text = processedMessageText
         }
 
+        holder.binding.messageReference.visibility = View.GONE
         // 合并消息支持显示连接消息
         if (messageEntry.isLinkPreview()) {
             holder.binding.messageReference.visibility = View.VISIBLE
