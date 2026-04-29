@@ -122,6 +122,8 @@ class ChatBottomMessageMenuFragment : Fragment() {
         // 转换为简化版本
         val simplifiedMessages = selectedMessages
             .sortedBy { it.timestamp * 1000 }
+            // 根据 jsonMessageId 过滤掉重复的消息，只保留每个 ID 的第一条消息 add ray on 2026/04/29
+            .distinctBy { it.jsonMessageId }
             .map { msg ->
                 // 修复引用消息显示问题
                 val parentMsg = extractParentMessageSafely(msg)
