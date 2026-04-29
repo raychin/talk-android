@@ -17,7 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.nextcloud.talk.R
 // import autodagger.AutoInjector
 // import com.nextcloud.talk.application.NextcloudTalkApplication
@@ -135,9 +135,17 @@ class ChatBottomMessageMenuFragment : Fragment() {
                     actorType = msg.actorType,
                     actorId = msg.actorId,
                     messageType = msg.messageType,
-                    messageParameters = msg.messageParameters,
+                    messageParameters = if (msg.messageParameters != null) {
+                        msg.messageParameters
+                    } else {
+                        HashMap()
+                    },
                     parentMessageId = msg.parentMessageId,
-                    reactions = msg.reactions,
+                    reactions = if (msg.reactions != null) {
+                        msg.reactions
+                    } else {
+                        LinkedHashMap()
+                    },
                     isTemporary = msg.isTemporary,
                     referenceId = msg.referenceId,
                     id = msg.id,
@@ -151,7 +159,10 @@ class ChatBottomMessageMenuFragment : Fragment() {
             }
             .toCollection(ArrayList())
         multiMessage.message = simplifiedMessages
-        return Gson().toJson(multiMessage)
+        // fix: 当 messageParameters 为 null 时，Gson 序列化会跳过这个字段，messageParameters 为空 HashMap，也会在 JSON 中保留该字段（显示为"messageParameters": {}）
+        val gson = GsonBuilder().serializeNulls().create()
+        return gson.toJson(multiMessage)
+        // return Gson().toJson(multiMessage)
     }
 
     /**
@@ -172,9 +183,17 @@ class ChatBottomMessageMenuFragment : Fragment() {
                     actorType = parent.actorType,
                     actorId = parent.actorId,
                     messageType = parent.messageType,
-                    messageParameters = parent.messageParameters,
+                    messageParameters = if (parent.messageParameters != null) {
+                        parent.messageParameters
+                    } else {
+                        HashMap()
+                    },
                     parentMessageId = parent.parentMessageId,
-                    reactions = parent.reactions,
+                    reactions = if (parent.reactions != null) {
+                        parent.reactions
+                    } else {
+                        LinkedHashMap()
+                    },
                     isTemporary = parent.isTemporary,
                     referenceId = parent.referenceId,
                     id = parent.id,
@@ -183,7 +202,8 @@ class ChatBottomMessageMenuFragment : Fragment() {
                     markdown = parent.renderMarkdown,
                     systemMessage = parent.getSystemMessage(),
                     token = parent.token,
-                    parent = extractParentMessageSafely(parent)
+                    // parent = extractParentMessageSafely(parent)
+                    parent = null
                 )
             }
         } else {
