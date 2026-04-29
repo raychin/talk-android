@@ -24,6 +24,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.talk.R
 import com.nextcloud.talk.adapters.items.FlexibleItemViewType
 import com.nextcloud.talk.adapters.items.GenericTextHeaderItem
+import com.nextcloud.talk.adapters.messages.LinkPreview
+import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity
 import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_COUNT
 import com.nextcloud.talk.chat.clps.MultiMessageDetailActivity.Companion.KEY_MESSAGE_ID
@@ -44,6 +46,7 @@ import com.nextcloud.talk.utils.DrawableUtils.getDrawableResourceIdForMimeType
 import com.nextcloud.talk.utils.FileViewerUtils
 import com.nextcloud.talk.utils.Mimetype
 import com.nextcloud.talk.utils.message.MessageUtils
+import com.stfalcon.chatkit.commons.models.IMessage
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import eu.davidea.flexibleadapter.items.IFilterable
@@ -56,10 +59,12 @@ data class MessageMultiItem(
     private val currentUser: User,
     val messageEntry: ChatMessage,
     var showHeader: Boolean = false,
-    private val viewThemeUtils: ViewThemeUtils
+    private val viewThemeUtils: ViewThemeUtils,
+    val ncApi: NcApi
 ) : AbstractFlexibleItem<MessageMultiItem.ViewHolder>(),
     IFilterable<String>,
     ISectionable<MessageMultiItem.ViewHolder, GenericTextHeaderItem> {
+
     class ViewHolder(view: View, adapter: FlexibleAdapter<*>) : FlexibleViewHolder(view, adapter) {
         var binding: RvItemMultiMessageBinding = RvItemMultiMessageBinding.bind(view)
     }
@@ -259,6 +264,25 @@ data class MessageMultiItem(
             Log.e("Ray", "multi || $processedMessageText")
             holder.binding.messageContent.text = processedMessageText
         }
+
+        // 合并消息支持显示连接消息
+        if (messageEntry.isLinkPreview()) {
+            holder.binding.messageReference.visibility = View.VISIBLE
+            LinkPreview().showLink(
+                messageEntry,
+                ncApi,
+                holder.binding.referenceInclude,
+                context
+            )
+            holder.binding.referenceInclude.referenceWrapper.setOnLongClickListener { l: View? ->
+                openMessageActionsDialog(messageEntry)
+                true
+            }
+        }
+    }
+    private fun openMessageActionsDialog(iMessage: IMessage?) {
+        val message = iMessage as ChatMessage
+        // TODO RAY 仿照openMessageActionsDialog
     }
 
     /**

@@ -149,12 +149,28 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="...this is a message result from unified search, which includes ellipses..." />
 
+    <LinearLayout
+        android:id="@+id/message_reference"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@+id/conversation_top_container"
+        app:layout_constraintTop_toBottomOf="@+id/message_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="start"
+        android:layout_marginTop="6dp"
+        android:visibility="gone"
+        tools:ignore="MissingConstraints">
+        <include
+            android:id="@+id/referenceInclude"
+            layout="@layout/reference_inside_message" />
+    </LinearLayout>
+
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/bottom_barrier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="message_content, thumbnail_img, thumbnail_size,message_excerpt" />
+        app:constraint_referenced_ids="message_content, message_reference, thumbnail_img, thumbnail_size,message_excerpt" />
 
     <View
         android:id="@+id/divider"

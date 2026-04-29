@@ -14,21 +14,29 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import autodagger.AutoInjector
 import com.google.gson.Gson
 import com.nextcloud.talk.R
 import com.nextcloud.talk.activities.BaseActivity
 import com.nextcloud.talk.adapters.items.clps.MessageMultiItem
+import com.nextcloud.talk.api.NcApi
+import com.nextcloud.talk.application.NextcloudTalkApplication
+import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.data.model.clps.MultiMessage
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ActivityMessageMultiBinding
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
+import javax.inject.Inject
 
 /**
  * MultiMessage 详情页面，显示完整的转发消息列表
  */
+@AutoInjector(NextcloudTalkApplication::class)
 class MultiMessageDetailActivity : BaseActivity() {
 
+    @Inject
+    lateinit var ncApi: NcApi
     private lateinit var binding: ActivityMessageMultiBinding
     private lateinit var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>
     private val itemsList = mutableListOf<AbstractFlexibleItem<*>>()
@@ -49,6 +57,7 @@ class MultiMessageDetailActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sharedApplication!!.componentApplication.inject(this)
         binding = ActivityMessageMultiBinding.inflate(layoutInflater)
         setSupportActionBar(binding.toolbar)
         setContentView(binding.root)
@@ -118,7 +127,7 @@ class MultiMessageDetailActivity : BaseActivity() {
 
             // 添加消息列表项
             multiMessage.message?.forEach { chatMessage ->
-                itemsList.add(MessageMultiItem(this, user, chatMessage, false, viewThemeUtils))
+                itemsList.add(MessageMultiItem(this, user, chatMessage, false, viewThemeUtils, ncApi))
             }
 
             if (adapter != null) {

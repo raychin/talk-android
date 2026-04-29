@@ -30,7 +30,7 @@
 
     <LinearLayout
         android:id="@+id/referenceMetadataContainer"
-        android:layout_width="@dimen/link_preview_width"
+        android:layout_width="@dimen/link_preview_text_width"
         android:layout_height="wrap_content"
         android:layout_below="@id/referenceThumbImage"
         android:background="@drawable/link_text_background"

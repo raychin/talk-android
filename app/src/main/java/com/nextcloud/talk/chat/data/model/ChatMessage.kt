@@ -205,6 +205,10 @@ data class ChatMessage(
 
     @Suppress("ReturnCount")
     fun isLinkPreview(): Boolean {
+        // fix: 合并消息包含链接消息不设为链接消息
+        if (isMultiMessage()) {
+            return false
+        }
         if (CapabilitiesUtil.isLinkPreviewAvailable(activeUser!!)) {
             val regexStringFromServer = activeUser?.capabilities?.coreCapability?.referenceRegex
 
