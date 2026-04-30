@@ -148,8 +148,7 @@ data class ChatMessage(
 
     var pinnedUntil: Long? = null,
 
-    var sendAt: Int? = null
-    var silent: Boolean = false,
+    var sendAt: Int? = null,
 
     // 修复引用消息显示问题
     @SerializedName("parent")

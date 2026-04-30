@@ -366,7 +366,7 @@ class ConversationsListActivity :
         isRefreshing = false
 
         // 调用 ViewModel 获取数据
-        conversationsListViewModel.getRooms()
+        conversationsListViewModel.getRooms(currentUser!!)
 
         Log.d(TAG, "Silent fetch of conversations triggered")
     }

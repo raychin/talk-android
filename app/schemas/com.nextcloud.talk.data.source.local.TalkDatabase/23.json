@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 23,
-    "identityHash": "8a3204bf7bc03a56a779a487c00870cd",
+    "identityHash": "2361f26da36c1790aa84cc6cfc7c4940",
     "entities": [
       {
         "tableName": "User",
@@ -122,7 +122,7 @@
       },
       {
         "tableName": "Conversations",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`internalId` TEXT NOT NULL, `accountId` INTEGER NOT NULL, `token` TEXT NOT NULL, `displayName` TEXT NOT NULL, `actorId` TEXT NOT NULL, `actorType` TEXT NOT NULL, `avatarVersion` TEXT NOT NULL, `callFlag` INTEGER NOT NULL, `callRecording` INTEGER NOT NULL, `callStartTime` INTEGER NOT NULL, `canDeleteConversation` INTEGER NOT NULL, `canLeaveConversation` INTEGER NOT NULL, `canStartCall` INTEGER NOT NULL, `description` TEXT NOT NULL, `hasCall` INTEGER NOT NULL, `hasPassword` INTEGER NOT NULL, `isCustomAvatar` INTEGER NOT NULL, `isFavorite` INTEGER NOT NULL, `lastActivity` INTEGER NOT NULL, `lastCommonReadMessage` INTEGER NOT NULL, `lastMessage` TEXT, `lastPing` INTEGER NOT NULL, `lastReadMessage` INTEGER NOT NULL, `lobbyState` TEXT NOT NULL, `lobbyTimer` INTEGER NOT NULL, `messageExpiration` INTEGER NOT NULL, `name` TEXT NOT NULL, `notificationCalls` INTEGER NOT NULL, `notificationLevel` TEXT NOT NULL, `objectType` TEXT NOT NULL, `objectId` TEXT NOT NULL, `participantType` TEXT NOT NULL, `permissions` INTEGER NOT NULL, `readOnly` TEXT NOT NULL, `recordingConsent` INTEGER NOT NULL, `remoteServer` TEXT, `remoteToken` TEXT, `sessionId` TEXT NOT NULL, `status` TEXT, `statusClearAt` INTEGER, `statusIcon` TEXT, `statusMessage` TEXT, `type` TEXT NOT NULL, `unreadMention` INTEGER NOT NULL, `unreadMentionDirect` INTEGER NOT NULL, `unreadMessages` INTEGER NOT NULL, `hasArchived` INTEGER NOT NULL, `hasSensitive` INTEGER NOT NULL, `hasImportant` INTEGER NOT NULL, `hiddenPinnedId` INTEGER, `lastPinnedId` INTEGER, `messageDraft` TEXT, PRIMARY KEY(`internalId`), FOREIGN KEY(`accountId`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`internalId` TEXT NOT NULL, `accountId` INTEGER NOT NULL, `token` TEXT NOT NULL, `displayName` TEXT NOT NULL, `actorId` TEXT NOT NULL, `actorType` TEXT NOT NULL, `avatarVersion` TEXT NOT NULL, `callFlag` INTEGER NOT NULL, `callRecording` INTEGER NOT NULL, `callStartTime` INTEGER NOT NULL, `canDeleteConversation` INTEGER NOT NULL, `canLeaveConversation` INTEGER NOT NULL, `canStartCall` INTEGER NOT NULL, `description` TEXT NOT NULL, `hasCall` INTEGER NOT NULL, `hasPassword` INTEGER NOT NULL, `isCustomAvatar` INTEGER NOT NULL, `isFavorite` INTEGER NOT NULL, `lastActivity` INTEGER NOT NULL, `lastCommonReadMessage` INTEGER NOT NULL, `lastMessage` TEXT, `lastPing` INTEGER NOT NULL, `lastReadMessage` INTEGER NOT NULL, `lobbyState` TEXT NOT NULL, `lobbyTimer` INTEGER NOT NULL, `messageExpiration` INTEGER NOT NULL, `name` TEXT NOT NULL, `notificationCalls` INTEGER NOT NULL, `notificationLevel` TEXT NOT NULL, `objectType` TEXT NOT NULL, `objectId` TEXT NOT NULL, `participantType` TEXT NOT NULL, `permissions` INTEGER NOT NULL, `readOnly` TEXT NOT NULL, `recordingConsent` INTEGER NOT NULL, `remoteServer` TEXT, `remoteToken` TEXT, `sessionId` TEXT NOT NULL, `status` TEXT, `statusClearAt` INTEGER, `statusIcon` TEXT, `statusMessage` TEXT, `type` TEXT NOT NULL, `unreadMention` INTEGER NOT NULL, `unreadMentionDirect` INTEGER NOT NULL, `unreadMessages` INTEGER NOT NULL, `hasArchived` INTEGER NOT NULL, `hasSensitive` INTEGER NOT NULL, `hasImportant` INTEGER NOT NULL, `hiddenPinnedId` INTEGER, `lastPinnedId` INTEGER, `messageDraft` TEXT, `hiddenUpcomingEvent` TEXT, PRIMARY KEY(`internalId`), FOREIGN KEY(`accountId`) REFERENCES `User`(`id`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "internalId",
@@ -425,6 +425,11 @@
             "fieldPath": "messageDraft",
             "columnName": "messageDraft",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hiddenUpcomingEvent",
+            "columnName": "hiddenUpcomingEvent",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -460,7 +465,7 @@
       },
       {
         "tableName": "ChatMessages",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`internalId` TEXT NOT NULL, `accountId` INTEGER NOT NULL, `token` TEXT NOT NULL, `id` INTEGER NOT NULL, `internalConversationId` TEXT NOT NULL, `threadId` INTEGER, `isThread` INTEGER NOT NULL, `actorDisplayName` TEXT NOT NULL, `message` TEXT NOT NULL, `actorId` TEXT NOT NULL, `actorType` TEXT NOT NULL, `deleted` INTEGER NOT NULL, `expirationTimestamp` INTEGER NOT NULL, `isReplyable` INTEGER NOT NULL, `isTemporary` INTEGER NOT NULL, `lastEditActorDisplayName` TEXT, `lastEditActorId` TEXT, `lastEditActorType` TEXT, `lastEditTimestamp` INTEGER, `markdown` INTEGER, `messageParameters` TEXT, `messageType` TEXT NOT NULL, `parent` INTEGER, `reactions` TEXT, `reactionsSelf` TEXT, `referenceId` TEXT, `sendStatus` TEXT, `silent` INTEGER NOT NULL, `systemMessage` TEXT NOT NULL, `threadTitle` TEXT, `threadReplies` INTEGER, `timestamp` INTEGER NOT NULL, `pinnedActorType` TEXT, `pinnedActorId` TEXT, `pinnedActorDisplayName` TEXT, `pinnedAt` INTEGER, `pinnedUntil` INTEGER, `sendAt` INTEGER, PRIMARY KEY(`internalId`), FOREIGN KEY(`internalConversationId`) REFERENCES `Conversations`(`internalId`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`internalId` TEXT NOT NULL, `accountId` INTEGER NOT NULL, `token` TEXT NOT NULL, `id` INTEGER NOT NULL, `internalConversationId` TEXT NOT NULL, `threadId` INTEGER, `isThread` INTEGER NOT NULL, `actorDisplayName` TEXT NOT NULL, `message` TEXT NOT NULL, `actorId` TEXT NOT NULL, `actorType` TEXT NOT NULL, `deleted` INTEGER NOT NULL, `expirationTimestamp` INTEGER NOT NULL, `isReplyable` INTEGER NOT NULL, `isTemporary` INTEGER NOT NULL, `lastEditActorDisplayName` TEXT, `lastEditActorId` TEXT, `lastEditActorType` TEXT, `lastEditTimestamp` INTEGER, `markdown` INTEGER, `messageParameters` TEXT, `messageType` TEXT NOT NULL, `parent` INTEGER, `reactions` TEXT, `reactionsSelf` TEXT, `referenceId` TEXT, `sendStatus` TEXT, `silent` INTEGER NOT NULL, `systemMessage` TEXT NOT NULL, `threadTitle` TEXT, `threadReplies` INTEGER, `timestamp` INTEGER NOT NULL, `hidden` INTEGER NOT NULL DEFAULT 0, `pinnedActorType` TEXT, `pinnedActorId` TEXT, `pinnedActorDisplayName` TEXT, `pinnedAt` INTEGER, `pinnedUntil` INTEGER, `sendAt` INTEGER, PRIMARY KEY(`internalId`), FOREIGN KEY(`internalConversationId`) REFERENCES `Conversations`(`internalId`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "internalId",
@@ -641,6 +646,13 @@
             "notNull": true
           },
           {
+            "fieldPath": "hidden",
+            "columnName": "hidden",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
             "fieldPath": "pinnedActorType",
             "columnName": "pinnedActorType",
             "affinity": "TEXT"
@@ -795,7 +807,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a3204bf7bc03a56a779a487c00870cd')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2361f26da36c1790aa84cc6cfc7c4940')"
     ]
   }
 }

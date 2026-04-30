@@ -63,7 +63,7 @@ class MultiMessageDetailActivity : BaseActivity() {
         setContentView(binding.root)
         rootView= binding.root
 
-        user = currentUserProvider.currentUser.blockingGet()
+        user = currentUserProviderOld.currentUser.blockingGet()
 
         // chatViewModel = ViewModelProvider(this, viewModelFactory)[ChatViewModel::class.java]
 

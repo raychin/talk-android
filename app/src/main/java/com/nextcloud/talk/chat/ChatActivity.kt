@@ -581,10 +581,7 @@ class ChatActivity :
 
                     messageInputFragment = getMessageInputFragment()
                     messageInputViewModel.setData(chatViewModel.getChatRepository())
-        messageInputFragment = getMessageInputFragment()
-        chatBottomMessageMenuFragment = getChatBottomMessageMenuFragment()
-        messageInputViewModel = ViewModelProvider(this, viewModelFactory)[MessageInputViewModel::class.java]
-        messageInputViewModel.setData(chatViewModel.getChatRepository())
+                    chatBottomMessageMenuFragment = getChatBottomMessageMenuFragment()
 
                     initObservers()
 

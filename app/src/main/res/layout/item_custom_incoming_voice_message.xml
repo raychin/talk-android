@@ -18,13 +18,6 @@
     android:layout_marginEnd="@dimen/standard_margin"
     android:layout_marginBottom="2dp">
 
-    <ImageView
-        android:id="@id/messageUserAvatar"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignParentTop="true"
-        android:layout_marginEnd="8dp"
-        android:contentDescription="@string/avatar" />
     <CheckBox
         android:id="@+id/messageCheckbox"
         android:layout_width="wrap_content"
@@ -39,14 +32,14 @@
         android:focusable="false"
         android:contentDescription="@string/app_name"/>
 
-        <ImageView
-            android:id="@id/messageUserAvatar"
-            android:layout_toEndOf="@id/messageCheckbox"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentTop="true"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="@string/avatar" />
+    <ImageView
+        android:id="@id/messageUserAvatar"
+        android:layout_toEndOf="@id/messageCheckbox"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@string/avatar" />
 
     <androidx.emoji2.widget.EmojiTextView
         android:id="@+id/messageAuthor"

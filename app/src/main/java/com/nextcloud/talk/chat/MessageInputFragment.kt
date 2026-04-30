@@ -1008,7 +1008,7 @@ class MessageInputFragment : Fragment() {
     private fun sendMessage(message: String, sendWithoutNotification: Boolean) {
         messageInputViewModel.sendChatMessage(
         // 发送文本消息 add by ray on 2026/04/20
-        chatActivity.messageInputViewModel.sendChatMessage(
+        // chatActivity.messageInputViewModel.sendChatMessage(
             credentials = chatActivity.conversationUser!!.getCredentials(),
             url = ApiUtils.getUrlForChat(
                 chatActivity.chatApiVersion,

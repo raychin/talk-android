@@ -20,6 +20,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.text.toSpanned
 import androidx.lifecycle.lifecycleScope
 import autodagger.AutoInjector
 import coil.load
@@ -62,7 +63,6 @@ import com.nextcloud.talk.utils.message.MessageCheckboxUtils.addPlainTextLine
 import com.nextcloud.talk.utils.message.MessageCheckboxUtils.matchCheckbox
 import com.nextcloud.talk.utils.message.MessageCheckboxUtils.updateMessageWithCheckboxStates
 import com.nextcloud.talk.utils.bundle.BundleKeys
-import com.nextcloud.talk.utils.database.user.CurrentUserProviderNew
 import com.nextcloud.talk.utils.message.MessageUtils
 import com.stfalcon.chatkit.messages.MessageHolders.OutcomingTextMessageViewHolder
 import kotlinx.coroutines.CoroutineScope

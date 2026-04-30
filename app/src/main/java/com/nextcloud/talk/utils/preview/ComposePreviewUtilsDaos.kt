@@ -66,9 +66,6 @@ class DummyChatMessagesDaoImpl : ChatMessagesDao {
         /* */
     }
 
-    override fun updateChatMessage(message: ChatMessageEntity) {
-        /* */
-    }
     override suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long) { /* */ }
 
     override fun updateChatMessage(message: ChatMessageEntity) { /* */ }

@@ -19,6 +19,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import androidx.core.text.toSpanned
 import autodagger.AutoInjector
 import coil.load
 import com.google.android.flexbox.FlexboxLayout
@@ -57,7 +58,6 @@ import com.nextcloud.talk.utils.message.MessageCheckboxUtils.addPlainTextLine
 import com.nextcloud.talk.utils.message.MessageCheckboxUtils.matchCheckbox
 import com.nextcloud.talk.utils.message.MessageCheckboxUtils.updateMessageWithCheckboxStates
 import com.nextcloud.talk.utils.bundle.BundleKeys
-import com.nextcloud.talk.utils.database.user.CurrentUserProviderNew
 import com.nextcloud.talk.utils.message.MessageUtils
 import com.nextcloud.talk.utils.preferences.AppPreferences
 import com.stfalcon.chatkit.messages.MessageHolders

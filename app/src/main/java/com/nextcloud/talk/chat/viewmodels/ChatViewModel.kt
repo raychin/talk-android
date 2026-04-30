@@ -629,7 +629,6 @@ class ChatViewModel @Inject constructor(
                     viewModelScope.launch {
                         try {
                             val messageId = t.ocs?.data?.id?.toLong()
-                            val currentUser = userProvider.currentUser.blockingGet()
                             val internalConversationId = "${currentUser.id}@$chatRoomToken"
 
                             if (messageId != null) {

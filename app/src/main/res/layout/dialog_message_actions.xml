@@ -327,7 +327,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@null"
-                    android:paddingStart="@dimen/standard_padding"
+                    android:paddingStart="@dimen/standard_dialog_padding"
                     android:paddingEnd="@dimen/zero"
                     android:src="@drawable/select24"
                     app:tint="@color/high_emphasis_menu_icon" />
@@ -691,7 +691,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@null"
-                    android:paddingStart="@dimen/standard_padding"
+                    android:paddingStart="@dimen/standard_dialog_padding"
                     android:paddingEnd="@dimen/zero"
                     android:src="@drawable/icon_c_recall24"
                     app:tint="@color/high_emphasis_menu_icon" />
