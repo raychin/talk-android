@@ -2654,6 +2654,9 @@ class ChatActivity :
     }
 
     private fun scrollToAndCenterMessageWithId(messageId: String) {
+        if (selectorMode) {
+            return
+        }
         adapter?.let {
             val position = it.getMessagePositionByIdInReverse(messageId)
             if (position != -1) {
@@ -3070,7 +3073,9 @@ class ChatActivity :
             mentionAutocomplete?.dismissPopup()
         }
         // TODO RAY 性能问题，所以清空？导致回到页面需要执行initAdapter
-        adapter = null
+        if (!selectorMode) {
+            adapter = null
+        }
     }
 
     private fun isActivityNotChangingConfigurations(): Boolean = !isChangingConfigurations
@@ -4294,10 +4299,15 @@ class ChatActivity :
 
     fun forwardSelectorMode(showForward: Boolean) {
         selectorMode = showForward
+
+        // 只有在退出选择模式时才清空数据，进入时保留数据
+        if (!showForward) {
+            selectedMessageIds.clear()
+            selectedMessages.clear()
+        }
         adapter?.setSelectionMode(showForward, selectedMessageIds, selectedMessages)
-        selectedMessageIds.clear()
-        selectedMessages.clear()
         // adapter?.isSelectionMode = showForward
+
         binding.chatTitleMessagesSelector.root.visibility = if (showForward) View.VISIBLE else View.GONE
         binding.chatToolbar.visibility = if (showForward) View.GONE else View.VISIBLE
         binding.chatTitleMessagesSelector.cancelView.setOnClickListener {

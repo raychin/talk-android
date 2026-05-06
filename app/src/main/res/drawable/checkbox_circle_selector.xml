@@ -10,14 +10,6 @@
     <!-- 选中状态：蓝色实心圆 + 对勾 -->
     <item android:state_checked="true">
         <layer-list>
-<!--            <item>-->
-<!--                <shape android:shape="oval">-->
-<!--                    <solid android:color="#0088FF" />-->
-<!--                    <size-->
-<!--                        android:width="24dp"-->
-<!--                        android:height="24dp" />-->
-<!--                </shape>-->
-<!--            </item>-->
             <item
                 android:gravity="center"
                 android:width="24dp"
@@ -25,29 +17,13 @@
                 android:drawable="@drawable/checkbox_circle_blue" />
         </layer-list>
     </item>
-    <item android:state_selected="true">
-        <layer-list>
-            <!--            <item>-->
-            <!--                <shape android:shape="oval">-->
-            <!--                    <solid android:color="#0088FF" />-->
-            <!--                    <size-->
-            <!--                        android:width="24dp"-->
-            <!--                        android:height="24dp" />-->
-            <!--                </shape>-->
-            <!--            </item>-->
-            <item
-                android:gravity="center"
-                android:width="24dp"
-                android:height="24dp"
-                android:drawable="@drawable/checkbox_circle_blue" />
-        </layer-list>
-    </item>
-    <!-- 未选中状态：蓝色边框圆形 -->
-    <item>
+
+    <!-- 未选中状态：灰色空圆圈（无对勾） -->
+    <item android:state_checked="false">
         <shape android:shape="oval">
             <stroke
                 android:width="2dp"
-                android:color="#0088FF" />
+                android:color="#BDBDBD" />
             <solid android:color="@android:color/transparent" />
             <size
                 android:width="22dp"

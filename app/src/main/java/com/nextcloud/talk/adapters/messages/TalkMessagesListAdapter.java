@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import androidx.recyclerview.widget.DiffUtil;
+
 public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAdapter<M> {
     private final ChatActivity chatActivity;
 
@@ -57,7 +59,8 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
                 // 添加选择消息数据
                 selectedMessages.addAll(messages);
             }
-            notifyDataSetChanged();
+            // 使用 DiffUtil 优化刷新
+            refreshWithDiffUtil();
             if (selectionChangeListener != null) {
                 selectionChangeListener.onSelectionModeChanged(selectionMode);
             }
@@ -71,7 +74,8 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
                 selectedMessageIds.clear();
                 selectedMessages.clear();
             }
-            notifyDataSetChanged();
+            // 使用 DiffUtil 优化刷新
+            refreshWithDiffUtil();
             if (selectionChangeListener != null) {
                 selectionChangeListener.onSelectionModeChanged(selectionMode);
             }
@@ -148,6 +152,16 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
         selectedMessageIds.clear();
         selectedMessages.clear();
         setSelectionMode(false);
+
+        // 先保存需要更新的消息ID列表
+        List<String> idsToClear = new ArrayList<>(selectedMessageIds);
+        idsToClear.forEach(id -> {
+            // 使用 notifyItemChanged 更新该位置的 UI
+            int position = findMessagePositionById(id);
+            if (position >= 0) {
+                notifyItemChanged(position);
+            }
+        });
     }
 
     private void updateSelectionUI(View itemView, int position) {
@@ -170,6 +184,86 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
         if (checkBox != null) {
             checkBox.setChecked(isSelected);
         }
+    }
+
+    /**
+     * 查找消息在列表中的位置
+     */
+    private int findMessagePositionById(String messageId) {
+        if (items == null || messageId == null) {
+            return -1;
+        }
+
+        for (int i = 0; i < items.size(); i++) {
+            ChatMessage message = (ChatMessage) items.get(i).item;
+            if (message != null && String.valueOf(message.getJsonMessageId()).equals(messageId)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 使用 DiffUtil 刷新整个列表
+     */
+    private void refreshWithDiffUtil() {
+        if (items == null || items.isEmpty()) {
+            notifyDataSetChanged();
+            return;
+        }
+
+        // 创建当前列表的副本作为旧列表
+        List<MessagesListAdapter.Wrapper> oldItems = new ArrayList<>(items);
+
+        // 计算差异并应用
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return oldItems.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return items.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                MessagesListAdapter.Wrapper oldWrapper = oldItems.get(oldItemPosition);
+                MessagesListAdapter.Wrapper newWrapper = items.get(newItemPosition);
+
+                if (oldWrapper.item instanceof ChatMessage && newWrapper.item instanceof ChatMessage) {
+                    ChatMessage oldMessage = (ChatMessage) oldWrapper.item;
+                    ChatMessage newMessage = (ChatMessage) newWrapper.item;
+                    String oldId = String.valueOf(oldMessage.getJsonMessageId());
+                    String newId = String.valueOf(newMessage.getJsonMessageId());
+                    return oldId.equals(newId);
+                }
+
+                // 如果ID为空，则使用对象引用比较作为后备方案
+                return oldWrapper.item == newWrapper.item;
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                MessagesListAdapter.Wrapper oldWrapper = oldItems.get(oldItemPosition);
+                MessagesListAdapter.Wrapper newWrapper = items.get(newItemPosition);
+
+                if (oldWrapper.item instanceof ChatMessage && newWrapper.item instanceof ChatMessage) {
+                    ChatMessage oldMessage = (ChatMessage) oldWrapper.item;
+                    ChatMessage newMessage = (ChatMessage) newWrapper.item;
+                    String oldId = String.valueOf(oldMessage.getJsonMessageId());
+                    String newId = String.valueOf(newMessage.getJsonMessageId());
+
+                    // 内容相同但选择状态可能不同，所以返回 false 以触发重新绑定
+                    return false;
+                }
+
+                return oldWrapper.item.equals(newWrapper.item);
+            }
+        }, false);
+
+        diffResult.dispatchUpdatesTo(TalkMessagesListAdapter.this);
     }
     // ... existing code ...
 
