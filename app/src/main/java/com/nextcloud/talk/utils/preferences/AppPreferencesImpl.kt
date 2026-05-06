@@ -648,6 +648,14 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
             .apply()
     }
 
+    override fun getAppLanguage(): String =
+        runBlocking { async { readString(APP_LANGUAGE).first() } }.getCompleted()
+
+    override fun setAppLanguage(language: String) =
+        runBlocking<Unit> {
+            async { writeString(APP_LANGUAGE, language) }
+        }
+
     companion object {
         @Suppress("UnusedPrivateProperty")
         private val TAG = AppPreferencesImpl::class.simpleName
@@ -685,6 +693,8 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         const val CONVERSATION_LIST_POSITION_OFFSET = "CONVERSATION_LIST_POSITION_OFFSET"
 
         const val NOTIFICATION_COUNT = "notification_count"
+
+        const val APP_LANGUAGE = "app_language"
 
         private fun String.convertStringToArray(): Array<Float> {
             var varString = this
