@@ -95,6 +95,9 @@
     <string name="lower_hand">放手</string>
     <string name="marked_as_read">將對話 %1$s 標記為已讀</string>
     <string name="marked_as_unread">將對話 %1$s 標記為未讀</string>
+    <string name="media_message_content_description">檔案預覽</string>
+    <string name="media_message_content_play">播放媒體檔案</string>
+    <string name="mention_open_chat_with">使用 %1$s 開啟聊天</string>
     <string name="mentioned">已提及</string>
     <string name="menu_item_sort_by_date_newest_first">新的在前</string>
     <string name="menu_item_sort_by_date_oldest_first">舊的在前</string>
@@ -249,6 +252,7 @@
     <string name="nc_diagnosis_dialog_open_checklist">開啟疑難排解檢查表</string>
     <string name="nc_diagnosis_dialog_open_diagnosis">開啟診斷畫面</string>
     <string name="nc_diagnosis_dialog_open_dontkillmyapp_website">開啟 dontkillmyapp.com</string>
+    <string name="nc_dialog_introduce_unifiedpush_selection">您將要選取預設推播服務</string>
     <string name="nc_dialog_invalid_password">無效的密碼</string>
     <string name="nc_dialog_maintenance_mode_description">伺服器目前正處於維護模式。</string>
     <string name="nc_dialog_outdated_client">應用程式已過時</string>
@@ -262,6 +266,7 @@
     <string name="nc_dialog_save_to_storage_yes">是</string>
     <string name="nc_display_name_not_fetched">無法取得顯示名稱，將停止動作。</string>
     <string name="nc_display_name_not_stored">無法儲存顯示名稱，操作中斷。</string>
+    <string name="nc_draft_prefix">草稿：%1$s</string>
     <string name="nc_edit_icon">編輯</string>
     <string name="nc_edit_message">編輯</string>
     <string name="nc_edit_message_text">編輯訊息</string>
@@ -342,14 +347,14 @@
     <string name="nc_mark_conversation_as_unimportant">對話已取消標記為重要</string>
     <string name="nc_meeting_ended">會議已結束</string>
     <string name="nc_message_added_to_notes">訊息已新增至筆記</string>
-    <string name="nc_message_failed">失敗</string>
+    <string name="nc_message_failed">傳送訊息失敗</string>
     <string name="nc_message_failed_to_send">傳送訊息失敗: </string>
     <string name="nc_message_offline">離線</string>
     <string name="nc_message_quote_cancel_reply">取消回覆</string>
     <string name="nc_message_read">訊息已讀</string>
     <string name="nc_message_scheduled">已安排好訊息</string>
     <string name="nc_message_scheduled_at">訊息已安排於 %1$s 傳送</string>
-    <string name="nc_message_sending">正在傳送</string>
+    <string name="nc_message_sending">傳送訊息</string>
     <string name="nc_message_sent">已傳送郵件</string>
     <string name="nc_microphone_enabled_audio_recording">已啟用麥克風，正在錄音</string>
     <string name="nc_microphone_permission_hint">要啟用語音通訊，請授予「麥克風」權限。</string>
@@ -408,7 +413,7 @@
     <string name="nc_promote">授予主持人資格</string>
     <string name="nc_public_call_status">公開對話</string>
     <string name="nc_push_disabled">取消推送通知</string>
-    <string name="nc_push_notification_error"> 抱歉，發生了一點問題，錯誤為 %1$s</string>
+    <string name="nc_push_notification_error">抱歉，發生了一點問題，錯誤為 %1$s</string>
     <string name="nc_push_notification_fetch_error">抱歉，發生了一點問題，無法擷取測試推播訊息</string>
     <string name="nc_push_notification_message">已成功傳送推播通知。現在您應該會在此裝置上收到標題為「測試推播通知」的通知。</string>
     <string name="nc_remind">稍後提醒我</string>
@@ -421,6 +426,7 @@
     <string name="nc_rename_confirm">重新命名</string>
     <string name="nc_reply">回覆</string>
     <string name="nc_reply_privately">私下回覆</string>
+    <string name="nc_reply_to_thread">回覆至討論串：%1$s</string>
     <string name="nc_reschedule_message_with_notification">重新安排並通知</string>
     <string name="nc_reschedule_message_without_notification">重新安排而不另行通知</string>
     <string name="nc_room_retention">聊天室已成功保留</string>
@@ -431,6 +437,7 @@
     <string name="nc_schedule_message_without_notification">稍後傳送且不傳送通知</string>
     <string name="nc_scheduled_messages">已排定的訊息</string>
     <string name="nc_scheduled_messages_empty">沒有安排好要傳送的訊息</string>
+    <string name="nc_scheduled_thread">排定討論串</string>
     <string name="nc_scheduled_time">排定時間</string>
     <string name="nc_screen_lock_timeout_30">30秒</string>
     <string name="nc_screen_lock_timeout_300">5分鐘</string>
@@ -514,11 +521,14 @@
     <string name="nc_settings_remove">移除</string>
     <string name="nc_settings_remove_account">移除帳號</string>
     <string name="nc_settings_remove_confirmation">請確認 是否要清除目前的帳號</string>
+    <string name="nc_settings_screen_enable_unifiedpush_desc">使用外部 UnifiedPush 服務接收推播通知</string>
+    <string name="nc_settings_screen_enable_unifiedpush_title">啟用 UnifiedPush</string>
     <string name="nc_settings_screen_lock_desc">使用 Android 螢幕鎖定或支援的生物辨識方法鎖定 %1$s</string>
     <string name="nc_settings_screen_lock_timeout_title">螢幕鎖定不活躍逾時</string>
     <string name="nc_settings_screen_lock_title">螢幕鎖定</string>
     <string name="nc_settings_screen_security_desc">避免在最近清單與應用程式內截圖</string>
     <string name="nc_settings_screen_security_title">螢幕安全</string>
+    <string name="nc_settings_screen_unifiedpush_service_title">UnifiedPush 服務</string>
     <string name="nc_settings_server_almost_eol">伺服器版本非常舊，下一個版本將不支援！</string>
     <string name="nc_settings_server_eol">伺服器版本太舊了，此版本的 Android 應用程式不支援</string>
     <string name="nc_settings_server_eol_title">不支援的伺服器</string>
@@ -636,6 +646,7 @@
     <string name="polls_voted_hidden_success">投票已提交</string>
     <string name="previously_set">先前設定</string>
     <string name="qr_code_error">無法讀取 QR code</string>
+    <string name="quoted_message_too_old">此訊息太舊，無法顯示</string>
     <string name="raise_hand">舉手</string>
     <string name="reaction_forbidden">您無法在此對話中新增或移除反應</string>
     <string name="reactions_tab_all">全部</string>
@@ -696,6 +707,7 @@
     <string name="shared_items_voice">語音</string>
     <string name="show_ban_reason">顯示封鎖理由</string>
     <string name="show_banned_participants">顯示已封鎖的參與者</string>
+    <string name="silent_message_hint">靜音訊息</string>
     <string name="starred">收藏</string>
     <string name="startCallForbidden">您不被允許開始通話</string>
     <string name="start_thread">建立討論串</string>
@@ -734,6 +746,8 @@
     <string name="translation_error_title">翻譯失敗</string>
     <string name="translation_from">從</string>
     <string name="translation_to">至</string>
+    <string name="turn_off_background_blur">關閉背景模糊</string>
+    <string name="turn_on_background_blur">啟用背景模糊</string>
     <string name="typing_1_other">以及另外 1 個人正在輸入……</string>
     <string name="typing_are_typing">正在輸入……</string>
     <string name="typing_is_typing">正在輸入……</string>
@@ -742,6 +756,7 @@
     <string name="unarchive_hint">對話取消存檔後，預設會再次顯示。</string>
     <string name="unarchived_conversation">已解除封存 %1$s</string>
     <string name="unban">取消封鎖</string>
+    <string name="unifiedpush">UnifiedPush</string>
     <string name="unpin_message">取消釘選訊息</string>
     <string name="unread">未讀</string>
     <string name="until_unpin">直到取消釘選</string>
@@ -759,7 +774,6 @@
     <string name="user_info_headline">重要經歷</string>
     <string name="user_info_organisation">組織</string>
     <string name="user_info_phone">電話號碼</string>
-    <string name="user_info_profile_disable">停用個人檔案</string>
     <string name="user_info_profile_enable">啟用個人檔案</string>
     <string name="user_info_pronouns">代名詞</string>
     <string name="user_info_role">角色</string>
@@ -771,6 +785,9 @@
     <string name="userinfo_no_info_text">在您的個人檔案中新增名字、大頭照和聯絡資訊。</string>
     <string name="video_call">視訊連線</string>
     <string name="whats_your_status">您目前的狀態是什麼呢？</string>
+    <plurals name="nc_new_messages_count">
+        <item quantity="other">%d 則新訊息</item>
+    </plurals>
     <plurals name="see_similar_system_messages">
         <item quantity="other">檢視 %d 則類似的訊息</item>
     </plurals>

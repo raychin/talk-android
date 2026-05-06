@@ -342,14 +342,14 @@
     <string name="nc_mark_conversation_as_unimportant">Conversa sen marcar como importante</string>
     <string name="nc_meeting_ended">Rematou a xuntanza</string>
     <string name="nc_message_added_to_notes">Mensaxe engadida ás notas</string>
-    <string name="nc_message_failed">Fallado</string>
+    <string name="nc_message_failed">Produciuse un fallo ao enviar a mensaxe</string>
     <string name="nc_message_failed_to_send">Produciuse un fallo ao enviar a mensaxe:</string>
     <string name="nc_message_offline">Sen conexión</string>
     <string name="nc_message_quote_cancel_reply">Cancelar a resposta</string>
     <string name="nc_message_read">Mensaxe lida</string>
     <string name="nc_message_scheduled">Mensaxe programada</string>
     <string name="nc_message_scheduled_at">Mensaxe programada para %1$s</string>
-    <string name="nc_message_sending">Enviando</string>
+    <string name="nc_message_sending">Enviando a mensaxe</string>
     <string name="nc_message_sent">Mensaxe enviada</string>
     <string name="nc_microphone_enabled_audio_recording">O micrófono está activado e estase a gravar o son</string>
     <string name="nc_microphone_permission_hint">Para activar a comunicación por voz, conceda o permiso de «Micrófono».</string>
@@ -408,7 +408,6 @@
     <string name="nc_promote">Promover a moderador</string>
     <string name="nc_public_call_status">Conversa pública</string>
     <string name="nc_push_disabled">Desactivadas as notificacións emerxentes</string>
-    <string name="nc_push_notification_error"> Desculpe, algo foi mal, o erro é %1$s</string>
     <string name="nc_push_notification_fetch_error">Desculpe, algo foi mal,, non foi posíbel obter a mensaxe emerxente de proba</string>
     <string name="nc_push_notification_message">A notificación emerxente foi enviada satisfactoriamente. Agora ten que recibir unha notificación sobre este dispositivo co título «Probas de notificacións emerxentes»</string>
     <string name="nc_remind">Lembrarmo más adiante</string>
@@ -734,6 +733,8 @@
     <string name="translation_error_title">Produciuse un fallo na tradución</string>
     <string name="translation_from">Desde:</string>
     <string name="translation_to">Para</string>
+    <string name="turn_off_background_blur">Desactivar o esvaemento do fondo</string>
+    <string name="turn_on_background_blur">Activar o esvaemento do fondo</string>
     <string name="typing_1_other">e 1 máis está a escribir…</string>
     <string name="typing_are_typing">están a escribiren…</string>
     <string name="typing_is_typing">está a escribir…</string>
@@ -758,6 +759,7 @@
     <string name="user_info_headline">Titular</string>
     <string name="user_info_organisation">Organización</string>
     <string name="user_info_phone">Número de teléfono</string>
+    <string name="user_info_profile_enable">Activar o perfil</string>
     <string name="user_info_pronouns">Pronomes</string>
     <string name="user_info_role">Rol</string>
     <string name="user_info_twitter">Twitter</string>

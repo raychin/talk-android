@@ -27,7 +27,6 @@
     <color name="high_emphasis_menu_icon">@color/high_emphasis_text</color>
 
     <color name="bg_default">#121212</color>
-    <color name="bg_default_semitransparent">#99121212</color>
 
     <color name="fg_default">#FFFFFF</color>
     <color name="fg_inverse">#121212</color>
@@ -53,9 +52,6 @@
 
     <!-- shimmer element colors -->
     <color name="nc_shimmer_default_color">#4B4B4B</color>
-    <color name="nc_shimmer_darker_color">#282828</color>
-
-    <color name="grey_200">#818181</color>
 
     <color name="dialog_background">#353535</color>
 

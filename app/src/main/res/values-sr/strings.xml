@@ -340,12 +340,11 @@
     <string name="nc_mark_conversation_as_unimportant">Разговор више није означен као важан</string>
     <string name="nc_meeting_ended">Састанак је завршен</string>
     <string name="nc_message_added_to_notes">У белешке је додата порука</string>
-    <string name="nc_message_failed">Није успело</string>
     <string name="nc_message_failed_to_send">Није успело слање поруке:</string>
     <string name="nc_message_offline">Ван мреже</string>
     <string name="nc_message_quote_cancel_reply">Откажи одговор</string>
     <string name="nc_message_read">Порука је прочитана</string>
-    <string name="nc_message_sending">Шаље се</string>
+    <string name="nc_message_sending">Слање поруке</string>
     <string name="nc_message_sent">Порука послата</string>
     <string name="nc_microphone_enabled_audio_recording">Микрофон је укључен и снима се звук</string>
     <string name="nc_microphone_permission_hint">Ако желите да укључите аудио комуникацију, молимо вас да дате дозволу „Микрофон”</string>
@@ -402,7 +401,6 @@
     <string name="nc_promote">Унапреди у модератора</string>
     <string name="nc_public_call_status">Јавни разговор</string>
     <string name="nc_push_disabled">Брза обавештења су искључена</string>
-    <string name="nc_push_notification_error">Жао нам је, нешто је пошло наопако. Грешка је %1$s</string>
     <string name="nc_push_notification_fetch_error">Жао нам је, нешто је пошло наопако, тест брзо обавештење не може да се преузме</string>
     <string name="nc_push_notification_message">Брзо обавештење је успешно послато. Сада би требало да примите обавештење на овај уређај под називом ’Тестирање брзих обавештења’</string>
     <string name="nc_remind">Подсети ме касније</string>
@@ -704,6 +702,8 @@
     <string name="translation_error_title">Превођење није успело</string>
     <string name="translation_from">Од</string>
     <string name="translation_to">За</string>
+    <string name="turn_off_background_blur">Искључи замућење позадине</string>
+    <string name="turn_on_background_blur">Укључи замућење позадине</string>
     <string name="typing_1_other">and и још 1 куцају…</string>
     <string name="typing_are_typing">куцају...</string>
     <string name="typing_is_typing">куца...</string>

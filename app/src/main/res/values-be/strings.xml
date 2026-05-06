@@ -262,6 +262,7 @@
     <string name="nc_dialog_save_to_storage_yes">Так</string>
     <string name="nc_display_name_not_fetched">Не ўдалося атрымаць імя для паказу, скасаванне</string>
     <string name="nc_display_name_not_stored">Не ўдалося захаваць імя для паказу, скасаванне</string>
+    <string name="nc_draft_prefix">Чарнавік: %1$s</string>
     <string name="nc_edit_icon">Рэдагаваць</string>
     <string name="nc_edit_message">Рэдагаваць</string>
     <string name="nc_edit_message_text">Рэдагаваць паведамленне</string>
@@ -342,14 +343,13 @@
     <string name="nc_mark_conversation_as_unimportant">Пазнака важнасці размовы скасавана</string>
     <string name="nc_meeting_ended">Сустрэча завершана</string>
     <string name="nc_message_added_to_notes">Паведамленне дададзена ў нататкі</string>
-    <string name="nc_message_failed">Не ўдалося</string>
     <string name="nc_message_failed_to_send">Не атрымалася адправіць паведамленне:</string>
     <string name="nc_message_offline">Па-за сеткай</string>
     <string name="nc_message_quote_cancel_reply">Скасаваць адказ</string>
     <string name="nc_message_read">Паведамленне прачытана</string>
     <string name="nc_message_scheduled">Паведамленне запланавана</string>
     <string name="nc_message_scheduled_at">Паведамленне запланавана на %1$s</string>
-    <string name="nc_message_sending">Адпраўка</string>
+    <string name="nc_message_sending">Адпраўка паведамлення</string>
     <string name="nc_message_sent">Паведамленне адпраўлена</string>
     <string name="nc_microphone_enabled_audio_recording">Мікрафон уключаны, і гук запісваецца</string>
     <string name="nc_microphone_permission_hint">Каб уключыць галасавую сувязь, дайце дазвол на доступ да мікрафона.</string>
@@ -407,7 +407,6 @@
     <string name="nc_promote">Прызначыць мадэратарам</string>
     <string name="nc_public_call_status">Публічная размова</string>
     <string name="nc_push_disabled">Push-апавяшчэнні адключаны</string>
-    <string name="nc_push_notification_error">Нешта пайшло не так, памылка: %1$s</string>
     <string name="nc_push_notification_fetch_error">Нешта пайшло не так, не ўдалося атрымаць тэставае push-паведамленне</string>
     <string name="nc_push_notification_message">Push-апавяшчэнне паспяхова адпраўлена. Цяпер вы павінны атрымацьна гэтай прыладзе  апавяшчэнне з назвай \"Тэставае push-апавяшчэнне\".</string>
     <string name="nc_remind">Нагадаць пазней</string>
@@ -727,6 +726,8 @@
     <string name="translation_error_title">Не ўдалося перакласці</string>
     <string name="translation_from">З</string>
     <string name="translation_to">На</string>
+    <string name="turn_off_background_blur">Выключыць размытасць фону</string>
+    <string name="turn_on_background_blur">Уключыць размытасць фону</string>
     <string name="typing_1_other">і яшчэ 1 пішуць …</string>
     <string name="typing_are_typing">пішуць …</string>
     <string name="typing_is_typing">піша …</string>
@@ -751,7 +752,6 @@
     <string name="user_info_headline">Загаловак</string>
     <string name="user_info_organisation">Арганізацыя</string>
     <string name="user_info_phone">Нумар тэлефона</string>
-    <string name="user_info_profile_disable">Адключыць профіль</string>
     <string name="user_info_profile_enable">Уключыць профіль</string>
     <string name="user_info_pronouns">Займеннікі</string>
     <string name="user_info_role">Роля</string>

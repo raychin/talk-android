@@ -41,6 +41,7 @@ import android.view.OrientationEventListener
 import android.view.View
 import android.view.View.OnTouchListener
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.NotificationManagerCompat
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -73,6 +74,9 @@ import com.nextcloud.talk.call.ReactionAnimator
 import com.nextcloud.talk.call.components.ParticipantGrid
 import com.nextcloud.talk.call.components.SelfVideoView
 import com.nextcloud.talk.call.components.screenshare.ScreenShareComponent
+import com.nextcloud.talk.camera.BackgroundBlurFrameProcessor
+import com.nextcloud.talk.camera.BlurBackgroundViewModel
+import com.nextcloud.talk.camera.BlurBackgroundViewModel.BackgroundBlurOn
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.CallActivityBinding
@@ -107,7 +111,6 @@ import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.CapabilitiesUtil
 import com.nextcloud.talk.utils.CapabilitiesUtil.hasSpreedFeatureCapability
 import com.nextcloud.talk.utils.CapabilitiesUtil.isCallRecordingAvailable
-import com.nextcloud.talk.utils.NotificationUtils.cancelExistingNotificationsForRoom
 import com.nextcloud.talk.utils.NotificationUtils.getCallRingtoneUri
 import com.nextcloud.talk.utils.ReceiverFlag
 import com.nextcloud.talk.utils.SpreedFeatures
@@ -118,6 +121,7 @@ import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CALL_WITHOUT_NOTIFICATION
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CONVERSATION_NAME
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CONVERSATION_PASSWORD
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FROM_NOTIFICATION_START_CALL
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_NOTIFICATION_TIMESTAMP
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_IS_BREAKOUT_ROOM
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_IS_MODERATOR
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_MODIFIED_BASE_URL
@@ -185,7 +189,6 @@ import java.util.Objects
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
-import kotlin.String
 import kotlin.math.abs
 
 @AutoInjector(NextcloudTalkApplication::class)
@@ -214,6 +217,7 @@ class CallActivity : CallBaseActivity() {
     var audioManager: WebRtcAudioManager? = null
     var callRecordingViewModel: CallRecordingViewModel? = null
     var raiseHandViewModel: RaiseHandViewModel? = null
+    val blurBackgroundViewModel: BlurBackgroundViewModel = BlurBackgroundViewModel()
     private var mReceiver: BroadcastReceiver? = null
     private var peerConnectionFactory: PeerConnectionFactory? = null
     private var screenSharePeerConnectionFactory: PeerConnectionFactory? = null
@@ -284,7 +288,10 @@ class CallActivity : CallBaseActivity() {
     private var isBreakoutRoom = false
     private val localParticipantMessageListener = LocalParticipantMessageListener { token ->
         switchToRoomToken = token
-        hangup(true, false)
+        hangup(
+            shutDownView = true,
+            endCallForAll = false
+        )
     }
     private val offerMessageListener = OfferMessageListener { sessionId, roomType, sdp, nick ->
         getOrCreatePeerConnectionWrapperForSessionIdAndType(
@@ -371,7 +378,7 @@ class CallActivity : CallBaseActivity() {
 
     private var isFrontCamera by mutableStateOf(true)
 
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility", "Detekt.LongMethod")
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
@@ -539,6 +546,20 @@ class CallActivity : CallBaseActivity() {
         }
     }
 
+    private fun initBackgroundBlurViewModel(surfaceTextureHelper: SurfaceTextureHelper) {
+        blurBackgroundViewModel.viewState.observe(this) { state ->
+            val isOn = state == BackgroundBlurOn
+
+            val processor = if (isOn) {
+                BackgroundBlurFrameProcessor(context, surfaceTextureHelper)
+            } else {
+                null
+            }
+
+            videoSource?.setVideoProcessor(processor)
+        }
+    }
+
     private fun processExtras(extras: Bundle) {
         roomId = extras.getString(KEY_ROOM_ID, "")
         roomToken = extras.getString(KEY_ROOM_TOKEN, "")
@@ -553,6 +574,11 @@ class CallActivity : CallBaseActivity() {
 
         if (extras.containsKey(KEY_FROM_NOTIFICATION_START_CALL)) {
             isIncomingCallFromNotification = extras.getBoolean(KEY_FROM_NOTIFICATION_START_CALL)
+            val notificationId = extras.getInt(KEY_NOTIFICATION_TIMESTAMP, 0)
+            if (notificationId != 0) {
+                // cancel the notification to stop the call ringing
+                NotificationManagerCompat.from(this).cancel(notificationId)
+            }
         }
         if (extras.containsKey(KEY_IS_BREAKOUT_ROOM)) {
             isBreakoutRoom = extras.getBoolean(KEY_IS_BREAKOUT_ROOM)
@@ -1015,6 +1041,7 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun prepareCall() {
+        stopCallingSound()
         basicInitialization()
         initViews()
         // updateSelfVideoViewPosition(true)
@@ -1031,7 +1058,10 @@ class CallActivity : CallBaseActivity() {
             binding!!.selfVideoViewWrapper.visibility = View.GONE
         } else if (permissionUtil!!.isCameraPermissionGranted()) {
             binding!!.selfVideoViewWrapper.visibility = View.VISIBLE
-            onCameraClick()
+            // don't enable the camera if call was answered via notification
+            if (!isIncomingCallFromNotification) {
+                onCameraClick()
+            }
             if (cameraEnumerator!!.deviceNames.isEmpty()) {
                 binding!!.cameraButton.visibility = View.GONE
             }
@@ -1116,6 +1146,7 @@ class CallActivity : CallBaseActivity() {
             videoSource = peerConnectionFactory!!.createVideoSource(false)
 
             videoCapturer!!.initialize(surfaceTextureHelper, applicationContext, videoSource!!.capturerObserver)
+            initBackgroundBlurViewModel(surfaceTextureHelper)
         }
         localVideoTrack = peerConnectionFactory!!.createVideoTrack("NCv0", videoSource)
         localStream!!.addTrack(localVideoTrack)
@@ -1250,6 +1281,7 @@ class CallActivity : CallBaseActivity() {
                 binding!!.cameraButton.setImageResource(R.drawable.ic_videocam_white_24px)
             } else {
                 binding!!.cameraButton.setImageResource(R.drawable.ic_videocam_off_white_24px)
+                blurBackgroundViewModel.turnOffBlur()
             }
             toggleMedia(videoOn, true)
         } else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
@@ -1324,6 +1356,10 @@ class CallActivity : CallBaseActivity() {
 
     fun clickRaiseOrLowerHandButton() {
         raiseHandViewModel!!.clickHandButton()
+    }
+
+    fun toggleBackgroundBlur() {
+        blurBackgroundViewModel.toggleBackgroundBlur()
     }
 
     public override fun onDestroy() {
@@ -1582,13 +1618,6 @@ class CallActivity : CallBaseActivity() {
                             }
                             ApplicationWideCurrentRoomHolder.getInstance().isInCall = true
                             ApplicationWideCurrentRoomHolder.getInstance().isDialing = false
-                            if (!TextUtils.isEmpty(roomToken)) {
-                                cancelExistingNotificationsForRoom(
-                                    applicationContext,
-                                    conversationUser!!,
-                                    roomToken!!
-                                )
-                            }
                             if (!hasExternalSignalingServer) {
                                 pullSignalingMessages()
                             }
@@ -1809,6 +1838,7 @@ class CallActivity : CallBaseActivity() {
         fetchSignalingSettings()
     }
 
+    @Suppress("Detekt.NestedBlockDepth")
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     fun onMessageEvent(webSocketCommunicationEvent: WebSocketCommunicationEvent) {
         if (currentCallStatus === CallStatus.LEAVING) {
@@ -1900,7 +1930,7 @@ class CallActivity : CallBaseActivity() {
 
         when (messageType) {
             "usersInRoom" ->
-                internalSignalingMessageReceiver.process(signaling.messageWrapper as List<Map<String?, Any?>?>?)
+                internalSignalingMessageReceiver.process(signaling.messageWrapper as List<Map<String?, Any?>>)
 
             "message" -> {
                 val ncSignalingMessage = LoganSquare.parse(
@@ -2716,11 +2746,11 @@ class CallActivity : CallBaseActivity() {
      * All listeners are called in the main thread.
      */
     private class InternalSignalingMessageReceiver : SignalingMessageReceiver() {
-        fun process(users: List<Map<String?, Any?>?>?) {
+        fun process(users: List<Map<String?, Any?>>) {
             processUsersInRoom(users)
         }
 
-        fun process(message: NCSignalingMessage?) {
+        fun process(message: NCSignalingMessage) {
             processSignalingMessage(message)
         }
     }

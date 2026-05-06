@@ -50,6 +50,8 @@
     <color name="grey_600">#757575</color>
     <color name="nc_grey">#D5D5D5</color>
     <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="transparent">#00000000</color>
     <color name="call_incomingCallTextView">#E9FFFFFF</color>
     <color name="grey950">#111111</color>
     <color name="textColorMaxContrast">#767676</color>
@@ -58,7 +60,6 @@
     <color name="fg_inverse">#FFFFFF</color>
 
     <color name="bg_default">#FFFFFF</color>
-    <color name="bg_default_semitransparent">#99FFFFFF</color>
     <color name="bg_dark_mention_chips">#333333</color>
 
     <color name="bg_message_list_incoming_bubble">#EFEFEF</color>
@@ -74,7 +75,6 @@
 
     <!-- shimmer element colors -->
     <color name="nc_shimmer_default_color">#D7D7D7</color>
-    <color name="nc_shimmer_darker_color">#B4B4B4</color>
 
     <!-- voicemessage -->
     <color name="nc_voice_message_outgoing_controls">#606060</color>
@@ -82,8 +82,6 @@
     <color name="bg_message_own_reaction">#99ffffff</color>
 
     <color name="camera_bg_tint">#99121212</color>
-
-    <color name="grey_200">#EEEEEE</color>
 
     <!-- this is just a helper for status icon background because getting the background color of a dialog is not
     possible?! don't use this to set the background of dialogs -->

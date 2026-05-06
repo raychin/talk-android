@@ -342,14 +342,14 @@
     <string name="nc_mark_conversation_as_unimportant">Görüşmenin önemli işareti kaldırıldı</string>
     <string name="nc_meeting_ended">Toplantı sona erdi</string>
     <string name="nc_message_added_to_notes">İleti notlara eklendi</string>
-    <string name="nc_message_failed">Tamamlanamadı</string>
+    <string name="nc_message_failed">İleti gönderilemedi</string>
     <string name="nc_message_failed_to_send">İleti gönderilemedi.</string>
     <string name="nc_message_offline">Çevrim dışı</string>
     <string name="nc_message_quote_cancel_reply">Yanıtı iptal et</string>
     <string name="nc_message_read">İleti okundu</string>
     <string name="nc_message_scheduled">İleti zamanlandı</string>
     <string name="nc_message_scheduled_at">İleti %1$s için zamanlandı</string>
-    <string name="nc_message_sending">Gönderiliyor</string>
+    <string name="nc_message_sending">İleti gönderiliyor</string>
     <string name="nc_message_sent">İleti gönderildi</string>
     <string name="nc_microphone_enabled_audio_recording">Mikrofon açık ve ses kaydediliyor</string>
     <string name="nc_microphone_permission_hint">Sesli iletişim kurabilmek için \"Mikrofon\" için erişme izni verin.</string>
@@ -408,7 +408,6 @@
     <string name="nc_promote">Sorumluluğa yükselt</string>
     <string name="nc_public_call_status">Herkese açık görüşme</string>
     <string name="nc_push_disabled">Anında bildirimler kapalı</string>
-    <string name="nc_push_notification_error">Ne yazık ki bir sorun çıktı. Hata: %1$s</string>
     <string name="nc_push_notification_fetch_error">Ne yazık ki bir sorun çıktı. Deneme anında bildirimi alınamadı</string>
     <string name="nc_push_notification_message">Anında bildirim gönderildi. Bu aygıtta \'Anlık bildirimler denemesi\' konulu bir bildirim almalısınız</string>
     <string name="nc_remind">Sonra hatırlat</string>
@@ -734,6 +733,8 @@
     <string name="translation_error_title">Çeviri yapılamadı</string>
     <string name="translation_from">Kaynak dil</string>
     <string name="translation_to">Hedef dil</string>
+    <string name="turn_off_background_blur">Arka plan bulanıklaştırmayı kapat</string>
+    <string name="turn_on_background_blur">Arka plan bulanıklaştırmayı aç</string>
     <string name="typing_1_other">ve 1 diğer kişi yazıyor…</string>
     <string name="typing_are_typing">kişi yazıyor…</string>
     <string name="typing_is_typing">yazıyor…</string>
@@ -751,6 +752,7 @@
     <string name="user_absence_replacement">Yedek:</string>
     <string name="user_avatar">Kullanıcı avatarı</string>
     <string name="user_info_address">Adres</string>
+    <string name="user_info_biography">Özgeçmiş</string>
     <string name="user_info_bluesky">Bluesky</string>
     <string name="user_info_displayname">Tam ad</string>
     <string name="user_info_email">E-posta</string>

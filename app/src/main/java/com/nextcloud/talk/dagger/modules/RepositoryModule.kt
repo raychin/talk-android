@@ -19,12 +19,12 @@ import com.nextcloud.talk.chat.data.ChatMessageRepository
 import com.nextcloud.talk.chat.data.network.ChatNetworkDataSource
 import com.nextcloud.talk.chat.data.network.OfflineFirstChatRepository
 import com.nextcloud.talk.chat.data.network.RetrofitChatNetwork
-import com.nextcloud.talk.chooseaccount.StatusRepository
-import com.nextcloud.talk.chooseaccount.StatusRepositoryImplementation
+import com.nextcloud.talk.chooseaccount.data.StatusRepository
+import com.nextcloud.talk.chooseaccount.data.StatusRepositoryImplementation
 import com.nextcloud.talk.contacts.ContactsRepository
 import com.nextcloud.talk.contacts.ContactsRepositoryImpl
-import com.nextcloud.talk.conversationcreation.ConversationCreationRepository
-import com.nextcloud.talk.conversationcreation.ConversationCreationRepositoryImpl
+import com.nextcloud.talk.conversationcreation.data.ConversationCreationRepository
+import com.nextcloud.talk.conversationcreation.data.ConversationCreationRepositoryImpl
 import com.nextcloud.talk.conversationinfoedit.data.ConversationInfoEditRepository
 import com.nextcloud.talk.conversationinfoedit.data.ConversationInfoEditRepositoryImpl
 import com.nextcloud.talk.conversationlist.data.OfflineConversationsRepository
@@ -101,8 +101,8 @@ class RepositoryModule {
         ArbitraryStoragesRepositoryImpl(database.arbitraryStoragesDao())
 
     @Provides
-    fun provideReactionsRepository(ncApi: NcApi, dao: ChatMessagesDao): ReactionsRepository =
-        ReactionsRepositoryImpl(ncApi, dao)
+    fun provideReactionsRepository(ncApiCoroutines: NcApiCoroutines, dao: ChatMessagesDao): ReactionsRepository =
+        ReactionsRepositoryImpl(ncApiCoroutines, dao)
 
     @Provides
     fun provideCallRecordingRepository(ncApi: NcApi): CallRecordingRepository = CallRecordingRepositoryImpl(ncApi)
@@ -127,10 +127,8 @@ class RepositoryModule {
         RetrofitConversationsNetwork(ncApi)
 
     @Provides
-    fun provideConversationInfoEditRepository(
-        ncApi: NcApi,
-        ncApiCoroutines: NcApiCoroutines
-    ): ConversationInfoEditRepository = ConversationInfoEditRepositoryImpl(ncApi, ncApiCoroutines)
+    fun provideConversationInfoEditRepository(ncApiCoroutines: NcApiCoroutines): ConversationInfoEditRepository =
+        ConversationInfoEditRepositoryImpl(ncApiCoroutines)
 
     @Provides
     fun provideInvitationsRepository(ncApi: NcApi, ncApiCoroutines: NcApiCoroutines): InvitationsRepository =

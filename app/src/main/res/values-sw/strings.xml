@@ -342,14 +342,13 @@
     <string name="nc_mark_conversation_as_unimportant">Mazungumzo hayajatiwa alama kuwa muhimu</string>
     <string name="nc_meeting_ended">Mkutano umeisha</string>
     <string name="nc_message_added_to_notes">Ujumbe umeongezwa katika kumbukumbu</string>
-    <string name="nc_message_failed">Imeshindwa</string>
     <string name="nc_message_failed_to_send">Imeshindwa kutuma ujumbe</string>
     <string name="nc_message_offline">Nje ya mtandao</string>
     <string name="nc_message_quote_cancel_reply">Ghairi jibu</string>
     <string name="nc_message_read">Usomaji wa ujumbe</string>
     <string name="nc_message_scheduled">Ujumbe umeratibiwa</string>
     <string name="nc_message_scheduled_at">Ujumbe umeratibiwa kwa %1$s</string>
-    <string name="nc_message_sending">Inatuma</string>
+    <string name="nc_message_sending">Kutuma ujumbe</string>
     <string name="nc_message_sent">Ujumbe umetumwa</string>
     <string name="nc_microphone_enabled_audio_recording">Maikrofoni imewashwa na sauti inarekodiwa</string>
     <string name="nc_microphone_permission_hint">Ili kuwezesha mawasiliano ya sauti tafadhali toa ruhusa ya \"Mikrofoni\".</string>
@@ -406,7 +405,6 @@
     <string name="nc_promote">Pandisha cheo hadi msimamizi</string>
     <string name="nc_public_call_status">Mazungumzo ya umma</string>
     <string name="nc_push_disabled">Arifa zinazotumwa na programu hata wakati huitumii zimezimwa</string>
-    <string name="nc_push_notification_error"> Samahani hitilafu imetokea %1$s</string>
     <string name="nc_push_notification_fetch_error">Samahani, hitilafu fulani imetokea, haiwezi kuleta ujumbe wa jaribio</string>
     <string name="nc_push_notification_message">Arifa kutoka kwa programu imetumwa kwa mafanikio. Sasa unapaswa kupokea arifa kwenye kifaa hiki yenye kichwa \'Kujaribu arifa zinazotumwa na programu hata wakati huitumii\'.</string>
     <string name="nc_remind">Nikumbushe baadaye</string>
@@ -727,6 +725,8 @@
     <string name="translation_error_title">Utafsiri umeshindikana</string>
     <string name="translation_from">Tangu/ kutoka</string>
     <string name="translation_to">Mpaka/ hadi</string>
+    <string name="turn_off_background_blur">Zima ukungu wa mandharinyuma</string>
+    <string name="turn_on_background_blur">Washa ukungu wa mandharinyuma</string>
     <string name="typing_1_other">na mwingine 1 anachapisha</string>
     <string name="typing_are_typing">wanachapisha</string>
     <string name="typing_is_typing">anachapisha</string>

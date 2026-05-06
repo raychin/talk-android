@@ -41,6 +41,7 @@ import com.nextcloud.talk.contacts.CompanionClass
 import com.nextcloud.talk.contacts.ContactsViewModel
 import com.nextcloud.talk.contacts.loadImage
 import com.nextcloud.talk.models.json.autocomplete.AutocompleteUser
+import com.nextcloud.talk.utils.DisplayUtils
 import com.nextcloud.talk.utils.bundle.BundleKeys
 
 @Suppress("LongMethod")
@@ -75,7 +76,7 @@ fun ContactItemRow(contact: AutocompleteUser, contactsViewModel: ContactsViewMod
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val imageUri = contact.id?.let { contactsViewModel.getImageUri(it, true) }
+        val imageUri = contact.id?.let { contactsViewModel.getImageUri(it, true, DisplayUtils.isDarkModeOn(context)) }
         val errorPlaceholderImage: Int = R.drawable.account_circle_96dp
         val loadedImage = loadImage(imageUri, context, errorPlaceholderImage)
         AsyncImage(
@@ -89,7 +90,7 @@ fun ContactItemRow(contact: AutocompleteUser, contactsViewModel: ContactsViewMod
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_check_circle),
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.selected_list_item),
                     tint = Color.Blue,
                     modifier = Modifier.padding(end = 8.dp)
                 )

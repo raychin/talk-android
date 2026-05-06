@@ -95,6 +95,9 @@
     <string name="lower_hand">Baixar mão</string>
     <string name="marked_as_read">Conversa %1$s marcada como lida</string>
     <string name="marked_as_unread">Conversa %1$s marcada como não lida</string>
+    <string name="media_message_content_description">Visualização do arquivo</string>
+    <string name="media_message_content_play">Reproduzir arquivo de mídia</string>
+    <string name="mention_open_chat_with">Abrir bate-papo com %1$s</string>
     <string name="mentioned">Mencionado</string>
     <string name="menu_item_sort_by_date_newest_first">Mais novo primeiro</string>
     <string name="menu_item_sort_by_date_oldest_first">Mais antigo primeiro</string>
@@ -249,6 +252,7 @@
     <string name="nc_diagnosis_dialog_open_checklist">Abrir lista de verificação de solução de problemas</string>
     <string name="nc_diagnosis_dialog_open_diagnosis">Abrir tela de diagnóstico</string>
     <string name="nc_diagnosis_dialog_open_dontkillmyapp_website">Abrir dontkillmyapp.com</string>
+    <string name="nc_dialog_introduce_unifiedpush_selection">Você está prestes a selecionar seu serviço de notificações push padrão</string>
     <string name="nc_dialog_invalid_password">Senha inválida</string>
     <string name="nc_dialog_maintenance_mode_description">O servidor está atualmente em modo de manutenção.</string>
     <string name="nc_dialog_outdated_client">Aplicativo está desatualizado</string>
@@ -262,6 +266,7 @@
     <string name="nc_dialog_save_to_storage_yes">Sim</string>
     <string name="nc_display_name_not_fetched">Nome de exibição não obtido, interrompendo</string>
     <string name="nc_display_name_not_stored">Não foi possível armazenar o nome de exibição, cancelando</string>
+    <string name="nc_draft_prefix">Rascunho: %1$s</string>
     <string name="nc_edit_icon">Editar</string>
     <string name="nc_edit_message">Editar</string>
     <string name="nc_edit_message_text">Editar mensagem</string>
@@ -342,14 +347,14 @@
     <string name="nc_mark_conversation_as_unimportant">Conversa desmarcada como importante</string>
     <string name="nc_meeting_ended">Reunião encerrada</string>
     <string name="nc_message_added_to_notes">Mensagem adicionada às notas</string>
-    <string name="nc_message_failed">Falhou</string>
+    <string name="nc_message_failed">Falha ao enviar a mensagem</string>
     <string name="nc_message_failed_to_send">Falha ao enviar mensagem:</string>
     <string name="nc_message_offline">Off-line</string>
     <string name="nc_message_quote_cancel_reply">Cancelar resposta</string>
     <string name="nc_message_read">Mensagem lida</string>
     <string name="nc_message_scheduled">Mensagem agendada</string>
     <string name="nc_message_scheduled_at">Mensagem agendada para %1$s</string>
-    <string name="nc_message_sending">Enviando</string>
+    <string name="nc_message_sending">Enviando mensagem</string>
     <string name="nc_message_sent">Mensagem enviada</string>
     <string name="nc_microphone_enabled_audio_recording">O microfone está ativado e o áudio está sendo gravado</string>
     <string name="nc_microphone_permission_hint">Para ativar a comunicação por voz, conceda a permissão \"Microfone\".</string>
@@ -408,7 +413,7 @@
     <string name="nc_promote">Promover a moderador</string>
     <string name="nc_public_call_status">Conversa pública</string>
     <string name="nc_push_disabled">Notificações push desativadas</string>
-    <string name="nc_push_notification_error">Desculpe, algo deu errado, o erro é %1$s</string>
+    <string name="nc_push_notification_error">Desculpe, algo deu errado. O erro é %1$s.</string>
     <string name="nc_push_notification_fetch_error">Desculpe, algo deu errado, não foi possível obter a mensagem push de teste</string>
     <string name="nc_push_notification_message">A notificação push foi enviada com êxito. Agora você deve receber uma notificação neste dispositivo com o título \'Testando notificações push\'</string>
     <string name="nc_remind">Lembre-me mais tarde</string>
@@ -421,6 +426,7 @@
     <string name="nc_rename_confirm">Renomear</string>
     <string name="nc_reply">Responder</string>
     <string name="nc_reply_privately">Responder privadamente</string>
+    <string name="nc_reply_to_thread">Responder ao fio %1$s</string>
     <string name="nc_reschedule_message_with_notification">Reagendar com notificação</string>
     <string name="nc_reschedule_message_without_notification">Reagendar sem notificação</string>
     <string name="nc_room_retention">A sala é mantida com sucesso</string>
@@ -431,6 +437,7 @@
     <string name="nc_schedule_message_without_notification">Enviar mais tarde sem notificação</string>
     <string name="nc_scheduled_messages">Mensagens agendadas</string>
     <string name="nc_scheduled_messages_empty">Nenhuma mensagem agendada</string>
+    <string name="nc_scheduled_thread">Fio agendado</string>
     <string name="nc_scheduled_time">Horário agendado</string>
     <string name="nc_screen_lock_timeout_30">30 segundos</string>
     <string name="nc_screen_lock_timeout_300">5 minutos</string>
@@ -514,11 +521,14 @@
     <string name="nc_settings_remove">Excluir</string>
     <string name="nc_settings_remove_account">Excluir conta</string>
     <string name="nc_settings_remove_confirmation">Confirme se quer realmente excluir a conta atual.</string>
+    <string name="nc_settings_screen_enable_unifiedpush_desc">Receba notificações push por meio de um serviço UnifiedPush externo</string>
+    <string name="nc_settings_screen_enable_unifiedpush_title">Ativar UnifiedPush</string>
     <string name="nc_settings_screen_lock_desc">Trancar %1$s com o bloqueio de tela do Android ou um método biométrico suportado</string>
     <string name="nc_settings_screen_lock_timeout_title">Tempo limite para bloqueio de tela</string>
     <string name="nc_settings_screen_lock_title">Bloqueio de tela</string>
     <string name="nc_settings_screen_security_desc">Impede capturas de tela na lista recente e dentro do aplicativo</string>
     <string name="nc_settings_screen_security_title">Segurança da tela</string>
+    <string name="nc_settings_screen_unifiedpush_service_title">Serviço UnifiedPush</string>
     <string name="nc_settings_server_almost_eol">A versão do servidor é muito antiga e não será suportada na próxima versão!</string>
     <string name="nc_settings_server_eol">A versão do servidor é muito antiga e não suporta esta versão do aplicativo para Android</string>
     <string name="nc_settings_server_eol_title">Servidor não suportado</string>
@@ -580,7 +590,7 @@
     <string name="nc_voice_message_hold_to_record_info">Segure para gravar, solte para enviar.</string>
     <string name="nc_voice_message_missing_audio_permission">A permissão para gravação de áudio é necessária</string>
     <string name="nc_voice_message_slide_to_cancel">« Deslize para cancelar</string>
-    <string name="nc_webinar">Webinarário</string>
+    <string name="nc_webinar">Webinário</string>
     <string name="nc_yes">Sim</string>
     <string name="nc_zoom_in">Aumentar zoom</string>
     <string name="nc_zoom_out">Diminuir zoom</string>
@@ -636,6 +646,7 @@
     <string name="polls_voted_hidden_success">Voto enviado</string>
     <string name="previously_set">Definido anteriormente</string>
     <string name="qr_code_error">Não foi possível ler o código QR</string>
+    <string name="quoted_message_too_old">Esta mensagem é muito antiga para ser exibida</string>
     <string name="raise_hand">Levantar mão</string>
     <string name="reaction_forbidden">Você não tem permissão para adicionar ou remover reações nesta conversa</string>
     <string name="reactions_tab_all">Todos</string>
@@ -696,6 +707,7 @@
     <string name="shared_items_voice">Voz</string>
     <string name="show_ban_reason">Mostrar motivo do banimento</string>
     <string name="show_banned_participants">Mostrar participantes banidos</string>
+    <string name="silent_message_hint">Mensagem silenciosa</string>
     <string name="starred">Favorito</string>
     <string name="startCallForbidden">Você não tem permissão para iniciar uma chamada</string>
     <string name="start_thread">Criar um fio</string>
@@ -734,6 +746,8 @@
     <string name="translation_error_title">Falha na tradução</string>
     <string name="translation_from">De</string>
     <string name="translation_to">Para</string>
+    <string name="turn_off_background_blur">Desativar o desfoque do plano de fundo</string>
+    <string name="turn_on_background_blur">Ativar o desfoque do plano de fundo</string>
     <string name="typing_1_other">e 1 outro está digitando …</string>
     <string name="typing_are_typing">estão digitando …</string>
     <string name="typing_is_typing">está digitando …</string>
@@ -742,6 +756,7 @@
     <string name="unarchive_hint">Quando uma conversa for desarquivada, ela será mostrada novamente por padrão.</string>
     <string name="unarchived_conversation">%1$s desarquivado</string>
     <string name="unban">Desbanir</string>
+    <string name="unifiedpush">UnifiedPush</string>
     <string name="unpin_message">Desfixar mensagem</string>
     <string name="unread">Não lido</string>
     <string name="until_unpin">Até desfixar</string>
@@ -759,7 +774,6 @@
     <string name="user_info_headline">Título</string>
     <string name="user_info_organisation">Organização</string>
     <string name="user_info_phone">Número do telefone</string>
-    <string name="user_info_profile_disable">Desativar perfil</string>
     <string name="user_info_profile_enable">Ativar perfil</string>
     <string name="user_info_pronouns">Pronomes</string>
     <string name="user_info_role">Função</string>
@@ -771,6 +785,11 @@
     <string name="userinfo_no_info_text">Adicione nome, foto e detalhes de contato em sua página de perfil.</string>
     <string name="video_call">Videochamada</string>
     <string name="whats_your_status">Qual é o seu status?</string>
+    <plurals name="nc_new_messages_count">
+        <item quantity="one">%d new message</item>
+        <item quantity="many">%d new messages</item>
+        <item quantity="other">%dnovas mensagens</item>
+    </plurals>
     <plurals name="see_similar_system_messages">
         <item quantity="one">Veja %d mensagem semelhante</item>
         <item quantity="many">Veja %d mensagens semelhantes</item>

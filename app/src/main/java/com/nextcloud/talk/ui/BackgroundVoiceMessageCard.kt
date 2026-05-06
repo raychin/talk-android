@@ -92,6 +92,8 @@ class BackgroundVoiceMessageCard(
     }
 }
 
+private const val TITLE_SPACE = 0.8f
+
 @Suppress("LongParameterList", "LongMethod")
 @Composable
 fun BackgroundVoiceMessageCardContent(
@@ -142,7 +144,7 @@ fun BackgroundVoiceMessageCardContent(
 
                 Box(
                     modifier = Modifier
-                        .weight(0.8f)
+                        .weight(TITLE_SPACE)
                         .align(Alignment.CenterVertically),
                     contentAlignment = Alignment.Center
                 ) {
@@ -181,7 +183,7 @@ fun BackgroundVoiceMessageCardContent(
                     IconButton(onClick = onClosed) {
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_baseline_close_24),
-                            contentDescription = "contentDescription",
+                            contentDescription = stringResource(R.string.close),
                             modifier = Modifier
                                 .size(24.dp)
                                 .padding(2.dp),

@@ -63,6 +63,7 @@ import autodagger.AutoInjector
 import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.chat.viewmodels.ChatViewModel
+import com.nextcloud.talk.ui.dialog.DateTimeCompose.Companion.HALF_WEIGHT
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import com.nextcloud.talk.utils.database.user.CurrentUserProviderOld
@@ -78,20 +79,17 @@ import java.time.temporal.TemporalAdjusters.nextOrSame
 import javax.inject.Inject
 
 @AutoInjector(NextcloudTalkApplication::class)
-class DateTimeCompose(val bundle: Bundle) {
+class DateTimeCompose(val bundle: Bundle, val chatViewModel: ChatViewModel) {
     private var timeState = mutableStateOf(LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.MIN))
 
     init {
         NextcloudTalkApplication.sharedApplication!!.componentApplication.inject(this)
         val user = currentUserProvider.currentUser.blockingGet()
         val roomToken = bundle.getString(BundleKeys.KEY_ROOM_TOKEN)!!
-        val messageId = bundle.getString(BundleKeys.KEY_MESSAGE_ID)!!
+        val messageId = bundle.getInt(BundleKeys.KEY_MESSAGE_ID)
         val apiVersion = bundle.getInt(BundleKeys.KEY_CHAT_API_VERSION)
-        chatViewModel.getReminder(user, roomToken, messageId, apiVersion)
+        chatViewModel.getReminder(user, roomToken, messageId.toString(), apiVersion)
     }
-
-    @Inject
-    lateinit var chatViewModel: ChatViewModel
 
     @Inject
     lateinit var currentUserProvider: CurrentUserProviderOld
@@ -145,9 +143,9 @@ class DateTimeCompose(val bundle: Bundle) {
                 onClick = {
                     val user = currentUserProvider.currentUser.blockingGet()
                     val roomToken = bundle.getString(BundleKeys.KEY_ROOM_TOKEN)!!
-                    val messageId = bundle.getString(BundleKeys.KEY_MESSAGE_ID)!!
+                    val messageId = bundle.getInt(BundleKeys.KEY_MESSAGE_ID)
                     val apiVersion = bundle.getInt(BundleKeys.KEY_CHAT_API_VERSION)
-                    chatViewModel.deleteReminder(user, roomToken, messageId, apiVersion)
+                    chatViewModel.deleteReminder(user, roomToken, messageId.toString(), apiVersion)
                     shouldDismiss.value = true
                 },
                 modifier = Modifier
@@ -173,11 +171,11 @@ class DateTimeCompose(val bundle: Bundle) {
                 onClick = {
                     val user = currentUserProvider.currentUser.blockingGet()
                     val roomToken = bundle.getString(BundleKeys.KEY_ROOM_TOKEN)!!
-                    val messageId = bundle.getString(BundleKeys.KEY_MESSAGE_ID)!!
+                    val messageId = bundle.getInt(BundleKeys.KEY_MESSAGE_ID)
                     val apiVersion = bundle.getInt(BundleKeys.KEY_CHAT_API_VERSION)
                     val offset = timeState.value.atZone(ZoneOffset.systemDefault()).offset
                     val timeVal = timeState.value.toEpochSecond(offset)
-                    chatViewModel.setReminder(user, roomToken, messageId, timeVal.toInt(), apiVersion)
+                    chatViewModel.setReminder(user, roomToken, messageId.toString(), timeVal.toInt(), apiVersion)
                     shouldDismiss.value = true
                 },
                 modifier = Modifier
@@ -307,73 +305,54 @@ class DateTimeCompose(val bundle: Bundle) {
     @SuppressLint("UnusedBoxWithConstraintsScope")
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
+    private fun ExpandedDateTimePickers() {
+        val todayMillis = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val currentYear = LocalDate.now().year
+        val selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis >= todayMillis
+            override fun isSelectableYear(year: Int): Boolean = year >= currentYear
+        }
+        val datePickerState = rememberDatePickerState(selectableDates = selectableDates)
+        val now = LocalDateTime.now()
+        val timePickerState = rememberTimePickerState(
+            initialHour = now.hour,
+            initialMinute = now.minute,
+            is24Hour = DateFormat.is24HourFormat(LocalContext.current)
+        )
+        BoxWithConstraints(modifier = Modifier.requiredSizeIn(minWidth = 360.dp)) {
+            val scale = remember(maxWidth) { if (maxWidth < 360.dp) maxWidth / 360.dp else 1f }
+            DatePicker(
+                state = datePickerState,
+                modifier = Modifier.scale(scale),
+                colors = DatePickerDefaults.colors(containerColor = colorResource(R.color.bg_default))
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        TimePicker(state = timePickerState)
+        val date = datePickerState.selectedDateMillis?.let {
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneOffset.UTC) // Google sends time in UTC
+        }
+        val newTime = if (date != null) {
+            LocalDateTime.of(date.year, date.month, date.dayOfMonth, timePickerState.hour, timePickerState.minute)
+        } else {
+            LocalDate.now().atTime(timePickerState.hour, timePickerState.minute)
+        }
+        setTime(newTime)
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
     private fun CollapsableDateTime(shouldDismiss: MutableState<Boolean>, isCollapsed: MutableState<Boolean>) {
         GeneralIconButton(
             icon = ImageVector.vectorResource(R.drawable.ic_date_range_24px),
             label = stringResource(R.string.custom)
         ) { isCollapsed.value = !isCollapsed.value }
-        val scrollState = rememberScrollState()
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.verticalScroll(scrollState)
+            modifier = Modifier.verticalScroll(rememberScrollState())
         ) {
             if (!isCollapsed.value) {
-                val todayMillis = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                val currentYear = LocalDate.now().year
-                val selectableDates = object : SelectableDates {
-                    override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis >= todayMillis
-
-                    override fun isSelectableYear(year: Int): Boolean = year >= currentYear
-                }
-
-                val datePickerState = rememberDatePickerState(
-                    selectableDates = selectableDates
-                )
-                val now = LocalDateTime.now()
-                val timePickerState = rememberTimePickerState(
-                    initialHour = now.hour,
-                    initialMinute = now.minute,
-                    is24Hour = DateFormat.is24HourFormat(LocalContext.current)
-                )
-
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .requiredSizeIn(minWidth = 360.dp)
-                ) {
-                    val scale = remember(maxWidth) { if (maxWidth < 360.dp) maxWidth / 360.dp else 1f }
-
-                    DatePicker(
-                        state = datePickerState,
-                        modifier = Modifier
-                            .scale(scale),
-                        colors = DatePickerDefaults.colors(
-                            containerColor = colorResource(R.color.bg_default)
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                TimePicker(
-                    state = timePickerState
-                )
-
-                val date = datePickerState.selectedDateMillis?.let {
-                    val instant = Instant.ofEpochMilli(it)
-                    LocalDateTime.ofInstant(instant, ZoneOffset.UTC) // Google sends time in UTC
-                }
-                if (date != null) {
-                    val year = date.year
-                    val month = date.month
-                    val day = date.dayOfMonth
-                    val hour = timePickerState.hour
-                    val minute = timePickerState.minute
-                    val newTime = LocalDateTime.of(year, month, day, hour, minute)
-                    setTime(newTime)
-                } else {
-                    val newTime = LocalDate.now().atTime(timePickerState.hour, timePickerState.minute)
-                    setTime(newTime)
-                }
+                ExpandedDateTimePickers()
             }
             Submission(shouldDismiss)
         }
@@ -388,7 +367,7 @@ class DateTimeCompose(val bundle: Bundle) {
         if (DateFormat.is24HourFormat(context)) "dd MMM, HH:mm" else "dd MMM, hh:mm a"
 
     companion object {
-        private const val HALF_WEIGHT = 0.5f
+        const val HALF_WEIGHT = 0.5f
         private const val INT_8 = 8
         private const val INT_16 = 16
         private const val INT_18 = 18
@@ -422,12 +401,13 @@ private fun TimeOption(label: String, timeString: String, onClick: () -> Unit) {
             .padding(8.dp)
             .clickable { onClick() }
     ) {
-        Text(label, modifier = Modifier.weight(0.5f))
-        Text(timeString, modifier = Modifier.weight(0.5f))
+        Text(label, modifier = Modifier.weight(HALF_WEIGHT))
+        Text(timeString, modifier = Modifier.weight(HALF_WEIGHT))
     }
 }
 
 @Preview(name = "Light Mode")
+@Preview(name = "Dark Mode", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun GeneralIconButtonPreview(label: String = "Custom") {
     val context = LocalContext.current
@@ -442,15 +422,6 @@ fun GeneralIconButtonPreview(label: String = "Custom") {
     }
 }
 
-@Preview(
-    name = "Dark Mode",
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun GeneralIconButtonDarkPreview() {
-    GeneralIconButtonPreview()
-}
-
 @Preview(name = "RTL / Arabic", locale = "ar")
 @Composable
 fun GeneralIconButtonRtlPreview() {
@@ -458,6 +429,8 @@ fun GeneralIconButtonRtlPreview() {
 }
 
 @Preview(name = "Light Mode")
+@Preview(name = "Dark Mode", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "RTL / Arabic", locale = "ar")
 @Composable
 fun TimeOptionPreview() {
     val context = LocalContext.current
@@ -474,17 +447,75 @@ fun TimeOptionPreview() {
     }
 }
 
-@Preview(
-    name = "Dark Mode",
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun TimeOptionDarkPreview() {
-    TimeOptionPreview()
-}
-
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(name = "Light Mode")
+@Preview(name = "Dark Mode", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Preview(name = "RTL / Arabic", locale = "ar")
 @Composable
-fun TimeOptionRtlPreview() {
-    TimeOptionPreview()
+fun ExpandedDateTimePickersPreview() {
+    val context = LocalContext.current
+    val colorScheme = ComposePreviewUtils.getInstance(context).viewThemeUtils.getColorScheme(context)
+    val todayMillis = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val currentYear = LocalDate.now().year
+    val selectableDates = object : SelectableDates {
+        override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis >= todayMillis
+        override fun isSelectableYear(year: Int): Boolean = year >= currentYear
+    }
+    val datePickerState = rememberDatePickerState(selectableDates = selectableDates)
+    val now = LocalDateTime.now()
+    val timePickerState = rememberTimePickerState(
+        initialHour = now.hour,
+        initialMinute = now.minute,
+        is24Hour = DateFormat.is24HourFormat(context)
+    )
+    MaterialTheme(colorScheme = colorScheme) {
+        Surface {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                BoxWithConstraints(modifier = Modifier.requiredSizeIn(minWidth = 360.dp)) {
+                    val scale = remember(maxWidth) { if (maxWidth < 360.dp) maxWidth / 360.dp else 1f }
+                    DatePicker(
+                        state = datePickerState,
+                        modifier = Modifier.scale(scale),
+                        colors = DatePickerDefaults.colors(containerColor = colorResource(R.color.bg_default))
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                TimePicker(state = timePickerState)
+            }
+        }
+    }
+}
+
+@Preview(name = "Light Mode")
+@Preview(name = "Dark Mode", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "RTL / Arabic", locale = "ar")
+@Composable
+fun CollapsableDateTimePreview() {
+    val context = LocalContext.current
+    val colorScheme = ComposePreviewUtils.getInstance(context).viewThemeUtils.getColorScheme(context)
+    MaterialTheme(colorScheme = colorScheme) {
+        Surface {
+            Column(modifier = Modifier.padding(16.dp)) {
+                GeneralIconButton(
+                    icon = ImageVector.vectorResource(R.drawable.ic_date_range_24px),
+                    label = stringResource(R.string.custom)
+                ) {}
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    TextButton(onClick = {}, modifier = Modifier.weight(HALF_WEIGHT)) {
+                        Text(stringResource(R.string.nc_delete), color = Color.Red)
+                    }
+                    TextButton(onClick = {}, modifier = Modifier.weight(HALF_WEIGHT)) {
+                        Text(stringResource(R.string.close))
+                    }
+                    TextButton(onClick = {}, modifier = Modifier.weight(HALF_WEIGHT)) {
+                        Text(stringResource(R.string.set))
+                    }
+                }
+            }
+        }
+    }
 }

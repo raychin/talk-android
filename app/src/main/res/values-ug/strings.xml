@@ -340,12 +340,11 @@
     <string name="nc_mark_conversation_as_unimportant">سۆھبەتنىڭ مۇھىملىق بەلگىسى چىقىرۋېتىلدى</string>
     <string name="nc_meeting_ended">يىغىن ئاخىرلاشتى</string>
     <string name="nc_message_added_to_notes">ئۇچۇر خاتىرىگە قوشۇلدى</string>
-    <string name="nc_message_failed">مەغلۇب بولدى</string>
     <string name="nc_message_failed_to_send">ئۇچۇر ئەۋەتمىدى:</string>
     <string name="nc_message_offline">تورسىز</string>
     <string name="nc_message_quote_cancel_reply">جاۋابنى ئەمەلدىن قالدۇرۇڭ</string>
     <string name="nc_message_read">ئۇچۇر ئوقۇلدى</string>
-    <string name="nc_message_sending">ئەۋەتىۋاتىدۇ</string>
+    <string name="nc_message_sending">ئۇچۇر ئەۋەتىش</string>
     <string name="nc_message_sent">ئۇچۇر ئەۋەتىلدى</string>
     <string name="nc_microphone_enabled_audio_recording">مىكروفۇن ئوچۇق ھەمدە ئاۋاز ئۈنگە ئېلىنىۋاتىدۇ</string>
     <string name="nc_microphone_permission_hint">ئاۋازلىق ئالاقىنى قوزغىتىش ئۈچۈن \ \"مىكروفون \" ئىجازەت بېرىڭ.</string>
@@ -402,7 +401,6 @@
     <string name="nc_promote">رىياسەتچىگە تەشۋىق قىلىڭ</string>
     <string name="nc_public_call_status">ئاممىۋى سۆھبەت</string>
     <string name="nc_push_disabled">ئىتتىرىش ئۇقتۇرۇشى چەكلەنگەن</string>
-    <string name="nc_push_notification_error">كەچۈرۈڭ خاتالىق كۆرۈلدى، خاتالىق بولسا %1$s</string>
     <string name="nc_push_notification_fetch_error">كەچۈرۈڭ خاتالىق كۆرۈلدى، سىناق ئۇچۇرنى چۈشۈرەلمىدى</string>
     <string name="nc_push_notification_message">Push ئۇقتۇرۇش مۇۋەپپەقىيەتلىك ئەۋەتىلدى. سىز ھازىر بۇ ئۈسكۈنىدە «Push ئۇقتۇرۇشلىرىنى سىناق قىلىۋاتىدۇ» دېگەن ماۋزۇدىكى ئۇقتۇرۇشنى تاپشۇرۇۋېلىشىڭىز كېرەك.</string>
     <string name="nc_remind">كېيىن ماڭا ئەسكەرتىڭ</string>
@@ -706,6 +704,8 @@
     <string name="translation_error_title">تەرجىمە مەغلۇب بولدى</string>
     <string name="translation_from">دىن</string>
     <string name="translation_to">غا</string>
+    <string name="turn_off_background_blur">ئارقا كۆرۈنۈشنى تۇتۇقلاشتۇرۇشنى تاقا</string>
+    <string name="turn_on_background_blur">ئارقا كۆرۈنۈشنى تۇتۇقلاشتۇرۇشنى ئاچ</string>
     <string name="typing_1_other">يەنە 1 بولسا خەت بېسىۋاتىدۇ…</string>
     <string name="typing_are_typing">يېزىۋاتىدۇ…</string>
     <string name="typing_is_typing">يېزىۋاتىدۇ…</string>

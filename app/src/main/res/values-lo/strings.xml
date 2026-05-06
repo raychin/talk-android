@@ -340,12 +340,11 @@
     <string name="nc_mark_conversation_as_unimportant">Conversation unmarked as important</string>
     <string name="nc_meeting_ended">Meeting ended</string>
     <string name="nc_message_added_to_notes">Message added to notes</string>
-    <string name="nc_message_failed">Failed</string>
     <string name="nc_message_failed_to_send">Failed to send message:</string>
     <string name="nc_message_offline">Offline</string>
     <string name="nc_message_quote_cancel_reply">Cancel reply</string>
     <string name="nc_message_read">Message read</string>
-    <string name="nc_message_sending">Sending</string>
+    <string name="nc_message_sending">Sending message</string>
     <string name="nc_message_sent">Message sent</string>
     <string name="nc_microphone_enabled_audio_recording">Microphone is enabled and audio is recording</string>
     <string name="nc_microphone_permission_hint">To enable voice communication please grant \"Microphone\" permission.</string>
@@ -402,7 +401,6 @@
     <string name="nc_promote">Promote to moderator</string>
     <string name="nc_public_call_status">Public conversation</string>
     <string name="nc_push_disabled">Push notifications disabled</string>
-    <string name="nc_push_notification_error"> Sorry something went wrong, error is %1$s</string>
     <string name="nc_push_notification_fetch_error">Sorry something went wrong, cannot fetch test push message</string>
     <string name="nc_push_notification_message">Push notification is sent successfully. You should now receive a notification on this device with the title \'Testing push notifications\'</string>
     <string name="nc_remind">Remind me later</string>
@@ -704,6 +702,8 @@
     <string name="translation_error_title">Translation failed</string>
     <string name="translation_from">ຈາກ</string>
     <string name="translation_to">ເຖິງ</string>
+    <string name="turn_off_background_blur">Turn off background blur</string>
+    <string name="turn_on_background_blur">Turn on background blur</string>
     <string name="typing_1_other">and 1 other is typing …</string>
     <string name="typing_are_typing">are typing …</string>
     <string name="typing_is_typing">is typing …</string>

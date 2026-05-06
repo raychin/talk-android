@@ -95,6 +95,8 @@
     <string name="lower_hand">放下手</string>
     <string name="marked_as_read">將對話 %1$s 標記為已讀</string>
     <string name="marked_as_unread">將對話 %1$s 標記為未讀</string>
+    <string name="media_message_content_description">檔案預覽</string>
+    <string name="media_message_content_play">播放媒體檔案</string>
     <string name="mentioned">已提及</string>
     <string name="menu_item_sort_by_date_newest_first">最新先</string>
     <string name="menu_item_sort_by_date_oldest_first">最舊先</string>
@@ -262,6 +264,7 @@
     <string name="nc_dialog_save_to_storage_yes">是</string>
     <string name="nc_display_name_not_fetched">無法取得顯示名稱，將停止操作。</string>
     <string name="nc_display_name_not_stored">無法儲存顯示名稱，操作中斷。</string>
+    <string name="nc_draft_prefix">草稿：%1$s</string>
     <string name="nc_edit_icon">編輯</string>
     <string name="nc_edit_message">編輯</string>
     <string name="nc_edit_message_text">編輯訊息</string>
@@ -342,14 +345,14 @@
     <string name="nc_mark_conversation_as_unimportant">對話已標記為非重要</string>
     <string name="nc_meeting_ended">會議已結束</string>
     <string name="nc_message_added_to_notes">訊息已新增至筆記</string>
-    <string name="nc_message_failed">失敗了</string>
+    <string name="nc_message_failed">傳送訊息失敗</string>
     <string name="nc_message_failed_to_send">傳送訊息失敗︰</string>
     <string name="nc_message_offline">離線</string>
     <string name="nc_message_quote_cancel_reply">取消回覆</string>
     <string name="nc_message_read">訊息已讀</string>
     <string name="nc_message_scheduled">訊息已安排好傳送時間</string>
     <string name="nc_message_scheduled_at">訊息已安排於 %1$s 傳送</string>
-    <string name="nc_message_sending">正在發送</string>
+    <string name="nc_message_sending">傳送訊息</string>
     <string name="nc_message_sent">訊息已傳送</string>
     <string name="nc_microphone_enabled_audio_recording">麥克風已啟用，音頻正在錄音</string>
     <string name="nc_microphone_permission_hint">要啟用音頻通訊，請授予「米高風」權限。</string>
@@ -408,7 +411,7 @@
     <string name="nc_promote">晉升為主持人</string>
     <string name="nc_public_call_status">公開對話</string>
     <string name="nc_push_disabled">取消推送通知</string>
-    <string name="nc_push_notification_error">抱歉，出現問題，錯誤是 %1$s</string>
+    <string name="nc_push_notification_error">抱歉，發生了一點問題，錯誤為 %1$s</string>
     <string name="nc_push_notification_fetch_error">抱歉，出現問題，無法獲取測試推送訊息</string>
     <string name="nc_push_notification_message">推送通知已成功發送。您現在應該在此設備上收到標題為「測試推送通知」的通知</string>
     <string name="nc_remind">稍後提醒我</string>
@@ -636,6 +639,7 @@
     <string name="polls_voted_hidden_success">已提交投票</string>
     <string name="previously_set">先前設定</string>
     <string name="qr_code_error">無法讀取 QR 碼</string>
+    <string name="quoted_message_too_old">此訊息已過期，無法顯示</string>
     <string name="raise_hand">舉手</string>
     <string name="reaction_forbidden">您無權在此對話中新增或刪除表情符號。</string>
     <string name="reactions_tab_all">全部</string>
@@ -734,6 +738,8 @@
     <string name="translation_error_title">翻譯失敗</string>
     <string name="translation_from">從</string>
     <string name="translation_to">至</string>
+    <string name="turn_off_background_blur">關閉背景模糊</string>
+    <string name="turn_on_background_blur">啟用背景模糊</string>
     <string name="typing_1_other">還有 1 個人正在打字 …</string>
     <string name="typing_are_typing">正在打字 …</string>
     <string name="typing_is_typing">正在打字 …</string>
@@ -751,6 +757,7 @@
     <string name="user_absence_replacement">取代︰</string>
     <string name="user_avatar">用戶虛擬化身大頭照</string>
     <string name="user_info_address">地址</string>
+    <string name="user_info_biography">傳記</string>
     <string name="user_info_bluesky">Bluesky</string>
     <string name="user_info_displayname">全名</string>
     <string name="user_info_email">電郵地址</string>
@@ -769,6 +776,9 @@
     <string name="userinfo_no_info_text">在您的個人檔案中新增名字、頭像和聯絡資訊</string>
     <string name="video_call">視頻通話</string>
     <string name="whats_your_status">您目前的狀態是什麼呢？</string>
+    <plurals name="nc_new_messages_count">
+        <item quantity="other">%d 則新訊息</item>
+    </plurals>
     <plurals name="see_similar_system_messages">
         <item quantity="other">檢視 %d 則類似的訊息</item>
     </plurals>

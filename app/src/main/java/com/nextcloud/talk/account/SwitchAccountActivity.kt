@@ -12,7 +12,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.core.graphics.drawable.toDrawable
-import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import autodagger.AutoInjector
 import com.nextcloud.talk.R
@@ -24,6 +23,7 @@ import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ActivitySwitchAccountBinding
 import com.nextcloud.talk.models.ImportAccount
 import com.nextcloud.talk.models.json.participants.Participant
+import com.nextcloud.talk.conversationlist.DirectShareHelper
 import com.nextcloud.talk.users.UserManager
 import com.nextcloud.talk.utils.AccountUtils.findAvailableAccountsOnDevice
 import com.nextcloud.talk.utils.AccountUtils.getInformationFromAccount
@@ -31,7 +31,6 @@ import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_BASE_URL
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_IS_ACCOUNT_IMPORT
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_TOKEN
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_USERNAME
-import org.osmdroid.config.Configuration
 import java.net.CookieManager
 import javax.inject.Inject
 
@@ -62,8 +61,6 @@ class SwitchAccountActivity : BaseActivity() {
         setContentView(binding.root)
         setupActionBar()
         initSystemBars()
-
-        Configuration.getInstance().load(context, PreferenceManager.getDefaultSharedPreferences(context))
 
         handleIntent()
     }
@@ -97,6 +94,7 @@ class SwitchAccountActivity : BaseActivity() {
                     reauthorizeFromImport(item.account)
                 } else {
                     if (userManager.setUserAsActive(item.user!!).blockingGet()) {
+                        DirectShareHelper.removeAllShareTargetShortcuts(this@SwitchAccountActivity)
                         cookieManager.cookieStore.removeAll()
                         finish()
                     }

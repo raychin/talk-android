@@ -7,6 +7,7 @@
 
 package com.nextcloud.talk.chat
 
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -29,6 +30,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.LinearInterpolator
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -77,6 +79,7 @@ import com.nextcloud.talk.ui.dialog.AttachmentDialog
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.users.UserManager
 import com.nextcloud.talk.utils.ApiUtils
+import com.nextcloud.talk.utils.DisplayUtils
 import com.nextcloud.talk.utils.CapabilitiesUtil
 import com.nextcloud.talk.utils.CharPolicy
 import com.nextcloud.talk.utils.ConversationUtils
@@ -128,6 +131,8 @@ class MessageInputFragment : Fragment() {
     private var typingTimer: CountDownTimer? = null
     private lateinit var chatActivity: ChatActivity
     private var emojiPopup: EmojiPopup? = null
+    private var isEmojiPopupOpen = false
+    private var restoreKeyboardOnEmojiDismiss = false
     private var mentionAutocomplete: Autocomplete<*>? = null
     private var xcounter = 0f
     private var ycounter = 0f
@@ -159,6 +164,10 @@ class MessageInputFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        restoreKeyboardOnEmojiDismiss = false
+        emojiPopup?.dismiss()
+        emojiPopup = null
+        isEmojiPopupOpen = false
         super.onDestroyView()
         if (mentionAutocomplete != null && mentionAutocomplete!!.isPopupShowing) {
             mentionAutocomplete?.dismissPopup()
@@ -207,14 +216,16 @@ class MessageInputFragment : Fragment() {
 
         messageInputViewModel.getReplyChatMessage.observe(viewLifecycleOwner) { message ->
             message?.let {
-                chatActivity.chatViewModel.messageDraft.quotedMessageText = message.text
+                chatActivity.chatViewModel.messageDraft.quotedMessageText = message.getRichText()
                 chatActivity.chatViewModel.messageDraft.quotedDisplayName = message.actorDisplayName
-                chatActivity.chatViewModel.messageDraft.quotedImageUrl = message.imageUrl
+                // chatActivity.chatViewModel.messageDraft.quotedImageUrl = message.imageUrl
+                chatActivity.chatViewModel.messageDraft.quotedImageUrl = "" // TODO
                 chatActivity.chatViewModel.messageDraft.quotedJsonId = message.jsonMessageId
                 replyToMessage(
-                    message.text,
-                    message.actorDisplayName,
-                    message.imageUrl
+                    quotedMessageText = message.getRichText(),
+                    quotedActorDisplayName = message.actorDisplayName,
+                    // quotedImageUrl = message.imageUrl
+                    quotedImageUrl = "" // TODO
                 )
             } ?: clearReplyUi()
         }
@@ -237,7 +248,7 @@ class MessageInputFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 messageInputViewModel.getEditChatMessage.collect { message ->
-                    message?.let { setEditUI(it as ChatMessage) } ?: clearEditUI()
+                    message?.let { setEditUI(it) } ?: clearEditUI()
                 }
             }
         }
@@ -297,7 +308,12 @@ class MessageInputFragment : Fragment() {
                 val url: String = if (message.actorType == "guests" || message.actorType == "guest") {
                     ApiUtils.getUrlForGuestAvatar(user!!.baseUrl!!, message.actorDisplayName, true)
                 } else {
-                    ApiUtils.getUrlForAvatar(user!!.baseUrl!!, message.actorId, false)
+                    ApiUtils.getUrlForAvatar(
+                        user!!.baseUrl!!,
+                        message.actorId,
+                        false,
+                        darkMode = DisplayUtils.isDarkModeOn(requireContext())
+                    )
                 }
 
                 val imageRequest: ImageRequest = ImageRequest.Builder(requireContext())
@@ -512,7 +528,7 @@ class MessageInputFragment : Fragment() {
             replaceMentionChipSpans(editable)
             val inputEditText = editable.toString()
 
-            val message = messageInputViewModel.getEditChatMessage.value as ChatMessage
+            val message = messageInputViewModel.getEditChatMessage.value ?: return@setOnClickListener
             if (message.message!!.trim() != inputEditText.trim()) {
                 if (message.messageParameters != null) {
                     val editedMessage = messageUtils.processEditMessageParameters(
@@ -821,6 +837,8 @@ class MessageInputFragment : Fragment() {
 
     private fun showRecordAudioUi(show: Boolean) {
         if (show) {
+            restoreKeyboardOnEmojiDismiss = false
+            emojiPopup?.dismiss()
             val animation: Animation = AlphaAnimation(FULLY_OPAQUE, FULLY_TRANSPARENT)
             animation.duration = ANIMATION_DURATION
             animation.interpolator = LinearInterpolator()
@@ -852,31 +870,59 @@ class MessageInputFragment : Fragment() {
         }
     }
 
-    private fun initSmileyKeyboardToggler() {
-        val smileyButton = binding.fragmentMessageInputView.findViewById<ImageButton>(R.id.smileyButton)
+    private fun updateSmileyButtonIcon() {
+        val icon = if (isEmojiPopupOpen) {
+            R.drawable.ic_baseline_keyboard_24
+        } else {
+            R.drawable.ic_insert_emoticon_black_24dp
+        }
+        val drawable = ContextCompat.getDrawable(requireContext(), icon)
+        binding.fragmentMessageInputView.smileyButton.setImageDrawable(drawable)
+    }
 
-        emojiPopup = binding.fragmentMessageInputView.inputEditText?.let {
-            EmojiPopup(
+    private fun showKeyboard() {
+        val editText = binding.fragmentMessageInputView.inputEditText
+        editText.requestFocus()
+        val inputMethodManager =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        inputMethodManager?.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    private fun initSmileyKeyboardToggler() {
+        val inputEditText = binding.fragmentMessageInputView.inputEditText
+        if (emojiPopup == null) {
+            emojiPopup = EmojiPopup(
                 rootView = binding.root,
-                editText = it,
+                editText = inputEditText,
                 onEmojiPopupShownListener = {
-                    smileyButton?.setImageDrawable(
-                        ContextCompat.getDrawable(requireContext(), R.drawable.ic_baseline_keyboard_24)
-                    )
+                    isEmojiPopupOpen = true
+                    updateSmileyButtonIcon()
                 },
                 onEmojiPopupDismissListener = {
-                    smileyButton?.setImageDrawable(
-                        ContextCompat.getDrawable(requireContext(), R.drawable.ic_insert_emoticon_black_24dp)
-                    )
+                    isEmojiPopupOpen = false
+                    updateSmileyButtonIcon()
+                    if (restoreKeyboardOnEmojiDismiss) {
+                        restoreKeyboardOnEmojiDismiss = false
+                        showKeyboard()
+                    }
                 },
                 onEmojiClickListener = {
-                    binding.fragmentMessageInputView.inputEditText?.editableText?.append(" ")
+                    inputEditText.editableText?.append(" ")
                 }
             )
         }
 
-        smileyButton?.setOnClickListener {
-            emojiPopup?.toggle()
+        updateSmileyButtonIcon()
+
+        binding.fragmentMessageInputView.smileyButton.setOnClickListener {
+            if (isEmojiPopupOpen) {
+                restoreKeyboardOnEmojiDismiss = true
+                emojiPopup?.dismiss()
+            } else {
+                restoreKeyboardOnEmojiDismiss = false
+                inputEditText.requestFocus()
+                emojiPopup?.toggle()
+            }
         }
     }
 
@@ -991,6 +1037,7 @@ class MessageInputFragment : Fragment() {
             replaceMentionChipSpans(editable)
             binding.fragmentMessageInputView.inputEditText?.setText("")
             sendStopTypingMessage()
+            reportOutgoingDirectShare()
             sendMessage(
                 editable.toString(),
                 sendWithoutNotification
@@ -1000,7 +1047,26 @@ class MessageInputFragment : Fragment() {
         }
     }
 
+    private fun reportOutgoingDirectShare() {
+        val user = chatActivity.conversationUser ?: return
+        val isOneToOne = chatActivity.currentConversation?.type ==
+            com.nextcloud.talk.models.json.conversations.ConversationEnums
+                .ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
+        val displayName = chatActivity.currentConversation?.displayName ?: chatActivity.roomToken
+        lifecycleScope.launch {
+            com.nextcloud.talk.conversationlist.DirectShareHelper.reportOutgoingMessage(
+                requireContext(),
+                user,
+                chatActivity.roomToken,
+                displayName,
+                isOneToOne
+            )
+        }
+    }
+
     private fun sendMessage(message: String, sendWithoutNotification: Boolean) {
+        chatActivity.chatViewModel.onMessageSent()
+
         messageInputViewModel.sendChatMessage(
             credentials = chatActivity.conversationUser!!.getCredentials(),
             url = ApiUtils.getUrlForChat(
@@ -1095,10 +1161,10 @@ class MessageInputFragment : Fragment() {
             messageInputViewModel.editChatMessage(
                 chatActivity.credentials!!,
                 ApiUtils.getUrlForChatMessage(
-                    apiVersion,
-                    chatActivity.conversationUser!!.baseUrl!!,
-                    chatActivity.roomToken,
-                    message.id
+                    version = apiVersion,
+                    baseUrl = chatActivity.conversationUser!!.baseUrl!!,
+                    token = chatActivity.roomToken,
+                    messageId = message.jsonMessageId.toString()
                 ),
                 editedMessageText
             )

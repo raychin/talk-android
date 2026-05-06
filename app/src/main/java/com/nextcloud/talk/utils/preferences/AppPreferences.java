@@ -68,6 +68,14 @@ public interface AppPreferences {
 
     void removePushToken();
 
+    boolean getUseUnifiedPush();
+
+    void setUseUnifiedPush(boolean value);
+
+    Long getUnifiedPushLatestEndpoint();
+
+    void setUnifiedPushLatestEndpoint(Long date);
+
     String getTemporaryClientCertAlias();
 
     void setTemporaryClientCertAlias(String alias);
@@ -186,6 +194,10 @@ public interface AppPreferences {
     void setConversationListPositionAndOffset(int position, int offset);
 
     Pair<Integer, Integer> getConversationListPositionAndOffset();
+
+    void setConversationListLastUserId(long userId);
+
+    long getConversationListLastUserId();
 
     void clear();
 }

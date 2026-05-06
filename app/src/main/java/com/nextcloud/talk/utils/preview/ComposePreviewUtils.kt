@@ -27,8 +27,8 @@ import com.nextcloud.talk.chat.viewmodels.ChatViewModel
 import com.nextcloud.talk.contacts.ContactsRepository
 import com.nextcloud.talk.contacts.ContactsRepositoryImpl
 import com.nextcloud.talk.contacts.ContactsViewModel
-import com.nextcloud.talk.conversationcreation.ConversationCreationRepositoryImpl
-import com.nextcloud.talk.conversationcreation.ConversationCreationViewModel
+import com.nextcloud.talk.conversationcreation.data.ConversationCreationRepositoryImpl
+import com.nextcloud.talk.conversationcreation.viewmodel.ConversationCreationViewModel
 import com.nextcloud.talk.conversationlist.data.OfflineConversationsRepository
 import com.nextcloud.talk.conversationlist.data.network.ConversationsNetworkDataSource
 import com.nextcloud.talk.conversationlist.data.network.OfflineFirstConversationsRepository
@@ -49,6 +49,7 @@ import com.nextcloud.talk.ui.theme.MaterialSchemesProviderImpl
 import com.nextcloud.talk.ui.theme.TalkSpecificViewThemeUtils
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.users.UserManager
+import com.nextcloud.talk.utils.database.user.CurrentUserProviderImpl
 import com.nextcloud.talk.utils.database.user.CurrentUserProviderOldImpl
 import com.nextcloud.talk.utils.database.user.CurrentUserProviderOld
 import com.nextcloud.talk.utils.message.MessageUtils
@@ -165,7 +166,7 @@ class ComposePreviewUtils private constructor(context: Context) {
         )
 
     val reactionsRepository: ReactionsRepository
-        get() = ReactionsRepositoryImpl(ncApi, chatMessagesDao)
+        get() = ReactionsRepositoryImpl(ncApiCoroutines, chatMessagesDao)
 
     val mediaRecorderManager: MediaRecorderManager
         get() = MediaRecorderManager()
@@ -173,16 +174,22 @@ class ComposePreviewUtils private constructor(context: Context) {
     val audioFocusRequestManager: AudioFocusRequestManager
         get() = AudioFocusRequestManager(mContext)
 
+    val currentUserProvider: CurrentUserProviderImpl
+        get() = CurrentUserProviderImpl(userManager)
+
     val chatViewModel: ChatViewModel
         get() = ChatViewModel(
-            appPreferences,
-            chatNetworkDataSource,
-            chatRepository,
-            threadsRepository,
-            conversationRepository,
-            reactionsRepository,
-            mediaRecorderManager,
-            audioFocusRequestManager
+            appPreferences = appPreferences,
+            chatNetworkDataSource = chatNetworkDataSource,
+            chatRepository = chatRepository,
+            threadsRepository = threadsRepository,
+            conversationRepository = conversationRepository,
+            reactionsRepository = reactionsRepository,
+            mediaRecorderManager = mediaRecorderManager,
+            audioFocusRequestManager = audioFocusRequestManager,
+            currentUserProvider = currentUserProvider,
+            chatRoomToken = "",
+            conversationThreadId = null
         )
 
     val contactsRepository: ContactsRepository
