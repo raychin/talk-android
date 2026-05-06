@@ -110,6 +110,20 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
 
         image.minimumHeight = DisplayUtils.convertDpToPixel(MIN_IMAGE_HEIGHT, context!!).toInt()
 
+        // 设置图片最大宽度
+        val screenWidth = DisplayUtils.getScreenWidth(context!!)
+        val maxImageWidth = (screenWidth * MAX_IMAGE_WIDTH_RATIO).toInt()
+        // 获取屏幕高度
+        val screenHeight = DisplayUtils.getScreenHeight(context!!)
+        // 计算最大高度
+        val maxImageHeight = (screenHeight * MAX_IMAGE_HEIGHT_RATIO).toInt()
+        val layoutParams = image.layoutParams
+        if (layoutParams != null) {
+            // layoutParams.width = maxImageWidth
+            layoutParams.height = maxImageHeight
+            image.layoutParams = layoutParams
+        }
+
         if (message.lastEditTimestamp != 0L && !message.isDeleted) {
             time.text = dateUtils.getLocalTimeStringFromTimestamp(message.lastEditTimestamp!!)
             messageEditIndicator.visibility = View.VISIBLE
@@ -393,7 +407,16 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
         const val ACTOR_TYPE_BOTS = "bots"
         const val ACTOR_ID_CHANGELOG = "changelog"
         const val KEY_NAME = "name"
-        const val MIN_IMAGE_HEIGHT = 100F
+        // const val MIN_IMAGE_HEIGHT = 100F
         const val HORIZONTAL_REACTION_PADDING = 8.0F
+
+        // const val MIN_IMAGE_HEIGHT = 100F
+        // 参照微信图片预览尺寸设置
+        const val MIN_IMAGE_HEIGHT = 120F  // 最小高度从 100 改为 60，类似微信的缩略图大小
+        const val MAX_IMAGE_WIDTH_RATIO = 0.75f  // 最大宽度为屏幕宽度
+        const val MAX_IMAGE_HEIGHT_RATIO = 0.18f  // 最大宽度为屏幕高度
+        const val IMAGE_GRID_SIZE = 120F  // 网格预览尺寸（类似微信聊天列表中的小图）
+        const val PREVIEW_MAX_WIDTH = 1024  // 预览图最大宽度
+        const val PREVIEW_MAX_HEIGHT = 1024  // 预览图最大高度
     }
 }

@@ -203,4 +203,7 @@ public interface AppPreferences {
 
     void clearNotificationCount();
 
+    String getAppLanguage();
+
+    void setAppLanguage(String language);
 }
