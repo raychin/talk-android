@@ -1021,4 +1021,12 @@ How to translate with transifex:
 
     <string name="clps_message_delete_are_you_sure">Are you sure you want to delete this message? This will only
         delete it from your account and won\'t affect other users.</string>
+
+    <string name="switch_to_landscape">Switch to landscape</string>
+    <string name="switch_to_portrait">Switch to portrait</string>
+    <string name="screen_share">Share screen</string>
+    <string name="stop_screen_share">Stop sharing screen</string>
+    <string name="screen_share_permission_required">Screen share requires permission</string>
+    <string name="screen_share_started">Screen sharing started</string>
+    <string name="screen_share_stopped">Screen sharing stopped</string>
 </resources>

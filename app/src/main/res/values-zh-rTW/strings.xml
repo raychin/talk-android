@@ -116,6 +116,11 @@ How to translate with transifex:
     <string name="nc_settings_no_ringtone">無聲音</string>
     <string name="nc_settings_server_notification_app_not_installed_title">伺服器通知應用程式未安裝</string>
     <string name="nc_settings_contact_admin_of">請聯絡管理員：</string>
+    <string name="nc_confirm">確認</string>
+    <string name="battery_optimization_title">電池設定</string>
+    <string name="battery_optimization_not_ignored">電池最佳化已啟用，可能會導致問題。您應該停用電池最佳化！</string>
+    <string name="battery_optimization_ignored">電池最佳化被忽略，一切正常</string>
+    <string name="notification_permission">通知權限</string>
 
     <string name="nc_settings_appearance">外觀</string>
     <string name="nc_settings_theme_title">主題</string>
@@ -173,8 +178,8 @@ How to translate with transifex:
 
     <string name="nc_profile_personal_info_title">個人資訊</string>
 
-    <string name="nc_settings_diagnose_title">診斷</string>
-    <string name="nc_settings_diagnose_subtitle">開啟診斷畫面以檢查設定或建立錯誤報告</string>
+    <string name="nc_settings_diagnosis_title">診斷</string>
+    <string name="nc_settings_diagnosis_subtitle">開啟診斷畫面以檢查設定或建立錯誤報告</string>
 
     <string name="nc_settings_notifications_granted">通知已授予權限</string>
     <string name="nc_settings_notifications_declined">通知被拒絕</string>
@@ -182,9 +187,9 @@ How to translate with transifex:
     <!-- Diagnose -->
     <string name="nc_notifications_troubleshooting_dialog_title">通知故障排除</string>
     <string name="nc_notifications_troubleshooting_dialog_text">通知權限和電池設定已正確配置以接收通知。如果您仍然無法接收通知，請檢查通話和訊息的通知管道是否已啟用。更多協助請造訪 DontKillMyApp.com 或查看故障排除清單。如果仍然無效，請前往診斷畫面並傳送錯誤報告。</string>
-    <string name="nc_diagnose_dialog_open_checklist">開啟故障排除清單</string>
-    <string name="nc_diagnose_dialog_open_dontkillmyapp_website">Open dontkillmyapp.com</string>
-    <string name="nc_diagnose_dialog_open_diagnose">開啟診斷畫面</string>
+    <string name="nc_diagnosis_dialog_open_checklist">開啟故障排除清單</string>
+    <string name="nc_diagnosis_dialog_open_dontkillmyapp_website">開啟 dontkillmyapp.com</string>
+    <string name="nc_diagnosis_dialog_open_diagnosis">開啟診斷畫面</string>
 
     <string name="nc_ignore_battery_optimization_dialog_title">忽略電池最佳化</string>
     <string name="nc_ignore_battery_optimization_dialog_text">電池最佳化未被忽略。應變更此項以確保通知在背景正常工作！請按一下確定並選擇「所有應用程式」-> %1$s -> 「不要最佳化」。</string>
@@ -193,45 +198,48 @@ How to translate with transifex:
     <string name="nc_notification_warning">通知未正確設定</string>
     <string name="nc_not_now">稍後</string>
 
-    <string name="nc_diagnose_meta_category_title">元資訊</string>
-    <string name="nc_diagnose_meta_system_report_date">系統報告產生時間</string>
-    <string name="nc_diagnose_phone_category_title">手機</string>
-    <string name="nc_diagnose_device_name_title">裝置</string>
-    <string name="nc_diagnose_android_version_title">Android 版本</string>
-    <string name="nc_diagnose_app_category_title">應用程式</string>
-    <string name="nc_diagnose_app_name_title">應用程式名稱</string>
-    <string name="nc_diagnose_app_version_title">應用程式版本</string>
-    <string name="nc_diagnose_app_users_amount">註冊使用者數</string>
-    <string name="nc_diagnose_gplay_available_title">Google Play 服務</string>
-    <string name="nc_diagnose_gplay_available_yes">Google Play 服務可用</string>
-    <string name="nc_diagnose_gplay_available_no">Google Play 服務不可用。不支援通知</string>
-    <string name="nc_diagnose_battery_optimization_title">電池設定</string>
-    <string name="nc_diagnose_battery_optimization_not_ignored">電池最佳化已啟用，可能會導致問題。您應該停用電池最佳化！</string>
-    <string name="nc_diagnose_battery_optimization_ignored">電池最佳化被忽略，一切正常</string>
-    <string name="nc_diagnose_notification_permission">通知權限</string>
-    <string name="nc_diagnose_notification_calls_channel_permission">通話通知管道已啟用？</string>
-    <string name="nc_diagnose_notification_messages_channel_permission">訊息通知管道已啟用？</string>
-    <string name="nc_diagnose_firebase_push_token_title">Firebase 推播令牌</string>
-    <string name="nc_diagnose_firebase_push_token_latest_generated">最新 Firebase 推播令牌產生時間</string>
-    <string name="nc_diagnose_firebase_push_token_latest_fetch">最新 Firebase 推播令牌取得時間</string>
-    <string name="nc_diagnose_firebase_push_token_missing">未設定 Firebase 推播令牌。請建立錯誤報告。</string>
-    <string name="nc_diagnose_account_category_title">目前帳戶</string>
-    <string name="nc_diagnose_account_server">伺服器</string>
-    <string name="nc_diagnose_account_user_name">使用者</string>
-    <string name="nc_diagnose_account_server_notification_app">伺服器通知應用程式已安裝？</string>
-    <string name="nc_diagnose_account_user_status_enabled">使用者狀態已啟用？</string>
-    <string name="nc_diagnose_latest_push_registration_at_server">最新在伺服器上的推播註冊時間</string>
-    <string name="nc_diagnose_latest_push_registration_at_server_fail">尚未在伺服器上註冊</string>
-    <string name="nc_diagnose_latest_push_registration_at_push_proxy">最新在推播代理上的註冊時間</string>
-    <string name="nc_diagnose_latest_push_registration_at_push_proxy_fail">尚未在推播代理上註冊</string>
-    <string name="nc_diagnose_server_version">伺服器版本</string>
-    <string name="nc_diagnose_server_talk_version">伺服器 Talk 版本</string>
-    <string name="nc_diagnose_signaling_mode_title">信令模式</string>
-    <string name="nc_diagnose_signaling_mode_intern">內部</string>
-    <string name="nc_diagnose_signaling_mode_extern">外部</string>
-    <string name="send_email">傳送郵件</string>
-    <string name="create_issue">建立問題</string>
-    <string name="nc_diagnose_flavor" translatable="false">Build flavor</string>
+    <string name="nc_diagnosis_meta_category_title" translatable="false">元資訊</string>
+    <string name="nc_diagnosis_meta_system_report_date" translatable="false">系統報告產生時間</string>
+    <string name="nc_diagnosis_phone_category_title" translatable="false">手機</string>
+    <string name="nc_diagnosis_device_name_title" translatable="false">裝置</string>
+    <string name="nc_diagnosis_android_version_title" translatable="false">Android 版本</string>
+    <string name="nc_diagnosis_app_category_title" translatable="false">應用程式</string>
+    <string name="nc_diagnosis_app_name_title" translatable="false">應用程式名稱</string>
+    <string name="nc_diagnosis_app_version_title" translatable="false">應用程式版本</string>
+    <string name="nc_diagnosis_app_users_amount" translatable="false">註冊使用者數</string>
+    <string name="nc_diagnosis_gplay_available_title" translatable="false">Google Play 服務</string>
+    <string name="nc_diagnosis_gplay_available_yes" translatable="false">Google Play 服務可用</string>
+    <string name="nc_diagnosis_gplay_available_no" translatable="false">Google Play 服務不可用。不支援通知</string>
+    <string name="nc_diagnosis_battery_optimization_title" translatable="false">電池設定</string>
+    <string name="nc_diagnosis_battery_optimization_not_ignored" translatable="false">電池最佳化已啟用，可能會導致問題。您應該停用電池最佳化！</string>
+    <string name="nc_diagnosis_battery_optimization_ignored" translatable="false">電池最佳化被忽略，一切正常</string>
+    <string name="nc_diagnosis_notification_permission" translatable="false">通知權限</string>
+    <string name="nc_diagnosis_notification_calls_channel_permission" translatable="false">通話通知管道已啟用？</string>
+    <string name="nc_diagnosis_notification_messages_channel_permission" translatable="false">訊息通知管道已啟用？</string>
+    <string name="nc_diagnosis_firebase_push_token_title" translatable="false">Firebase 推播令牌</string>
+    <string name="nc_diagnosis_firebase_push_token_latest_generated" translatable="false">最新 Firebase 推播令牌產生時間</string>
+    <string name="nc_diagnosis_firebase_push_token_latest_fetch" translatable="false">最新 Firebase 推播令牌取得時間</string>
+    <string name="nc_diagnosis_firebase_push_token_missing" translatable="false">未設定 Firebase 推播令牌。請建立錯誤報告。</string>
+    <string name="nc_diagnosis_account_category_title" translatable="false">目前帳戶</string>
+    <string name="nc_diagnosis_account_server" translatable="false">伺服器</string>
+    <string name="nc_diagnosis_account_user_name" translatable="false">使用者</string>
+    <string name="nc_diagnosis_account_server_notification_app" translatable="false">伺服器通知應用程式已安裝？</string>
+    <string name="nc_diagnosis_account_user_status_enabled" translatable="false">使用者狀態已啟用？</string>
+    <string name="nc_diagnosis_latest_push_registration_at_server" translatable="false">最新在伺服器上的推播註冊時間</string>
+    <string name="nc_diagnosis_latest_push_registration_at_server_fail" translatable="false">尚未在伺服器上註冊</string>
+    <string name="nc_diagnosis_latest_push_registration_at_push_proxy" translatable="false">最新在推播代理上的註冊時間</string>
+    <string name="nc_diagnosis_latest_push_registration_at_push_proxy_fail" translatable="false">尚未在推播代理上註冊</string>
+    <string name="nc_diagnosis_server_version" translatable="false">伺服器版本</string>
+    <string name="nc_diagnosis_server_talk_version" translatable="false">伺服器 Talk 版本</string>
+    <string name="nc_diagnosis_signaling_mode_title" translatable="false">信令模式</string>
+    <string name="nc_diagnosis_signaling_mode_intern" translatable="false">內部</string>
+    <string name="nc_diagnosis_signaling_mode_extern" translatable="false">外部</string>
+    <string name="nc_diagnosis_notifications_granted" translatable="false">已授予通知權限</string>
+    <string name="nc_diagnosis_notifications_declined" translatable="false">已拒絕通知權限</string>
+    <string name="nc_diagnosis_unknown" translatable="false">"未知"</string>
+    <string name="nc_diagnosis_yes" translatable="false">"是"</string>
+    <string name="nc_diagnosis_no" translatable="false">"否"</string>
+    <string name="nc_diagnosis_flavor" translatable="false">Build flavor</string>
     <string name="nc_test_push_button">測試推播通知</string>
     <string name="nc_test_results">測試結果</string>
     <string name="message_copied">訊息已複製</string>
@@ -258,6 +266,7 @@ How to translate with transifex:
     <string name="nc_invalid_time">無效時間</string>
     <string name="nc_today_meeting">今天 %1$s</string>
     <string name="nc_tomorrow_meeting">明天 %1$s</string>
+    <string name="nc_upcoming_event_dismissed">即將來的通話可在對話資訊中查看</string>
     <string name="nc_delete_conversation_more">如果您刪除對話，它也將從所有其他參與者處刪除。</string>
 
     <string name="nc_new_conversation">新增對話</string>
@@ -429,6 +438,7 @@ How to translate with transifex:
     <string name="nc_conversation_menu_voice_call">語音通話</string>
     <string name="nc_conversation_menu_video_call">視訊通話</string>
     <string name="nc_event_conversation_menu">活動對話選單</string>
+    <string name="nc_conversation_menu_conversation_go_to_file">前往檔案</string>
     <string name="nc_conversation_menu_conversation_info">對話資訊</string>
     <string name="nc_new_messages">未讀訊息</string>
     <string name="nc_sent_a_gif" formatted="true">%1$s 傳送了一個 GIF。</string>
@@ -547,6 +557,7 @@ How to translate with transifex:
     <string name="read_storage_no_permission">若無權限，無法從儲存空間分享檔案</string>
     <string name="open_in_files_app">在檔案應用程式中開啟</string>
     <string name="send_to_forbidden">您無權分享內容到此聊天</string>
+    <string name="reaction_forbidden">您無權在此對話中新增或刪除表情回應</string>
 
     <string name="typing_is_typing">正在輸入…</string>
     <string name="typing_are_typing">正在輸入…</string>
@@ -603,6 +614,9 @@ How to translate with transifex:
     <string name="nc_shared_location">已分享位置</string>
     <string name="nc_location_current_position_description">您目前的位置</string>
     <string name="nc_location_unknown">位置未知</string>
+    <string name="nc_search_location">搜尋位置</string>
+    <string name="nc_zoom_in">放大</string>
+    <string name="nc_zoom_out">縮小</string>
 
     <!-- share contact -->
     <string name="nc_share_contact">分享聯絡人</string>
@@ -657,6 +671,15 @@ How to translate with transifex:
     <string name="user_info_website">網站</string>
     <string name="user_info_twitter">Twitter</string>
     <string name="user_info_displayname">全名</string>
+    <string name="user_info_biography">個人簡介</string>
+    <string name="user_info_fediverse">聯邦宇宙</string>
+    <string name="user_info_headline">標語</string>
+    <string name="user_info_organisation">組織</string>
+    <string name="user_info_profile_enable">啟用個人資料</string>
+    <string name="user_info_profile_disable">停用個人資料</string>
+    <string name="user_info_pronouns">代名詞</string>
+    <string name="user_info_role">角色</string>
+    <string name="user_info_bluesky">Bluesky</string>
     <string name="file_list_folder">資料夾</string>
     <string name="file_list_loading">載入中…</string>
     <string name="edit">編輯</string>
@@ -898,6 +921,21 @@ How to translate with transifex:
     <string name="scan_qr_code">掃描 QR Code</string>
     <string name="qr_code_error">無法讀取 QR Code</string>
     <string name="message_delete_are_you_sure">確定要刪除此訊息嗎？</string>
+    <string name="pin_message">置頂訊息</string>
+    <string name="unpin_message">取消置頂</string>
+    <string name="pin_24hr">置頂 24 小時</string>
+    <string name="pin_7_days">置頂 7 天</string>
+    <string name="pin_30_days">置頂 30 天</string>
+    <string name="pin_indefinitely">永久置頂</string>
+    <string name="pinned_indefinitely">已永久置頂</string>
+    <string name="pinned_until">置頂至</string>
+    <string name="pinned_by_you">%1$s（您置頂的）</string>
+    <string name="pinned_by_author">%1$s（由 %2$s 置頂）</string>
+    <string name="pinned">已置頂</string>
+    <string name="until_unpin">直到取消置頂</string>
+    <string name="pinned_go_to_message">查看訊息</string>
+    <string name="pinned_dismiss">忽略</string>
+    <string name="pinned_message_options">訊息選項</string>
     <string name="location_permission_denied">位置權限被拒絕</string>
     <string name="location_permission_denied_msg">請在應用程式設定中啟用</string>
     <string name="location_services_disabled">位置服務已停用</string>
@@ -948,8 +986,19 @@ How to translate with transifex:
     <string name="forward_confirm_send_sequential">將這些訊息逐條轉發至 %1$s？</string>
     <string name="forward_confirm_send_merged">將這些訊息合併轉發至 %1$s？</string>
 
+    <string name="clps_chat_history_person">%1$s和%2$s的聊天記錄</string>
+    <string name="clps_chat_history_persons">%s的聊天記錄</string>
+
     <string name="clps_items_image">圖片</string>
     <string name="clps_items_file">檔案</string>
 
     <string name="clps_message_delete_are_you_sure">此操作會刪除操作人自身帳號下的訊息記錄，但不影響其他用戶，確定要刪除此訊息嗎？</string>
+
+    <string name="switch_to_landscape">切換為橫向</string>
+    <string name="switch_to_portrait">切換為直向</string>
+    <string name="screen_share">分享螢幕</string>
+    <string name="stop_screen_share">停止分享螢幕</string>
+    <string name="screen_share_permission_required">螢幕共享需要授權</string>
+    <string name="screen_share_started">已開始分享螢幕</string>
+    <string name="screen_share_stopped">已停止分享螢幕</string>
 </resources>
