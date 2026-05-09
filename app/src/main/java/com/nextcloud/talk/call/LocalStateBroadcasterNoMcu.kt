@@ -33,6 +33,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.webrtc.PeerConnection.IceConnectionState
 import java.util.concurrent.ConcurrentHashMap
 
@@ -49,7 +51,61 @@ class LocalStateBroadcasterNoMcu(
         private var job: Job? = null
 
         init {
+            // 任选其一
             handleStateChange(uiState)
+            // 注意：本方案不需要notifyPeerConnectionReady
+            // startStateSendingWithRetry()
+        }
+
+        /**
+         * 使用渐进延迟重试机制发送本地初始状态到远端参与者。
+         *
+         * 重试时间点：0ms, 300ms, 600ms, 1000ms, 2000, 4000ms
+         * 总最大等待：~7900ms
+         *
+         * 正常情况下 PCW 在 addCallParticipant 后很快就会通过
+         * getOrCreatePeerConnectionWrapperForSessionIdAndType 创建完成，
+         * 通常在第 1-2 次尝试即可成功发送。
+         */
+        private fun startStateSendingWithRetry() {
+            val sessionKey = uiState.sessionKey ?: return
+
+            job = scope.launch {
+                // 渐进式重试延迟（毫秒）：首次立即尝试，后续逐步加大间隔
+                val retryDelays = longArrayOf(0L, 300L, 600L, 1000L, 2000L, 4000L)
+
+                for ((index, delayMs) in retryDelays.withIndex()) {
+                    // 非首次需要等待
+                    if (delayMs > 0L) {
+                        delay(delayMs)
+                    }
+
+                    // 检查参与者是否已离开（避免无效重试）
+                    if (!iceConnectionStateObservers.containsKey(sessionKey)) {
+                        // Log.d(TAG, "Participant $sessionKey removed, stopping retry")
+                        return@launch
+                    }
+
+                    try {
+                        sendState(sessionKey)
+                        // Log.d(TAG, "Initial state sent successfully to $sessionKey (attempt ${index + 1})")
+                        // 发送成功，停止重试并清理自身
+                        remove()
+                        return@launch
+                    } catch (e: Exception) {
+                        // Log.w(
+                        //     TAG,
+                        //     "Failed to send initial state to $sessionKey " +
+                        //         "(attempt ${index + 1}/${retryDelays.size}): ${e.message}"
+                        // )
+                    }
+                }
+
+                // Log.w(
+                //     TAG,
+                //     "Exhausted all retries ($${retryDelays.size} attempts) sending initial state to $sessionKey"
+                // )
+            }
         }
 
         private fun handleStateChange(uiState: ParticipantUiState) {
@@ -97,5 +153,15 @@ class LocalStateBroadcasterNoMcu(
 
         messageSender.send(getSignalingMessageForAudioState(), sessionKey)
         messageSender.send(getSignalingMessageForVideoState(), sessionKey)
+    }
+
+    // LocalStateBroadcasterNoMcu.kt 新增
+    fun notifyPeerConnectionReady(sessionId: String?) {
+        sessionId ?: return
+        // 延迟一小段时间确保 PCW 已加入列表后再发送
+        scope.launch {
+            delay(500)  // 等待 PCW 注册完成
+            sendState(sessionId)  // 重试发送当前状态
+        }
     }
 }
