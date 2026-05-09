@@ -23,33 +23,37 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:animateLayoutChanges="true"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/callAnswerVoiceOnlyView"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_margin="24dp"
-            android:background="@drawable/shape_oval"
-            android:backgroundTint="@color/nc_darkGreen"
-            android:src="@drawable/ic_call_white_24dp"
-            android:contentDescription="@string/nc_call_button_content_description_answer_voice_only" />
+        android:orientation="horizontal"
+        android:divider="@drawable/divider_transparent"
+        android:showDividers="middle"
+        android:dividerPadding="24dp"
+        android:paddingBottom="24dp">
 
         <ImageButton
             android:id="@+id/hangupButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_margin="24dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="36dp"
             android:background="@drawable/shape_oval"
             android:backgroundTint="@color/nc_darkRed"
             android:src="@drawable/ic_call_end_white_24px"
             android:contentDescription="@string/nc_call_button_content_description_hangup" />
 
         <ImageButton
+            android:id="@+id/callAnswerVoiceOnlyView"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="36dp"
+            android:background="@drawable/shape_oval"
+            android:backgroundTint="@color/nc_darkGreen"
+            android:src="@drawable/ic_call_white_24dp"
+            android:contentDescription="@string/nc_call_button_content_description_answer_voice_only" />
+
+        <ImageButton
             android:id="@+id/callAnswerCameraView"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_margin="24dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="36dp"
             android:background="@drawable/shape_oval"
             android:backgroundTint="@color/nc_darkGreen"
             android:src="@drawable/ic_videocam_white_24px"

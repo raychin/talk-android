@@ -127,19 +127,21 @@ class CallNotificationActivity : CallBaseActivity() {
                 if (isInCallWithVideo(callFlag)) {
                     binding!!.incomingCallVoiceOrVideoTextView.text = String.format(
                         resources.getString(R.string.nc_call_video),
-                        resources.getString(R.string.nc_app_product_name)
+                        resources.getString(R.string.nc_app_name)
                     )
+                    binding!!.callAnswerVoiceOnlyView.visibility = View.GONE
                 } else {
                     binding!!.incomingCallVoiceOrVideoTextView.text = String.format(
                         resources.getString(R.string.nc_call_voice),
-                        resources.getString(R.string.nc_app_product_name)
+                        resources.getString(R.string.nc_app_name)
                     )
+                    binding!!.callAnswerCameraView.visibility = View.GONE
                 }
             }
         } else {
             val callDescriptionWithoutTypeInfo = String.format(
                 resources.getString(R.string.nc_call_unknown),
-                resources.getString(R.string.nc_app_product_name)
+                resources.getString(R.string.nc_app_name)
             )
             binding!!.incomingCallVoiceOrVideoTextView.text = callDescriptionWithoutTypeInfo
         }
@@ -186,6 +188,10 @@ class CallNotificationActivity : CallBaseActivity() {
 
     private fun hangup() {
         leavingScreen = true
+
+        // 挂断时也取消通知
+        cancelIncomingCallNotification()
+
         finish()
     }
 
@@ -195,13 +201,56 @@ class CallNotificationActivity : CallBaseActivity() {
         intent.putExtra(KEY_ROOM_ONE_TO_ONE, isOneToOneCall)
         callIntent.putExtras(intent.extras!!)
         startActivity(callIntent)
+
+        // 立即取消通知，不要等到 onStop
+        cancelIncomingCallNotification()
+
+        // 完成当前 Activity
+        finish()
+    }
+
+    /**
+     * 取消来电通知
+     */
+    private fun cancelIncomingCallNotification() {
+        if (notificationTimestamp != null) {
+            val notificationManager = NotificationManagerCompat.from(context)
+            notificationManager.cancel(notificationTimestamp!!)
+            Log.d(TAG, "Cancelled incoming call notification with ID: $notificationTimestamp")
+
+            // 同时取消可能存在的其他相关通知
+            cancelExistingNotificationsForRoom()
+        } else {
+            Log.w(TAG, "notificationTimestamp is null, cannot cancel notification")
+        }
+    }
+
+    /**
+     * 取消与当前房间相关的所有通知
+     */
+    private fun cancelExistingNotificationsForRoom() {
+        if (!roomToken.isNullOrEmpty() && userBeingCalled != null) {
+            try {
+                NotificationUtils.cancelExistingNotificationsForRoom(
+                    applicationContext,
+                    userBeingCalled!!,
+                    roomToken!!
+                )
+                Log.d(TAG, "Cancelled all notifications for room: $roomToken")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to cancel notifications for room", e)
+            }
+        }
     }
 
     private fun isInCallWithVideo(callFlag: Int): Boolean = (callFlag and Participant.InCallFlags.WITH_VIDEO) > 0
 
     override fun onStop() {
-        val notificationManager = NotificationManagerCompat.from(context)
-        notificationManager.cancel(notificationTimestamp!!)
+        // val notificationManager = NotificationManagerCompat.from(context)
+        // notificationManager.cancel(notificationTimestamp!!)
+        // 确保在 onStop 时也取消通知（作为备用）
+        cancelIncomingCallNotification()
+
         super.onStop()
     }
 
