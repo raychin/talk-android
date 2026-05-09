@@ -2944,7 +2944,7 @@ class ChatActivity :
 
         // 方式二：picture-selector【较新】 + picture-editor，支持多选、预览、裁剪、编辑功能
         PictureSelector.create(this)
-            .openGallery(SelectMimeType.ofImage())
+            .openGallery(SelectMimeType.ofAll())
             .isDisplayCamera(false)
             // 外部传入图片加载引擎，必传项
             .setImageEngine(GlideEngine)
