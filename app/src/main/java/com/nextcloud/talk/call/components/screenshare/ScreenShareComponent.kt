@@ -7,6 +7,8 @@
 
 package com.nextcloud.talk.call.components.screenshare
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,6 +22,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ScreenLockRotation
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -34,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +61,27 @@ fun ScreenShareComponent(
     modifier: Modifier = Modifier,
     onCloseIconClick: () -> Unit
 ) {
+
+    val context = LocalContext.current
+    val activity = context as? Activity
+
+    // 默认横屏显示
+    var isLandscape by remember { mutableStateOf(true) }
+
+    // 设置默认方向为横屏
+    LaunchedEffect(Unit) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+    }
+
+    // 方向切换时更新 Activity 方向
+    LaunchedEffect(isLandscape) {
+        activity?.requestedOrientation = if (isLandscape) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+    }
+
     var controlsVisible by remember { mutableStateOf(true) }
 
     LaunchedEffect(controlsVisible) {
@@ -72,6 +99,7 @@ fun ScreenShareComponent(
             WebRTCScreenShareComponent(
                 mediaStream = participantUiState.screenMediaStream,
                 eglBase = eglBase,
+                isLandscape = isLandscape,
                 onSingleTap = { controlsVisible = true }
             )
         }
@@ -83,12 +111,56 @@ fun ScreenShareComponent(
         ) {
             ScreenShareControls(
                 nick = participantUiState.nick.orEmpty(),
+                isLandscape = isLandscape,
+                onOrientationToggle = { isLandscape = !isLandscape },
                 onCloseClick = onCloseIconClick
             )
         }
     }
 }
 
+@Composable
+private fun ScreenShareControls(nick: String, isLandscape: Boolean, onOrientationToggle: () -> Unit, onCloseClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent)
+                )
+            )
+            .padding(top = 8.dp, start = 12.dp, end = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = nick,
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                OrientationToggleButton(
+                    isLandscape = isLandscape,
+                    onClick = onOrientationToggle
+                )
+
+                CloseButton(onClick = onCloseClick)
+            }
+        }
+    }
+}
 @Composable
 private fun ScreenShareControls(nick: String, onCloseClick: () -> Unit) {
     Box(
@@ -119,6 +191,36 @@ private fun ScreenShareControls(nick: String, onCloseClick: () -> Unit) {
 
             CloseButton(onClick = onCloseClick)
         }
+    }
+}
+
+@Composable
+private fun OrientationToggleButton(
+    isLandscape: Boolean,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .padding(4.dp)
+            .size(36.dp)
+            .background(
+                color = Color.Black.copy(alpha = 0.4f),
+                shape = CircleShape
+            )
+            .border(1.dp, Color.White.copy(alpha = 0.8f), CircleShape)
+    ) {
+        Icon(
+            imageVector = if (isLandscape) {
+                Icons.Default.ScreenLockRotation  // 横屏状态显示锁定旋转
+            } else {
+                Icons.Default.ScreenRotation  // 竖屏状态显示可旋转
+            },
+            contentDescription = stringResource(
+                if (isLandscape) R.string.switch_to_portrait else R.string.switch_to_landscape
+            ),
+            tint = Color.White
+        )
     }
 }
 

@@ -327,6 +327,8 @@ How to translate with transifex:
     <string name="nc_call_state_with_phone">%1$s 使用手機</string>
     <string name="nc_call_state_with_video">%1$s 使用視訊</string>
     <string name="nc_missed_call">您錯過了 %s 的來電</string>
+    <string name="nc_call_ongoing_notification_default_title">通話進行中</string>
+    <string name="nc_call_ongoing_notification_content">點擊返回通話</string>
     <string name="nc_call_button_content_description_pip">開啟子母畫面模式</string>
     <string name="nc_call_button_content_description_audio_output">變更音訊輸出</string>
     <string name="nc_call_button_content_description_camera">切換相機</string>

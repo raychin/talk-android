@@ -34,12 +34,13 @@ import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoTrack
 
 @Composable
-fun WebRTCScreenShareComponent(mediaStream: MediaStream, eglBase: EglBase?, onSingleTap: () -> Unit) {
+fun WebRTCScreenShareComponent(mediaStream: MediaStream, eglBase: EglBase?, isLandscape: Boolean = true,
+    onSingleTap: () -> Unit) {
     val context = LocalContext.current
     val renderer = remember { SurfaceViewRenderer(context) }
     val videoTrack = remember(mediaStream) { mediaStream.videoTracks.firstOrNull() }
 
-    SetupSurfaceRenderer(renderer, eglBase, videoTrack)
+    SetupSurfaceRenderer(renderer, eglBase, videoTrack, isLandscape)
 
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -85,12 +86,22 @@ fun WebRTCScreenShareComponent(mediaStream: MediaStream, eglBase: EglBase?, onSi
 }
 
 @Composable
-private fun SetupSurfaceRenderer(renderer: SurfaceViewRenderer, eglBase: EglBase?, videoTrack: VideoTrack?) {
+private fun SetupSurfaceRenderer(renderer: SurfaceViewRenderer, eglBase: EglBase?, videoTrack: VideoTrack?, isLandscape: Boolean = true) {
     DisposableEffect(renderer, eglBase, videoTrack) {
         renderer.init(eglBase?.eglBaseContext, null)
         renderer.setEnableHardwareScaler(true)
         renderer.setMirror(false)
-        renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+
+        // renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+        // 根据方向调整缩放类型
+        renderer.setScalingType(
+            if (isLandscape) {
+                RendererCommon.ScalingType.SCALE_ASPECT_FIT
+            } else {
+                RendererCommon.ScalingType.SCALE_ASPECT_FILL
+            }
+        )
+
         videoTrack?.addSink(renderer)
 
         onDispose {

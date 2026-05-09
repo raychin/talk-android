@@ -18,6 +18,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
@@ -372,6 +373,9 @@ class CallActivity : CallBaseActivity() {
 
     private var isFrontCamera by mutableStateOf(true)
 
+    // 屏幕共享前的原始方向
+    private var savedOrientationBeforeScreenShare: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
@@ -384,15 +388,35 @@ class CallActivity : CallBaseActivity() {
         binding = CallActivityBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
 
+        // TODO RAY 接收到屏幕共享，全屏显示
         binding!!.screenShareFullscreenView.setContent {
             MaterialTheme {
                 val screenShareParticipantUiState by callViewModel.activeScreenShareSession.collectAsState()
+
+                // 核心：监听屏幕共享状态变化，自动弹出或手动点击都会触发
+                LaunchedEffect(screenShareParticipantUiState) {
+                    if (screenShareParticipantUiState != null) {
+                        // 从 null 变为非 null 时保存当前方向（无论哪种方式触发的）
+                        savedOrientationBeforeScreenShare = requestedOrientation
+                        Log.d(TAG, "屏幕共享弹出: 保存当前方向=$savedOrientationBeforeScreenShare")
+                    } else {
+                        Log.d(TAG, "屏幕共享关闭: 已恢复方向")
+                    }
+                }
+
                 if (screenShareParticipantUiState != null) {
                     binding!!.selfVideoViewWrapper.visibility = View.GONE
                     ScreenShareComponent(
                         participantUiState = screenShareParticipantUiState!!,
                         eglBase = rootEglBase!!,
                         onCloseIconClick = {
+                            // 恢复到屏幕共享前的方向 add by on 2026/05/09
+                            requestedOrientation = if (savedOrientationBeforeScreenShare != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+                                savedOrientationBeforeScreenShare
+                            } else {
+                                // 兜底: 如果没有保存过,则跟随传感器
+                                ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                            }
                             callViewModel.setActiveScreenShareSession(null)
                             initViews()
                         }
@@ -1459,9 +1483,6 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun addIceServers(signalingSettingsOverall: SignalingSettingsOverall, apiVersion: Int) {
-        // 清空信令服务
-        iceServers!!.clear()
-
         if (signalingSettingsOverall.ocs!!.settings!!.stunServers != null) {
             val stunServers = signalingSettingsOverall.ocs!!.settings!!.stunServers
             if (apiVersion == ApiUtils.API_V3) {
@@ -1679,6 +1700,12 @@ class CallActivity : CallBaseActivity() {
                 localCallParticipantModel,
                 messageSender as MessageSenderNoMcu
             )
+        }
+
+        if (microphoneOn && localStream != null && localStream!!.audioTracks.isNotEmpty()) {
+            // 强制触发一次状态广播，让对端知道当前音频状态 add by ray on 2026/05/09
+            localCallParticipantModel.isAudioEnabled = !localCallParticipantModel.isAudioEnabled
+            localCallParticipantModel.isAudioEnabled = !localCallParticipantModel.isAudioEnabled
         }
 
         val apiVersion = ApiUtils.getCallApiVersion(conversationUser, intArrayOf(ApiUtils.API_V4, 1))
@@ -2423,6 +2450,12 @@ class CallActivity : CallBaseActivity() {
             peerConnectionWrapper = createPeerConnectionWrapperForSessionIdAndType(publisher, sessionId, type)
             peerConnectionWrapperList.add(peerConnectionWrapper)
             if (!publisher) {
+                // 新增：PCW 创建后，向该参与者补发本地当前音频/视频状态 add by ray on 2026/05/09
+                if (localStateBroadcaster is LocalStateBroadcasterNoMcu) {
+                    (localStateBroadcaster as LocalStateBroadcasterNoMcu)
+                        .notifyPeerConnectionReady(sessionId)
+                }
+
                 if (!callViewModel.doesParticipantExist(sessionId)) {
                     addCallParticipant(sessionId)
                 }
@@ -2459,6 +2492,7 @@ class CallActivity : CallBaseActivity() {
                 return screenSharePeerConnectionFactory
             }
 
+            // TODO RAY 接收到屏幕共享
             val tempPeerConnectionFactory = if (type == "screen") {
                 screenSharePeerConnectionFactory ?: run {
                     initScreenSharePeerConnectionFactory()
@@ -2704,6 +2738,7 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun handleCallStateInConversation() {
+        // TODO RAY 关闭来电横幅通知
         stopCallingSound()
         if (binding!!.callStates.callStateRelativeLayout.visibility != View.INVISIBLE) {
             binding!!.callStates.callStateRelativeLayout.visibility = View.INVISIBLE
