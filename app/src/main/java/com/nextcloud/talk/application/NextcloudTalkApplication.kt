@@ -24,7 +24,7 @@ import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ExistingWorkPolicy
+// import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
@@ -54,7 +54,7 @@ import com.nextcloud.talk.filebrowser.webdav.DavUtils
 import com.nextcloud.talk.jobs.AccountRemovalWorker
 import com.nextcloud.talk.jobs.CapabilitiesWorker
 import com.nextcloud.talk.jobs.SignalingSettingsWorker
-import com.nextcloud.talk.jobs.clps.TalkBackgroundWorker
+// import com.nextcloud.talk.jobs.clps.TalkBackgroundWorker
 import com.nextcloud.talk.jobs.WebsocketConnectionsWorker
 import com.nextcloud.talk.ui.theme.ThemeModule
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
@@ -245,31 +245,31 @@ class NextcloudTalkApplication :
             periodicCapabilitiesUpdateWork
         )
 
-        // val talkBackgroundWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java).build()
-        // WorkManager.getInstance(applicationContext).enqueue(talkBackgroundWorker)
-        val delayedWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java)
-            .setInitialDelay(TALK_WORK_DELAY, TimeUnit.SECONDS)
-            .build()
-        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-            TALK_WORK_ID,
-            // 如果已存在则不再执行
-            ExistingWorkPolicy.REPLACE,
-            delayedWorker
-        )
-        // val constraints = Constraints.Builder()
-        //     .setRequiredNetworkType(NetworkType.CONNECTED)
-        //     .setRequiresCharging(false) // 根据需要调整
+        // // val talkBackgroundWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java).build()
+        // // WorkManager.getInstance(applicationContext).enqueue(talkBackgroundWorker)
+        // val delayedWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java)
+        //     .setInitialDelay(TALK_WORK_DELAY, TimeUnit.SECONDS)
         //     .build()
-        // // 周期时间太短，无法重复执行，一般15分钟
-        // val talkBackgroundWorker = PeriodicWorkRequest.Builder(TalkBackgroundWorker::class.java, 45, TimeUnit.SECONDS)
-        //     .setConstraints(constraints)
-        //     .build()
-        // // WorkManager.getInstance(applicationContext).getWorkInfoById(talkBackgroundWorker.id)
-        // // WorkManager.getInstance(applicationContext)
-        // //     .getWorkInfoByIdLiveData(talkBackgroundWorker.id)
-        // //     .observe(this, Observer {
-        // //         workInfo -> Log.d("WorkManager", "WorkInfo: $workInfo")
-        // //     })
+        // WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+        //     TALK_WORK_ID,
+        //     // 如果已存在则不再执行
+        //     ExistingWorkPolicy.REPLACE,
+        //     delayedWorker
+        // )
+        // // val constraints = Constraints.Builder()
+        // //     .setRequiredNetworkType(NetworkType.CONNECTED)
+        // //     .setRequiresCharging(false) // 根据需要调整
+        // //     .build()
+        // // // 周期时间太短，无法重复执行，一般15分钟
+        // // val talkBackgroundWorker = PeriodicWorkRequest.Builder(TalkBackgroundWorker::class.java, 45, TimeUnit.SECONDS)
+        // //     .setConstraints(constraints)
+        // //     .build()
+        // // // WorkManager.getInstance(applicationContext).getWorkInfoById(talkBackgroundWorker.id)
+        // // // WorkManager.getInstance(applicationContext)
+        // // //     .getWorkInfoByIdLiveData(talkBackgroundWorker.id)
+        // // //     .observe(this, Observer {
+        // // //         workInfo -> Log.d("WorkManager", "WorkInfo: $workInfo")
+        // // //     })
     }
 
     override fun onTerminate() {

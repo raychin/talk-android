@@ -9,16 +9,16 @@ package com.nextcloud.talk.jobs.clps
 
 import android.content.Context
 import android.util.Log
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
+// import androidx.work.ExistingWorkPolicy
+// import androidx.work.OneTimeWorkRequest
+// import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import autodagger.AutoInjector
 import cn.jpush.android.api.JPushInterface
 import com.nextcloud.talk.application.NextcloudTalkApplication
-import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.TALK_WORK_DELAY
-import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.TALK_WORK_ID
+// import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.TALK_WORK_DELAY
+// import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.TALK_WORK_ID
 import com.nextcloud.talk.utils.preferences.AppPreferences
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -28,7 +28,7 @@ import java.text.SimpleDateFormat
 import java.util.Base64
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
+// import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AutoInjector(NextcloudTalkApplication::class)
@@ -60,17 +60,17 @@ class TalkBackgroundWorker(context: Context, workerParams: WorkerParameters) : W
 
         // makeGetRequest()
 
-        // 创建 xx 秒后执行的一次性任务 45S可行
-        val delayedWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java)
-            .setInitialDelay(TALK_WORK_DELAY, TimeUnit.SECONDS)
-            .build()
-        // WorkManager.getInstance(applicationContext).enqueue(delayedWorker)
-        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-            TALK_WORK_ID,
-            // 如果已存在则不再执行
-            ExistingWorkPolicy.REPLACE,
-            delayedWorker
-        )
+        // // 创建 xx 秒后执行的一次性任务 45S可行
+        // val delayedWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java)
+        //     .setInitialDelay(TALK_WORK_DELAY, TimeUnit.SECONDS)
+        //     .build()
+        // // WorkManager.getInstance(applicationContext).enqueue(delayedWorker)
+        // WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+        //     TALK_WORK_ID,
+        //     // 如果已存在则不再执行
+        //     ExistingWorkPolicy.REPLACE,
+        //     delayedWorker
+        // )
 
         // return Result.failure()
         return Result.success()
