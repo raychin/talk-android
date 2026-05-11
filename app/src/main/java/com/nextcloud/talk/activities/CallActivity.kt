@@ -117,6 +117,7 @@ import com.nextcloud.talk.utils.VibrationUtils.vibrateShort
 import com.nextcloud.talk.utils.animations.PulseAnimation
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CALL_VOICE_ONLY
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CALL_WITHOUT_NOTIFICATION
+import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CONVERSATION_DISPLAY_NAME
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CONVERSATION_NAME
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_CONVERSATION_PASSWORD
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_FROM_NOTIFICATION_START_CALL
@@ -235,6 +236,7 @@ class CallActivity : CallBaseActivity() {
     private var roomToken: String? = null
     lateinit var conversationUser: User
     private var conversationName: String? = null
+    private var conversationDisplayName: String? = null
     private var callSession: String? = null
     private var localStream: MediaStream? = null
     private var credentials: String? = null
@@ -577,6 +579,10 @@ class CallActivity : CallBaseActivity() {
         roomToken = extras.getString(KEY_ROOM_TOKEN, "")
         conversationPassword = extras.getString(KEY_CONVERSATION_PASSWORD, "")
         conversationName = extras.getString(KEY_CONVERSATION_NAME, "")
+        conversationDisplayName = extras.getString(KEY_CONVERSATION_DISPLAY_NAME, "")
+        if (conversationDisplayName.isNullOrBlank()) {
+            conversationDisplayName = extras.getString(KEY_CONVERSATION_NAME, "")
+        }
         isVoiceOnlyCall = extras.getBoolean(KEY_CALL_VOICE_ONLY, false)
         isCallWithoutNotification = extras.getBoolean(KEY_CALL_WITHOUT_NOTIFICATION, false)
         canPublishAudioStream = extras.getBoolean(KEY_PARTICIPANT_PERMISSION_CAN_PUBLISH_AUDIO)
@@ -1080,7 +1086,9 @@ class CallActivity : CallBaseActivity() {
         //     }
         // }
         if (permissionUtil!!.isMicrophonePermissionGranted()) {
-            CallForegroundService.start(applicationContext, conversationName, intent.extras)
+            // TODO RAY 这里是弹出的提示，可以不需要，看需求决定
+            // CallForegroundService.start(applicationContext, conversationDisplayName, intent.extras)
+
             Log.d("Ray", "Microphone permission granted, checking if need to enable")
 
             if (!microphoneOn) {
@@ -2368,11 +2376,21 @@ class CallActivity : CallBaseActivity() {
                 callViewModel.getParticipant(sessionId)?.updateIsInternal(participant.internal == true)
             }
 
-            val nick: String? = if (hasExternalSignalingServer) {
-                webSocketClient!!.getDisplayNameForSession(sessionId)
-            } else {
-                if (offerAnswerNickProviders[sessionId] != null) offerAnswerNickProviders[sessionId]?.nick else ""
-            }
+            // val nick: String? = if (hasExternalSignalingServer) {
+            //     webSocketClient!!.getDisplayNameForSession(sessionId)
+            // } else {
+            //     if (offerAnswerNickProviders[sessionId] != null) offerAnswerNickProviders[sessionId]?.nick else ""
+            // }
+            val nick: String? = participant.displayName?.takeIf { it.isNotBlank() }
+                ?: if (hasExternalSignalingServer) {
+                    webSocketClient!!.getDisplayNameForSession(sessionId)
+                } else {
+                    offerAnswerNickProviders[sessionId]?.nick
+                        ?.takeIf { it.isNotBlank() }
+                        // ★ 新增回退：使用已知的会话名称作为初始 nick
+                        ?: conversationDisplayName?.takeIf { !it.equals("Guest", ignoreCase = true) }
+                        ?: ""
+                }
 
             callViewModel.getParticipant(sessionId)?.updateNick(nick)
             val participantHasAudioOrVideo = participantInCallFlagsHaveAudioOrVideo(participant)
@@ -2833,7 +2851,7 @@ class CallActivity : CallBaseActivity() {
         } else {
             binding!!.callStates.callStateTextView.setText(R.string.nc_call_ringing)
         }
-        binding!!.callConversationNameTextView.text = conversationName
+        binding!!.callConversationNameTextView.text = conversationDisplayName
         if (binding!!.callStates.callStateRelativeLayout.visibility != View.VISIBLE) {
             binding!!.callStates.callStateRelativeLayout.visibility = View.VISIBLE
         }
@@ -3158,7 +3176,7 @@ class CallActivity : CallBaseActivity() {
         binding!!.callControls.visibility = View.GONE
         binding!!.selfVideoViewWrapper.visibility = View.GONE
         binding!!.callStates.callStateRelativeLayout.visibility = View.GONE
-        binding!!.pipCallConversationNameTextView.text = conversationName
+        binding!!.pipCallConversationNameTextView.text = conversationDisplayName
 
         if (callViewModel.participants.value.size == 1) {
             binding!!.pipOverlay.visibility = View.GONE
