@@ -105,8 +105,12 @@ class ParticipantHandler(
         if (iceConnectionState == IceConnectionState.NEW ||
             iceConnectionState == IceConnectionState.CHECKING
         ) {
-            _uiState.update { it.copy(isAudioEnabled = false) }
-            _uiState.update { it.copy(isStreamEnabled = false) }
+            // 仅在尚未收到对端实际状态时才重置
+            // 防止覆盖 DataChannel/Signaling 已同步的状态
+            if (!_uiState.value.isConnected) {
+                _uiState.update { it.copy(isAudioEnabled = false) }
+                _uiState.update { it.copy(isStreamEnabled = false) }
+            }
         }
 
         _uiState.update { it.copy(isConnected = isConnected(iceConnectionState)) }

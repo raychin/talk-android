@@ -185,6 +185,7 @@ import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
 import java.io.IOException
 import java.util.Objects
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
@@ -394,20 +395,10 @@ class CallActivity : CallBaseActivity() {
         binding!!.screenShareFullscreenView.setContent {
             MaterialTheme {
                 val screenShareParticipantUiState by callViewModel.activeScreenShareSession.collectAsState()
-
-                // 核心：监听屏幕共享状态变化，自动弹出或手动点击都会触发
-                LaunchedEffect(screenShareParticipantUiState) {
-                    if (screenShareParticipantUiState != null) {
-                        // 从 null 变为非 null 时保存当前方向（无论哪种方式触发的）
-                        savedOrientationBeforeScreenShare = requestedOrientation
-                        Log.d(TAG, "屏幕共享弹出: 保存当前方向=$savedOrientationBeforeScreenShare")
-                    } else {
-                        Log.d(TAG, "屏幕共享关闭: 已恢复方向")
-                    }
-                }
-
                 if (screenShareParticipantUiState != null) {
                     binding!!.selfVideoViewWrapper.visibility = View.GONE
+                    // 保存当前屏幕方向
+                    savedOrientationBeforeScreenShare = requestedOrientation
                     ScreenShareComponent(
                         participantUiState = screenShareParticipantUiState!!,
                         eglBase = rootEglBase!!,
@@ -417,7 +408,9 @@ class CallActivity : CallBaseActivity() {
                                 savedOrientationBeforeScreenShare
                             } else {
                                 // 兜底: 如果没有保存过,则跟随传感器
-                                ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                                // ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                                // 兜底: 如果没有保存过,则设置为竖屏
+                                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                             }
                             callViewModel.setActiveScreenShareSession(null)
                             initViews()
@@ -1491,6 +1484,9 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun addIceServers(signalingSettingsOverall: SignalingSettingsOverall, apiVersion: Int) {
+        // 清空信令服务
+        iceServers!!.clear()
+
         if (signalingSettingsOverall.ocs!!.settings!!.stunServers != null) {
             val stunServers = signalingSettingsOverall.ocs!!.settings!!.stunServers
             if (apiVersion == ApiUtils.API_V3) {
@@ -1549,7 +1545,8 @@ class CallActivity : CallBaseActivity() {
 
                         messageSender = MessageSenderNoMcu(
                             signalingMessageSender,
-                            getParticipantSessionKeys(),
+                            // getParticipantSessionKeys(),
+                            callParticipantSessionIds,  // 共享的可变集合
                             peerConnectionWrapperList
                         )
 
@@ -1663,8 +1660,8 @@ class CallActivity : CallBaseActivity() {
                             if (currentCallStatus !== CallStatus.IN_CONVERSATION) {
                                 setCallState(CallStatus.JOINED)
 
-                                // // 确保加入通话后启用麦克风 --- 1
-                                // enableMicrophoneIfNeeded()
+                                // 确保加入通话后启用麦克风 --- 1
+                                enableMicrophoneIfNeeded()
                             }
                             ApplicationWideCurrentRoomHolder.getInstance().isInCall = true
                             ApplicationWideCurrentRoomHolder.getInstance().isDialing = false
@@ -1701,6 +1698,9 @@ class CallActivity : CallBaseActivity() {
         callParticipantList = CallParticipantList(signalingMessageReceiver)
         callParticipantList!!.addObserver(callParticipantListObserver)
 
+        // 先销毁旧的 localStateBroadcaster（防止 Observer 累积）
+        localStateBroadcaster?.destroy()
+
         if (hasMCU) {
             localStateBroadcaster = LocalStateBroadcasterMcu(localCallParticipantModel, messageSender)
         } else {
@@ -1710,10 +1710,12 @@ class CallActivity : CallBaseActivity() {
             )
         }
 
+        // performCall() 中，替换第 1713-1717 行:
         if (microphoneOn && localStream != null && localStream!!.audioTracks.isNotEmpty()) {
-            // 强制触发一次状态广播，让对端知道当前音频状态 add by ray on 2026/05/09
-            localCallParticipantModel.isAudioEnabled = !localCallParticipantModel.isAudioEnabled
-            localCallParticipantModel.isAudioEnabled = !localCallParticipantModel.isAudioEnabled
+            // 确保 model 状态与实际麦克风状态一致
+            if (localStream!!.audioTracks[0].enabled()) {
+                localCallParticipantModel.isAudioEnabled = true
+            }
         }
 
         val apiVersion = ApiUtils.getCallApiVersion(conversationUser, intArrayOf(ApiUtils.API_V4, 1))
@@ -1755,17 +1757,19 @@ class CallActivity : CallBaseActivity() {
     private fun enableMicrophoneIfNeeded() {
         if (canPublishAudioStream && permissionUtil!!.isMicrophonePermissionGranted()) {
             // 如果是发起通话（非来电），默认应该开启麦克风
-            if (!isIncomingCallFromNotification) {
+            // if (!isIncomingCallFromNotification) {
                 microphoneOn = true
 
                 if (localStream != null && localStream!!.audioTracks.isNotEmpty()) {
                     localStream!!.audioTracks[0].setEnabled(true)
+                    // 先设为 false 再设为 true，确保 Observer 触发 onChange
+                    localCallParticipantModel.isAudioEnabled = false
                     localCallParticipantModel.isAudioEnabled = true
                     binding!!.microphoneButton.setImageResource(R.drawable.ic_mic_white_24px)
 
                     Log.d(TAG, "Microphone automatically enabled for outgoing call")
                 }
-            }
+            // }
         }
     }
     // ... ray add code ...
@@ -1903,7 +1907,8 @@ class CallActivity : CallBaseActivity() {
             } else {
                 messageSender = MessageSenderNoMcu(
                     signalingMessageSender,
-                    getParticipantSessionKeys(),
+                    // getParticipantSessionKeys(),
+                    callParticipantSessionIds,  // 共享的可变集合
                     peerConnectionWrapperList
                 )
             }
@@ -1946,9 +1951,25 @@ class CallActivity : CallBaseActivity() {
                     } else {
                         messageSender = MessageSenderNoMcu(
                             signalingMessageSender,
-                            getParticipantSessionKeys(),
+                            // getParticipantSessionKeys(),
+                            callParticipantSessionIds,  // 共享的可变集合
                             peerConnectionWrapperList
                         )
+
+                        // 只在已有参与者时才重建（区分首次 vs 重连）
+                        if (callViewModel.participants.value.isNotEmpty()) {
+                            Log.d(TAG, "WebSocket reconnected with existing participants, rebuilding localStateBroadcaster")
+
+                            localStateBroadcaster?.destroy()
+                            localStateBroadcaster = LocalStateBroadcasterNoMcu(
+                                localCallParticipantModel,
+                                messageSender as MessageSenderNoMcu
+                            )
+
+                            for (participant in callViewModel.participants.value) {
+                                localStateBroadcaster?.handleCallParticipantAdded(participant)
+                            }
+                        }
                     }
 
                     if (!webSocketCommunicationEvent.getHashMap()!!.containsKey("oldResumeId")) {
@@ -2059,6 +2080,14 @@ class CallActivity : CallBaseActivity() {
         for (sessionId in callParticipantIdsToEnd) {
             removeCallParticipant(sessionId)
         }
+
+        // 清理参与者
+        for (sessionId in callParticipantIdsToEnd) {
+            removeCallParticipant(sessionId)
+        }
+        // 新增：清空共享 sessionIds 集合，防止下次通话残留旧数据
+        callParticipantSessionIds.clear()
+
         ApplicationWideCurrentRoomHolder.getInstance().isInCall = false
         ApplicationWideCurrentRoomHolder.getInstance().isDialing = false
         hangupNetworkCalls(shutDownView, endCallForAll)
@@ -2311,8 +2340,16 @@ class CallActivity : CallBaseActivity() {
          */
         if (isOneToOneConversation && left.isNotEmpty()) {
             Log.d("Ray", "isOneToOneConversation left hangup call")
-            hangup(shutDownView = true, endCallForAll = false)
-            return
+            // hangup(shutDownView = true, endCallForAll = false)
+            // return
+            val leftSessionIds = left.mapNotNull { it.sessionId }.toSet()
+            val activeSessionIds = (joined + updated + unchanged).mapNotNull { it.sessionId }.toSet()
+            // 只有当对方确实不在通话中时才挂断
+            if (leftSessionIds.none { it in activeSessionIds }) {
+                Log.d("Ray", "isOneToOneConversation left hangup call")
+                hangup(shutDownView = true, endCallForAll = false)
+                return
+            }
         }
 
         if (!isSelfInCall) {
@@ -2331,7 +2368,8 @@ class CallActivity : CallBaseActivity() {
                 true
             )
         }
-        handleJoinedCallParticipantsChanged(selfParticipant, joined, currentSessionId)
+        // handleJoinedCallParticipantsChanged(selfParticipant, joined, currentSessionId)
+        handleJoinedCallParticipantsChanged(selfParticipant, joined, updated, unchanged, currentSessionId)
 
         if (othersInCall && currentCallStatus !== CallStatus.IN_CONVERSATION) {
             setCallState(CallStatus.IN_CONVERSATION)
@@ -2351,6 +2389,8 @@ class CallActivity : CallBaseActivity() {
     private fun handleJoinedCallParticipantsChanged(
         selfParticipant: Participant?,
         joined: Collection<Participant>,
+        updated: Collection<Participant>,     // ← 新增
+        unchanged: Collection<Participant>,   // ← 新增
         currentSessionId: String?
     ) {
         var selfJoined = false
@@ -2387,7 +2427,7 @@ class CallActivity : CallBaseActivity() {
                 } else {
                     offerAnswerNickProviders[sessionId]?.nick
                         ?.takeIf { it.isNotBlank() }
-                        // ★ 新增回退：使用已知的会话名称作为初始 nick
+                        // 新增回退：使用已知的会话名称作为初始 nick
                         ?: conversationDisplayName?.takeIf { !it.equals("Guest", ignoreCase = true) }
                         ?: ""
                 }
@@ -2410,11 +2450,17 @@ class CallActivity : CallBaseActivity() {
                 getOrCreatePeerConnectionWrapperForSessionIdAndType(sessionId, VIDEO_STREAM_TYPE_VIDEO, false)
             }
         }
-        othersInCall = if (selfJoined) {
-            joined.size > 1
-        } else {
-            joined.isNotEmpty()
-        }
+
+
+        // othersInCall = if (selfJoined) {
+        //     joined.size > 1
+        // } else {
+        //     joined.isNotEmpty()
+        // }
+        // 修复：othersInCall 应该检查所有集合中的非自己参与者
+        val allParticipantsExceptSelf = (joined + updated + unchanged)
+            .filter { it.sessionId != null && it.sessionId != currentSessionId }
+        othersInCall = allParticipantsExceptSelf.isNotEmpty()
     }
 
     private fun hasMCUAndAudioVideo(participantHasAudioOrVideo: Boolean): Boolean = hasMCU && participantHasAudioOrVideo
@@ -2424,8 +2470,8 @@ class CallActivity : CallBaseActivity() {
         selfParticipantHasAudioOrVideo: Boolean,
         sessionId: String,
         currentSessionId: String
-    ): Boolean =
-        !hasMCU && selfParticipantHasAudioOrVideo && (!participantHasAudioOrVideo || sessionId < currentSessionId)
+    ): Boolean = true
+        // !hasMCU && selfParticipantHasAudioOrVideo && (!participantHasAudioOrVideo || sessionId < currentSessionId)
 
     private fun participantInCallFlagsHaveAudioOrVideo(participant: Participant?): Boolean =
         if (participant == null) {
@@ -2468,12 +2514,6 @@ class CallActivity : CallBaseActivity() {
             peerConnectionWrapper = createPeerConnectionWrapperForSessionIdAndType(publisher, sessionId, type)
             peerConnectionWrapperList.add(peerConnectionWrapper)
             if (!publisher) {
-                // 新增：PCW 创建后，向该参与者补发本地当前音频/视频状态 add by ray on 2026/05/09
-                if (localStateBroadcaster is LocalStateBroadcasterNoMcu) {
-                    (localStateBroadcaster as LocalStateBroadcasterNoMcu)
-                        .notifyPeerConnectionReady(sessionId)
-                }
-
                 if (!callViewModel.doesParticipantExist(sessionId)) {
                     addCallParticipant(sessionId)
                 }
@@ -2571,7 +2611,11 @@ class CallActivity : CallBaseActivity() {
         )
     }
 
+    private val callParticipantSessionIds = ConcurrentHashMap<String, Boolean>().keySet(true)
     private fun addCallParticipant(sessionId: String?) {
+
+        sessionId?.let { callParticipantSessionIds.add(it) }
+
         val callParticipantMessageListener: CallParticipantMessageListener =
             CallActivityCallParticipantMessageListener(sessionId)
         callParticipantMessageListeners[sessionId] = callParticipantMessageListener
@@ -2623,6 +2667,9 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun removeCallParticipant(sessionId: String?) {
+
+        sessionId?.let { callParticipantSessionIds.remove(it) }
+
         if (!callViewModel.doesParticipantExist(sessionId)) {
             return
         }

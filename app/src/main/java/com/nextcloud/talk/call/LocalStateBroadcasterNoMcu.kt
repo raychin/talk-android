@@ -28,6 +28,7 @@ package com.nextcloud.talk.call
  * explicitly fetched from the internal signaling server, so even in case of a failed connection they will be
  * eventually received once the remote participant connects again.
  */
+import android.util.Log
 import com.nextcloud.talk.activities.ParticipantUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,61 +52,7 @@ class LocalStateBroadcasterNoMcu(
         private var job: Job? = null
 
         init {
-            // 任选其一
             handleStateChange(uiState)
-            // 注意：本方案不需要notifyPeerConnectionReady
-            // startStateSendingWithRetry()
-        }
-
-        /**
-         * 使用渐进延迟重试机制发送本地初始状态到远端参与者。
-         *
-         * 重试时间点：0ms, 300ms, 600ms, 1000ms, 2000, 4000ms
-         * 总最大等待：~7900ms
-         *
-         * 正常情况下 PCW 在 addCallParticipant 后很快就会通过
-         * getOrCreatePeerConnectionWrapperForSessionIdAndType 创建完成，
-         * 通常在第 1-2 次尝试即可成功发送。
-         */
-        private fun startStateSendingWithRetry() {
-            val sessionKey = uiState.sessionKey ?: return
-
-            job = scope.launch {
-                // 渐进式重试延迟（毫秒）：首次立即尝试，后续逐步加大间隔
-                val retryDelays = longArrayOf(0L, 300L, 600L, 1000L, 2000L, 4000L)
-
-                for ((index, delayMs) in retryDelays.withIndex()) {
-                    // 非首次需要等待
-                    if (delayMs > 0L) {
-                        delay(delayMs)
-                    }
-
-                    // 检查参与者是否已离开（避免无效重试）
-                    if (!iceConnectionStateObservers.containsKey(sessionKey)) {
-                        // Log.d(TAG, "Participant $sessionKey removed, stopping retry")
-                        return@launch
-                    }
-
-                    try {
-                        sendState(sessionKey)
-                        // Log.d(TAG, "Initial state sent successfully to $sessionKey (attempt ${index + 1})")
-                        // 发送成功，停止重试并清理自身
-                        remove()
-                        return@launch
-                    } catch (e: Exception) {
-                        // Log.w(
-                        //     TAG,
-                        //     "Failed to send initial state to $sessionKey " +
-                        //         "(attempt ${index + 1}/${retryDelays.size}): ${e.message}"
-                        // )
-                    }
-                }
-
-                // Log.w(
-                //     TAG,
-                //     "Exhausted all retries ($${retryDelays.size} attempts) sending initial state to $sessionKey"
-                // )
-            }
         }
 
         private fun handleStateChange(uiState: ParticipantUiState) {
@@ -124,44 +71,102 @@ class LocalStateBroadcasterNoMcu(
         }
     }
 
+    private val sendStateJobs = ConcurrentHashMap<String, Job>()
     override fun handleCallParticipantAdded(uiState: ParticipantUiState) {
-        uiState.sessionKey?.let {
-            iceConnectionStateObservers[it]?.remove()
 
-            iceConnectionStateObservers[it] =
-                IceConnectionStateObserver(uiState)
+        uiState.sessionKey?.let { sessionKey ->
+            // 取消之前的重发任务
+            sendStateJobs[sessionKey]?.cancel()
+
+            // 启动新的重发任务（与 MCU 模式类似的定时重发策略）
+            sendStateJobs[sessionKey] = scope.launch {
+                // Progressive delays: send immediately, then retry several times
+                // This covers:
+                // - t=0ms:    ICE might already be connected (fast path)
+                // - t=500ms:  ICE likely connecting
+                // - t=1500ms: ICE should be connected in most cases
+                // - t=3500ms: Fallback for slow networks
+                // - t=7500ms: Ensure delivery even with delays
+                // - t=15500s: Final safety net
+                // 总时长15.5s → 47.5s
+                val delays = longArrayOf(0L, 500L, 1000L, 2000L, 4000L, 8000L, 12000L, 20000L)
+
+                for ((index, delayMs) in delays.withIndex()) {
+                    if (delayMs > 0L) delay(delayMs)
+
+                    if (!sendStateJobs.containsKey(sessionKey)) return@launch
+
+                    val isIceConnected = uiState.isConnected
+
+                    try {
+                        sendState(sessionKey)
+                        Log.d(
+                            TAG,
+                            "State sent to $sessionKey (#${index + 1}/${delays.size}), " +
+                                "audio=${localCallParticipantModel.isAudioEnabled()}, " +
+                                "video=${localCallParticipantModel.isVideoEnabled()}"
+                        )
+
+                        // // ICE 已连接时，首次发送成功即可退出
+                        // if (isIceConnected) {
+                        //     Log.d(TAG, "ICE connected, stop retrying for $sessionKey")
+                        //     sendStateJobs.remove(sessionKey)
+                        //     break
+                        // }
+
+                        // if (isIceConnected) {
+                        //     // ICE 已连接，发送完整状态（DataChannel + Signaling）
+                        //     sendState(sessionKey)
+                        //     Log.d(TAG, "State sent to $sessionKey (#${index + 1}), ICE connected")
+                        // } else {
+                        //     // ICE 未连接，仅发送 Signaling 消息（WebSocket，无需 PCW）
+                        //     messageSender.send(getSignalingMessageForAudioState(), sessionKey)
+                        //     messageSender.send(getSignalingMessageForVideoState(), sessionKey)
+                        //     Log.d(TAG, "Signaling-only sent to $sessionKey (#${index + 1}), ICE not connected")
+                        // }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to send state to $sessionKey (#${index + 1})", e)
+                    }
+                }
+
+                sendStateJobs.remove(sessionKey)
+                Log.d(TAG, "Initial state sending completed for $sessionKey")
+            }
         }
     }
 
     override fun handleCallParticipantRemoved(sessionId: String) {
-        iceConnectionStateObservers[sessionId]?.remove()
+        sendStateJobs[sessionId]?.cancel()
+        sendStateJobs.remove(sessionId)
     }
 
     override fun destroy() {
         super.destroy()
         // Cancel all collectors safely
-        val observersCopy = iceConnectionStateObservers.values.toList()
-        for (observer in observersCopy) {
-            observer.remove()
-        }
+        sendStateJobs.values.forEach { it.cancel() }
+        sendStateJobs.clear()
     }
 
     private fun sendState(sessionKey: String?) {
+        // Data channel 消息（PCW 不存在时会被队列缓存，就绪后自动发送）
         messageSender.send(getDataChannelMessageForAudioState(), sessionKey)
         messageSender.send(getDataChannelMessageForSpeakingState(), sessionKey)
         messageSender.send(getDataChannelMessageForVideoState(), sessionKey)
 
+        Log.d(
+            TAG,
+            "State sent to $sessionKey, " +
+                "audio=${getDataChannelMessageForAudioState()}, " +
+                "speaking=${getDataChannelMessageForSpeakingState()}, " +
+                "video=${getDataChannelMessageForSpeakingState()}"
+        )
+
+        // Signaling 消息（通过 WebSocket 发送，无需 PCW）
         messageSender.send(getSignalingMessageForAudioState(), sessionKey)
         messageSender.send(getSignalingMessageForVideoState(), sessionKey)
     }
 
-    // LocalStateBroadcasterNoMcu.kt 新增
-    fun notifyPeerConnectionReady(sessionId: String?) {
-        sessionId ?: return
-        // 延迟一小段时间确保 PCW 已加入列表后再发送
-        scope.launch {
-            delay(500)  // 等待 PCW 注册完成
-            sendState(sessionId)  // 重试发送当前状态
-        }
+    companion object {
+        private val TAG = LocalStateBroadcasterNoMcu::class.java.simpleName
     }
 }
