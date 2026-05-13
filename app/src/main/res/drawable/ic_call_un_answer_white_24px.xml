@@ -1,0 +1,26 @@
+<!--<vector xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    android:width="32dp"-->
+<!--    android:height="32dp"-->
+<!--    android:viewportWidth="48"-->
+<!--    android:viewportHeight="48">-->
+<!--    &lt;!&ndash; Clean X mark &ndash;&gt;-->
+<!--    <path-->
+<!--        android:pathData="M14,14 L34,34 M34,14 L14,34"-->
+<!--        android:strokeWidth="5"-->
+<!--        android:strokeColor="#FFFFFFFF"-->
+<!--        android:strokeLineCap="round"-->
+<!--        android:fillColor="@android:color/transparent"/>-->
+<!--</vector>-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Clean X mark - adjusted to match visual size of answer icon -->
+    <path
+        android:pathData="M16,16 L32,32 M32,16 L16,32"
+        android:strokeWidth="5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"/>
+</vector>

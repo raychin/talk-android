@@ -28,36 +28,99 @@
         android:showDividers="middle"
         android:dividerPadding="24dp"
         android:paddingBottom="24dp">
-
-        <ImageButton
+        <!-- 拒绝按钮 + 标签 -->
+        <LinearLayout
             android:id="@+id/hangupButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_margin="36dp"
-            android:background="@drawable/shape_oval"
-            android:backgroundTint="@color/nc_darkRed"
-            android:src="@drawable/ic_call_end_white_24px"
-            android:contentDescription="@string/nc_call_button_content_description_hangup" />
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_horizontal">
 
-        <ImageButton
+            <ImageButton
+                android:id="@+id/hangupImageButton"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/shape_oval"
+                android:backgroundTint="@color/nc_darkRed"
+                android:src="@drawable/ic_call_un_answer_white_24px"
+                android:clickable="false"
+                android:focusable="false"
+                android:contentDescription="@string/nc_call_button_content_description_hangup" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/clps_call_un_answer"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 语音接听按钮 + 标签 -->
+        <LinearLayout
             android:id="@+id/callAnswerVoiceOnlyView"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_margin="36dp"
-            android:background="@drawable/shape_oval"
-            android:backgroundTint="@color/nc_darkGreen"
-            android:src="@drawable/ic_call_white_24dp"
-            android:contentDescription="@string/nc_call_button_content_description_answer_voice_only" />
+            android:gravity="center_horizontal">
 
-        <ImageButton
+            <ImageButton
+                android:id="@+id/callAnswerVoiceOnlyButton"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/shape_oval"
+                android:backgroundTint="@color/nc_darkGreen"
+                android:src="@drawable/ic_call_answer_white_24px"
+                android:clickable="false"
+                android:focusable="false"
+                android:contentDescription="@string/nc_call_button_content_description_answer_voice_only" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/clps_call_answer"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 视频接听按钮 + 标签 -->
+        <LinearLayout
             android:id="@+id/callAnswerCameraView"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_margin="36dp"
-            android:background="@drawable/shape_oval"
-            android:backgroundTint="@color/nc_darkGreen"
-            android:src="@drawable/ic_videocam_white_24px"
-            android:contentDescription="@string/nc_call_button_content_description_answer_video_call" />
+            android:gravity="center_horizontal">
+
+            <ImageButton
+                android:id="@+id/callAnswerCameraButton"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/shape_oval"
+                android:backgroundTint="@color/nc_darkGreen"
+                android:src="@drawable/ic_call_answer_white_24px"
+                android:clickable="false"
+                android:focusable="false"
+                android:contentDescription="@string/nc_call_button_content_description_answer_video_call" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/clps_call_answer"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <RelativeLayout

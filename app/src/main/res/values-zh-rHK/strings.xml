@@ -1020,4 +1020,8 @@ How to translate with transifex:
     <string name="screen_share_permission_required">螢幕共享需要授權</string>
     <string name="screen_share_started">已開始分享螢幕</string>
     <string name="screen_share_stopped">已停止分享螢幕</string>
+
+    <string name="clps_re_edit_message">重新編輯</string>
+    <string name="clps_call_answer">接聽</string>
+    <string name="clps_call_un_answer">拒絕</string>
 </resources>
