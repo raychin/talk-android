@@ -65,13 +65,13 @@ fun ScreenShareComponent(
     val context = LocalContext.current
     val activity = context as? Activity
 
-    // 默认横屏显示
-    var isLandscape by remember { mutableStateOf(true) }
+    // 默认横屏显示 isLandscape = true，71-74注释放开
+    var isLandscape by remember { mutableStateOf(false) }
 
-    // 设置默认方向为横屏
-    LaunchedEffect(Unit) {
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-    }
+    // // 设置默认方向为横屏
+    // LaunchedEffect(Unit) {
+    //     activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+    // }
 
     // 方向切换时更新 Activity 方向
     LaunchedEffect(isLandscape) {
@@ -99,7 +99,6 @@ fun ScreenShareComponent(
             WebRTCScreenShareComponent(
                 mediaStream = participantUiState.screenMediaStream,
                 eglBase = eglBase,
-                isLandscape = isLandscape,
                 onSingleTap = { controlsVisible = true }
             )
         }
