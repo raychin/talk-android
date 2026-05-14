@@ -19,12 +19,18 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.emoji2.bundled.BundledEmojiCompatConfig
 import androidx.emoji2.text.EmojiCompat
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
+import androidx.work.BackoffPolicy
 import androidx.work.Configuration
+import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
-// import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
@@ -50,12 +56,13 @@ import com.nextcloud.talk.dagger.modules.RepositoryModule
 import com.nextcloud.talk.dagger.modules.RestModule
 import com.nextcloud.talk.dagger.modules.UtilsModule
 import com.nextcloud.talk.dagger.modules.ViewModelModule
+import com.nextcloud.talk.data.network.NetworkMonitorImpl
 import com.nextcloud.talk.filebrowser.webdav.DavUtils
 import com.nextcloud.talk.jobs.AccountRemovalWorker
 import com.nextcloud.talk.jobs.CapabilitiesWorker
 import com.nextcloud.talk.jobs.SignalingSettingsWorker
-// import com.nextcloud.talk.jobs.clps.TalkBackgroundWorker
 import com.nextcloud.talk.jobs.WebsocketConnectionsWorker
+import com.nextcloud.talk.jobs.clps.TalkBackgroundWorker
 import com.nextcloud.talk.ui.theme.ThemeModule
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
 import com.nextcloud.talk.utils.DeviceUtils
@@ -67,6 +74,7 @@ import com.vanniktech.emoji.EmojiManager
 import com.vanniktech.emoji.google.GoogleEmojiProvider
 import de.cotech.hw.SecurityKeyManager
 import de.cotech.hw.SecurityKeyManagerConfig
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import org.conscrypt.Conscrypt
 import org.webrtc.PeerConnectionFactory
@@ -219,6 +227,54 @@ class NextcloudTalkApplication :
     private fun initPush() {
         JPushInterface.setDebugMode(BuildConfig.DEBUG)
         JPushInterface.init(this)
+        // 主进程重启后立即检查推送状态
+        JPushInterface.getPushStatus(this)
+
+        // 监听应用前后台切换
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                // 应用回到前台时检查推送状态
+                JPushInterface.getPushStatus(applicationContext)
+            }
+        })
+
+        val networkMonitor = NetworkMonitorImpl(applicationContext)
+        // 监听网络从离线变为在线
+        ProcessLifecycleOwner.get().lifecycleScope.launch {
+            var wasOnline = false
+            networkMonitor.isOnline.collect { isOnline ->
+                if (isOnline && !wasOnline) {
+                    // 网络从离线恢复为在线，检查推送状态
+                    JPushInterface.getPushStatus(applicationContext)
+                }
+                wasOnline = isOnline
+            }
+        }
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)       // 有网络才执行
+            .setRequiresDeviceIdle(false)                          // 不需要设备空闲
+            .setRequiresBatteryNotLow(true)                        // 电量不低时才执行
+            .build()
+
+        val periodicPushCheckWork = PeriodicWorkRequest.Builder(
+            TalkBackgroundWorker::class.java,
+            1,                          // 重复间隔：1小时（最小15分钟太频繁）
+            TimeUnit.HOURS
+        )
+            .setConstraints(constraints)
+            .setBackoffCriteria(         // 失败后指数退避
+                BackoffPolicy.EXPONENTIAL,
+                30,
+                TimeUnit.MINUTES
+            )
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "PushStatusCheckWork",
+            ExistingPeriodicWorkPolicy.KEEP,  // 已有则保留，不重复创建
+            periodicPushCheckWork
+        )
     }
 
     private fun initWorkers() {
@@ -244,32 +300,6 @@ class NextcloudTalkApplication :
             ExistingPeriodicWorkPolicy.REPLACE,
             periodicCapabilitiesUpdateWork
         )
-
-        // // val talkBackgroundWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java).build()
-        // // WorkManager.getInstance(applicationContext).enqueue(talkBackgroundWorker)
-        // val delayedWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java)
-        //     .setInitialDelay(TALK_WORK_DELAY, TimeUnit.SECONDS)
-        //     .build()
-        // WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-        //     TALK_WORK_ID,
-        //     // 如果已存在则不再执行
-        //     ExistingWorkPolicy.REPLACE,
-        //     delayedWorker
-        // )
-        // // val constraints = Constraints.Builder()
-        // //     .setRequiredNetworkType(NetworkType.CONNECTED)
-        // //     .setRequiresCharging(false) // 根据需要调整
-        // //     .build()
-        // // // 周期时间太短，无法重复执行，一般15分钟
-        // // val talkBackgroundWorker = PeriodicWorkRequest.Builder(TalkBackgroundWorker::class.java, 45, TimeUnit.SECONDS)
-        // //     .setConstraints(constraints)
-        // //     .build()
-        // // // WorkManager.getInstance(applicationContext).getWorkInfoById(talkBackgroundWorker.id)
-        // // // WorkManager.getInstance(applicationContext)
-        // // //     .getWorkInfoByIdLiveData(talkBackgroundWorker.id)
-        // // //     .observe(this, Observer {
-        // // //         workInfo -> Log.d("WorkManager", "WorkInfo: $workInfo")
-        // // //     })
     }
 
     override fun onTerminate() {

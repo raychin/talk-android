@@ -139,6 +139,15 @@
             </intent-filter>
         </service>
 
+        <receiver android:name="com.nextcloud.talk.jpush.PushStatusReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".activities.MainActivity"
             android:exported="true"
@@ -168,8 +177,12 @@
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name=".account.BrowserLoginActivity"
+            android:name=".account.WebViewLoginActivity"
             android:theme="@style/AppTheme" />
+
+<!--        <activity-->
+<!--            android:name=".account.BrowserLoginActivity"-->
+<!--            android:theme="@style/AppTheme" />-->
 
         <activity android:name=".contacts.ContactsActivity"
             android:theme="@style/AppTheme"/>

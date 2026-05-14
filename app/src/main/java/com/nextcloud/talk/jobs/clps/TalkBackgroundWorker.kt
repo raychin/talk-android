@@ -9,16 +9,11 @@ package com.nextcloud.talk.jobs.clps
 
 import android.content.Context
 import android.util.Log
-// import androidx.work.ExistingWorkPolicy
-// import androidx.work.OneTimeWorkRequest
-// import androidx.work.WorkManager
-import androidx.work.Worker
+import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import autodagger.AutoInjector
 import cn.jpush.android.api.JPushInterface
 import com.nextcloud.talk.application.NextcloudTalkApplication
-// import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.TALK_WORK_DELAY
-// import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.TALK_WORK_ID
 import com.nextcloud.talk.utils.preferences.AppPreferences
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -28,11 +23,10 @@ import java.text.SimpleDateFormat
 import java.util.Base64
 import java.util.Date
 import java.util.Locale
-// import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AutoInjector(NextcloudTalkApplication::class)
-class TalkBackgroundWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+class TalkBackgroundWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
     @Inject
     lateinit var appPreferences: AppPreferences
@@ -41,7 +35,7 @@ class TalkBackgroundWorker(context: Context, workerParams: WorkerParameters) : W
     @Inject
     lateinit var okHttpClient: OkHttpClient
 
-    override fun doWork(): Result {
+    override suspend fun doWork(): Result {
         NextcloudTalkApplication.Companion.sharedApplication!!.componentApplication.inject(this)
         context = applicationContext
 
