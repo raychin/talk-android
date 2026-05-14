@@ -2470,8 +2470,8 @@ class CallActivity : CallBaseActivity() {
         selfParticipantHasAudioOrVideo: Boolean,
         sessionId: String,
         currentSessionId: String
-    ): Boolean = true
-        // !hasMCU && selfParticipantHasAudioOrVideo && (!participantHasAudioOrVideo || sessionId < currentSessionId)
+    ): Boolean =
+        !hasMCU && selfParticipantHasAudioOrVideo && (!participantHasAudioOrVideo || sessionId < currentSessionId)
 
     private fun participantInCallFlagsHaveAudioOrVideo(participant: Participant?): Boolean =
         if (participant == null) {
@@ -2594,6 +2594,13 @@ class CallActivity : CallBaseActivity() {
             } else {
                 null
             }
+        }
+
+        // 修复：确保 localSession 与信令服务器的 session ID 一致
+        val effectiveLocalSession = if (hasExternalSignalingServer) {
+            webSocketClient?.sessionId ?: callSession
+        } else {
+            callSession
         }
 
         return PeerConnectionWrapper(
@@ -3036,6 +3043,26 @@ class CallActivity : CallBaseActivity() {
 
         override fun onUnshareScreen() {
             endPeerConnection(sessionId, "screen")
+        }
+
+        override fun onMuteAudio() {
+            // 状态更新已由 ParticipantHandler.listener 处理
+            Log.d(TAG, "Remote participant $sessionId muted audio via signaling")
+        }
+
+        override fun onUnmuteAudio() {
+            // 状态更新已由 ParticipantHandler.listener 处理
+            Log.d(TAG, "Remote participant $sessionId unmuted audio via signaling")
+        }
+
+        override fun onMuteVideo() {
+            // 状态更新已由 ParticipantHandler.listener 处理
+            Log.d(TAG, "Remote participant $sessionId muted video via signaling")
+        }
+
+        override fun onUnmuteVideo() {
+            // 状态更新已由 ParticipantHandler.listener 处理
+            Log.d(TAG, "Remote participant $sessionId unmuted video via signaling")
         }
     }
 

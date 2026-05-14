@@ -154,6 +154,11 @@ public abstract class SignalingMessageReceiver {
         void onRaiseHand(boolean state, long timestamp);
         void onReaction(String reaction);
         void onUnshareScreen();
+
+        void onMuteAudio();
+        void onUnmuteAudio();
+        void onMuteVideo();
+        void onUnmuteVideo();
     }
 
     /**
@@ -691,6 +696,38 @@ public abstract class SignalingMessageReceiver {
             // }
 
             callParticipantMessageNotifier.notifyUnshareScreen(sessionId);
+
+            return;
+        }
+
+        if ("mute".equals(type) || "unmute".equals(type)) {
+            NCMessagePayload payload = signalingMessage.getPayload();
+            if (payload == null) {
+                // Broken message, this should not happen.
+                return;
+            }
+
+            String name = payload.getName();
+            if (name == null) {
+                // Broken message, this should not happen.
+                return;
+            }
+
+            boolean isMute = "mute".equals(type);
+
+            if ("audio".equals(name)) {
+                if (isMute) {
+                    callParticipantMessageNotifier.notifyMuteAudio(sessionId);
+                } else {
+                    callParticipantMessageNotifier.notifyUnmuteAudio(sessionId);
+                }
+            } else if ("video".equals(name)) {
+                if (isMute) {
+                    callParticipantMessageNotifier.notifyMuteVideo(sessionId);
+                } else {
+                    callParticipantMessageNotifier.notifyUnmuteVideo(sessionId);
+                }
+            }
 
             return;
         }

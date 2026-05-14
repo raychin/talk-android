@@ -91,4 +91,28 @@ class CallParticipantMessageNotifier {
             listener.onUnshareScreen();
         }
     }
+
+    public synchronized void notifyMuteAudio(String sessionId) {
+        for (SignalingMessageReceiver.CallParticipantMessageListener listener : getListenersFor(sessionId)) {
+            listener.onMuteAudio();
+        }
+    }
+
+    public synchronized void notifyUnmuteAudio(String sessionId) {
+        for (SignalingMessageReceiver.CallParticipantMessageListener listener : getListenersFor(sessionId)) {
+            listener.onUnmuteAudio();
+        }
+    }
+
+    public synchronized void notifyMuteVideo(String sessionId) {
+        for (SignalingMessageReceiver.CallParticipantMessageListener listener : getListenersFor(sessionId)) {
+            listener.onMuteVideo();
+        }
+    }
+
+    public synchronized void notifyUnmuteVideo(String sessionId) {
+        for (SignalingMessageReceiver.CallParticipantMessageListener listener : getListenersFor(sessionId)) {
+            listener.onUnmuteVideo();
+        }
+    }
 }

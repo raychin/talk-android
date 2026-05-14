@@ -105,6 +105,7 @@ public class PeerConnectionWrapper {
         void onIceConnectionStateChanged(PeerConnection.IceConnectionState iceConnectionState);
     }
 
+//    private final PeerConnectionFactory peerConnectionFactory;
     public PeerConnectionWrapper(PeerConnectionFactory peerConnectionFactory,
                                  List<PeerConnection.IceServer> iceServerList,
                                  MediaConstraints mediaConstraints,
@@ -113,6 +114,7 @@ public class PeerConnectionWrapper {
                                  SignalingMessageReceiver signalingMessageReceiver,
                                  SignalingMessageSender signalingMessageSender) {
         this.videoStreamType = videoStreamType;
+//        this.peerConnectionFactory = peerConnectionFactory;  // ← 新增：保存 factory
 
         this.sessionId = sessionId;
         this.mediaConstraints = mediaConstraints;
@@ -124,8 +126,8 @@ public class PeerConnectionWrapper {
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServerList);
         configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
-        // 启用持续 ICE 候选收集，提高在 NAT 环境下的连接成功率，每当网络接口变化，WebRTC 会重新收集并回调 onIceCandidate()
-        configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+//        // 启用持续 ICE 候选收集，提高在 NAT 环境下的连接成功率，每当网络接口变化，WebRTC 会重新收集并回调 onIceCandidate()
+//        configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
 
         peerConnection = peerConnectionFactory.createPeerConnection(configuration, new InitialPeerConnectionObserver());
 
@@ -579,51 +581,55 @@ public class PeerConnectionWrapper {
 
             // 调整优先级
             String modifiedCandidate = candidate;
-            if (type.equals("relay")) {
-                // 提升relay类型的优先级
-                // 找到优先级字段并修改
-                for (int i = 0; i < parts.length; i++) {
-                    if (i > 0 && parts[i - 1].equals("UDP")) {
-                        // 优先级字段在UDP后面
-                        try {
-                            int priority = Integer.parseInt(parts[i]);
-                            // 提升优先级到最高
-                            parts[i] = String.valueOf(2147483647); // 最大32位整数
-                            modifiedCandidate = String.join(" ", parts);
-                            break;
-                        } catch (NumberFormatException e) {
-                            // 忽略解析错误
+            switch (type) {
+                case "relay" -> {
+                    // 提升relay类型的优先级
+                    // 找到优先级字段并修改
+                    for (int i = 0; i < parts.length; i++) {
+                        if (i > 0 && parts[i - 1].equals("UDP")) {
+                            // 优先级字段在UDP后面
+                            try {
+                                int priority = Integer.parseInt(parts[i]);
+                                // 提升优先级到最高
+                                parts[i] = String.valueOf(2147483647); // 最大32位整数
+                                modifiedCandidate = String.join(" ", parts);
+                                break;
+                            } catch (NumberFormatException e) {
+                                // 忽略解析错误
+                            }
                         }
                     }
                 }
-            } else if (type.equals("srflx")) {
-                // 降低srflx类型的优先级
-                for (int i = 0; i < parts.length; i++) {
-                    if (i > 0 && parts[i - 1].equals("UDP")) {
-                        // 优先级字段在UDP后面
-                        try {
-                            int priority = Integer.parseInt(parts[i]);
-                            // 降低优先级
-                            parts[i] = String.valueOf(priority / 2);
-                            modifiedCandidate = String.join(" ", parts);
-                            break;
-                        } catch (NumberFormatException e) {
-                            // 忽略解析错误
+                case "srflx" -> {
+                    // 降低srflx类型的优先级
+                    for (int i = 0; i < parts.length; i++) {
+                        if (i > 0 && parts[i - 1].equals("UDP")) {
+                            // 优先级字段在UDP后面
+                            try {
+                                int priority = Integer.parseInt(parts[i]);
+                                // 降低优先级
+                                parts[i] = String.valueOf(priority / 2);
+                                modifiedCandidate = String.join(" ", parts);
+                                break;
+                            } catch (NumberFormatException e) {
+                                // 忽略解析错误
+                            }
                         }
                     }
                 }
-            } else if (type.equals("host")) {
-                // 降低 host 类型的优先级，但不丢弃
-                for (int i = 0; i < parts.length; i++) {
-                    if (i > 0 && parts[i - 1].equals("UDP")) {
-                        try {
-                            int priority = Integer.parseInt(parts[i]);
-                            // 将 host candidate 优先级降低到最低
-                            parts[i] = String.valueOf(Math.max(1, priority / 10));
-                            modifiedCandidate = String.join(" ", parts);
-                            break;
-                        } catch (NumberFormatException e) {
-                            // 忽略解析错误
+                case "host" -> {
+                    // 降低 host 类型的优先级，但不丢弃
+                    for (int i = 0; i < parts.length; i++) {
+                        if (i > 0 && parts[i - 1].equals("UDP")) {
+                            try {
+                                int priority = Integer.parseInt(parts[i]);
+                                // 将 host candidate 优先级降低到最低
+                                parts[i] = String.valueOf(Math.max(1, priority / 10));
+                                modifiedCandidate = String.join(" ", parts);
+                                break;
+                            } catch (NumberFormatException e) {
+                                // 忽略解析错误
+                            }
                         }
                     }
                 }
@@ -704,7 +710,7 @@ public class PeerConnectionWrapper {
 
                 DataChannelObserver ob = new DataChannelObserver(dataChannel);
                 dataChannelObservers.put(dataChannel.label(), ob);
-                dataChannel.registerObserver(new DataChannelObserver(dataChannel));
+                dataChannel.registerObserver(ob);
                 dataChannels.put(dataChannel.label(), dataChannel);
             }
         }
@@ -716,6 +722,29 @@ public class PeerConnectionWrapper {
 
         @Override
         public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+//            MediaStreamTrack track = rtpReceiver.track();
+//            if (track == null) {
+//                return;
+//            }
+//
+//            // 方案 A: mediaStreams 有值（某些 WebRTC 版本），直接使用
+//            if (mediaStreams != null && mediaStreams.length > 0 && mediaStreams[0] != null) {
+//                stream = mediaStreams[0];
+//            } else {
+//                // 方案 B: mediaStreams 为空（UNIFIED_PLAN + addTrack 的常见情况）
+//                // 手动从 rtpReceiver 获取 track，创建/更新 MediaStream
+//                if (stream == null) {
+//                    stream = peerConnectionFactory.createLocalMediaStream("remoteStream");
+//                }
+//                if (track instanceof AudioTrack) {
+//                    stream.addTrack((AudioTrack) track);
+//                } else if (track instanceof VideoTrack) {
+//                    stream.addTrack((VideoTrack) track);
+//                }
+//            }
+//
+//            // 每次有新 track 都通知，因为同一 MediaStream 可能会分两次收到 audio/video track
+//            peerConnectionNotifier.notifyStreamAdded(stream);
         }
     }
 

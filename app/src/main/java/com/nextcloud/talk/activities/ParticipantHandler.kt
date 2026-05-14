@@ -151,6 +151,22 @@ class ParticipantHandler(
             handleScreenStreamChange(null)
             onParticipantUnshareScreen.invoke(_uiState.value.sessionKey)
         }
+
+        override fun onMuteAudio() {
+            _uiState.update { it.copy(isAudioEnabled = false) }
+        }
+
+        override fun onUnmuteAudio() {
+            _uiState.update { it.copy(isAudioEnabled = true) }
+        }
+
+        override fun onMuteVideo() {
+            _uiState.update { it.copy(isStreamEnabled = false) }
+        }
+
+        override fun onUnmuteVideo() {
+            _uiState.update { it.copy(isStreamEnabled = true) }
+        }
     }
 
     init {
