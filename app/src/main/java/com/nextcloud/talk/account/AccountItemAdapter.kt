@@ -34,7 +34,7 @@ class AccountItemAdapter(private val onClick: (AdvancedUserItem) -> Unit) :
             ) {
                 binding.userIcon.loadUserAvatar(item.user, item.model.calculatedActorId!!, true, false)
             }
-            binding.actionRequired.visibility = if (item.actionRequiredCount > 0) View.VISIBLE else View.GONE
+            // binding.actionRequired.visibility = if (item.actionRequiredCount > 0) View.VISIBLE else View.GONE
         }
     }
 

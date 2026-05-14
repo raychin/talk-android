@@ -70,27 +70,27 @@ class BrowserLoginActivity : BaseActivity() {
     }
 
     private fun observe() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.initialLoginRequestState.collect { state ->
-                    when (state) {
-                        BrowserLoginActivityViewModel.InitialLoginViewState.InitialLoginRequestError -> {
-                            Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_SHORT).show()
-                        }
-                        is BrowserLoginActivityViewModel.InitialLoginViewState.InitialLoginRequestSuccess -> {
-                            if (viewModel.waitingForBrowserState.value) {
-                                viewModel.setWaitingForBrowser(false)
-                                viewModel.handleWebBrowserLogin()
-                            } else {
-                                viewModel.setWaitingForBrowser(true)
-                                launchDefaultWebBrowser(state.loginUrl)
-                            }
-                        }
-                        BrowserLoginActivityViewModel.InitialLoginViewState.None -> {}
-                    }
-                }
-            }
-        }
+        // lifecycleScope.launch {
+        //     repeatOnLifecycle(Lifecycle.State.STARTED) {
+        //         viewModel.initialLoginRequestState.collect { state ->
+        //             when (state) {
+        //                 BrowserLoginActivityViewModel.InitialLoginViewState.InitialLoginRequestError -> {
+        //                     Snackbar.make(binding.root, R.string.nc_common_error_sorry, Snackbar.LENGTH_SHORT).show()
+        //                 }
+        //                 is BrowserLoginActivityViewModel.InitialLoginViewState.InitialLoginRequestSuccess -> {
+        //                     if (viewModel.waitingForBrowserState.value) {
+        //                         viewModel.setWaitingForBrowser(false)
+        //                         viewModel.handleWebBrowserLogin()
+        //                     } else {
+        //                         viewModel.setWaitingForBrowser(true)
+        //                         launchDefaultWebBrowser(state.loginUrl)
+        //                     }
+        //                 }
+        //                 BrowserLoginActivityViewModel.InitialLoginViewState.None -> {}
+        //             }
+        //         }
+        //     }
+        // }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -123,27 +123,27 @@ class BrowserLoginActivity : BaseActivity() {
             reauthorizeAccount = extras.getBoolean(BundleKeys.KEY_REAUTHORIZE_ACCOUNT)
         }
 
-        if (extras.containsKey(BundleKeys.KEY_FROM_QR)) {
-            val uri = extras.getString(BundleKeys.KEY_FROM_QR)!!
-
-            if (uri.startsWith(LoginRepository.ONE_TIME_PREFIX)) {
-                viewModel.loginWithOTPQR(uri, reauthorizeAccount)
-            } else {
-                viewModel.loginWithQR(uri, reauthorizeAccount)
-            }
-        } else if (baseUrl != null) {
-            viewModel.startWebBrowserLogin(baseUrl, reauthorizeAccount)
-        }
+        // if (extras.containsKey(BundleKeys.KEY_FROM_QR)) {
+        //     val uri = extras.getString(BundleKeys.KEY_FROM_QR)!!
+        //
+        //     if (uri.startsWith(LoginRepository.ONE_TIME_PREFIX)) {
+        //         viewModel.loginWithOTPQR(uri, reauthorizeAccount)
+        //     } else {
+        //         viewModel.loginWithQR(uri, reauthorizeAccount)
+        //     }
+        // } else if (baseUrl != null) {
+        //     viewModel.startWebBrowserLogin(baseUrl, reauthorizeAccount)
+        // }
     }
 
     private fun initViews() {
-        viewThemeUtils.material.colorMaterialButtonFilledOnPrimary(binding.cancelLoginBtn)
-        viewThemeUtils.material.colorProgressBar(binding.progressBar)
-
-        binding.cancelLoginBtn.setOnClickListener {
-            viewModel.cancelLogin()
-            onBackPressedDispatcher.onBackPressed()
-        }
+        // viewThemeUtils.material.colorMaterialButtonFilledOnPrimary(binding.cancelLoginBtn)
+        // viewThemeUtils.material.colorProgressBar(binding.progressBar)
+        //
+        // binding.cancelLoginBtn.setOnClickListener {
+        //     viewModel.cancelLogin()
+        //     onBackPressedDispatcher.onBackPressed()
+        // }
     }
 
     private fun launchDefaultWebBrowser(url: String) {

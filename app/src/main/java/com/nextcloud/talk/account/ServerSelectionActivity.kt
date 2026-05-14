@@ -346,7 +346,7 @@ class ServerSelectionActivity : BaseActivity() {
                                 val bundle = Bundle()
                                 bundle.putString(BundleKeys.KEY_BASE_URL, queryUrl.replace("/status.php", ""))
 
-                                val intent = Intent(context, BrowserLoginActivity::class.java)
+                                val intent = Intent(context, WebViewLoginActivity::class.java)
                                 intent.putExtras(bundle)
                                 startActivity(intent)
                             }
@@ -442,7 +442,7 @@ class ServerSelectionActivity : BaseActivity() {
                     return@registerForActivityResult
                 }
 
-                val intent = Intent(this, BrowserLoginActivity::class.java)
+                val intent = Intent(this, WebViewLoginActivity::class.java)
                 val bundle = bundleOf().apply {
                     putString(BundleKeys.KEY_FROM_QR, resultData)
                 }

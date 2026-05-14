@@ -1,7 +1,9 @@
 /*
  * Nextcloud Talk - Android Client
  *
- * SPDX-FileCopyrightText: 2017-2026 Nextcloud GmbH and Nextcloud contributors
+ * SPDX-FileCopyrightText: 2023 Marcel Hibbe <dev@mhibbe.de>
+ * SPDX-FileCopyrightText: 2022 Andy Scherzinger <info@andy-scherzinger.de>
+ * SPDX-FileCopyrightText: 2017 Mario Danic <mario@lovelyhq.com>
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 package com.nextcloud.talk.account
@@ -31,6 +33,9 @@ import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_BASE_URL
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_IS_ACCOUNT_IMPORT
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_TOKEN
 import com.nextcloud.talk.utils.bundle.BundleKeys.KEY_USERNAME
+import eu.davidea.flexibleadapter.FlexibleAdapter
+import eu.davidea.flexibleadapter.common.SmoothScrollLinearLayoutManager
+import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import org.osmdroid.config.Configuration
 import java.net.CookieManager
 import javax.inject.Inject
@@ -49,9 +54,29 @@ class SwitchAccountActivity : BaseActivity() {
     @Inject
     lateinit var cookieManager: CookieManager
 
-    private var adapter: AccountItemAdapter? = null
-    private val userItems: MutableList<AdvancedUserItem> = ArrayList()
+    private var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>? = null
+    private val userItems: MutableList<AbstractFlexibleItem<*>> = ArrayList()
     private var isAccountImport = false
+
+    private val onImportItemClickListener = FlexibleAdapter.OnItemClickListener { _, position ->
+        if (userItems.size > position) {
+            val account = (userItems[position] as AdvancedUserItem).account
+            reauthorizeFromImport(account)
+        }
+        true
+    }
+
+    private val onSwitchItemClickListener = FlexibleAdapter.OnItemClickListener { _, position ->
+        if (userItems.size > position) {
+            val user = (userItems[position] as AdvancedUserItem).user
+
+            if (userManager.setUserAsActive(user!!).blockingGet()) {
+                cookieManager.cookieStore.removeAll()
+                finish()
+            }
+        }
+        true
+    }
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,17 +117,7 @@ class SwitchAccountActivity : BaseActivity() {
         super.onResume()
 
         if (adapter == null) {
-            adapter = AccountItemAdapter { item ->
-                if (isAccountImport) {
-                    reauthorizeFromImport(item.account)
-                } else {
-                    if (userManager.setUserAsActive(item.user!!).blockingGet()) {
-                        cookieManager.cookieStore.removeAll()
-                        finish()
-                    }
-                }
-            }
-
+            adapter = FlexibleAdapter(userItems, this, false)
             var participant: Participant
 
             if (!isAccountImport) {
@@ -117,9 +132,11 @@ class SwitchAccountActivity : BaseActivity() {
                         participant.actorType = Participant.ActorType.USERS
                         participant.actorId = userId
                         participant.displayName = user.displayName
-                        userItems.add(AdvancedUserItem(participant, user, null, 0))
+                        userItems.add(AdvancedUserItem(participant, user, null, viewThemeUtils, 0))
                     }
                 }
+                adapter!!.addListener(onSwitchItemClickListener)
+                adapter!!.updateDataSet(userItems, false)
             } else {
                 var account: Account
                 var importAccount: ImportAccount
@@ -133,16 +150,18 @@ class SwitchAccountActivity : BaseActivity() {
                     participant.displayName = importAccount.getUsername()
                     user = User()
                     user.baseUrl = importAccount.getBaseUrl()
-                    userItems.add(AdvancedUserItem(participant, user, account, 0))
+                    userItems.add(AdvancedUserItem(participant, user, account, viewThemeUtils, 0))
                 }
+                adapter!!.addListener(onImportItemClickListener)
+                adapter!!.updateDataSet(userItems, false)
             }
-            adapter!!.submitList(userItems)
         }
         prepareViews()
     }
 
     private fun prepareViews() {
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        val layoutManager: LinearLayoutManager = SmoothScrollLinearLayoutManager(this)
+        binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.adapter = adapter
     }
