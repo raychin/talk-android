@@ -1198,10 +1198,18 @@ class CallActivity : CallBaseActivity() {
         // create an AudioSource instance
         audioSource = peerConnectionFactory!!.createAudioSource(audioConstraints)
         localAudioTrack = peerConnectionFactory!!.createAudioTrack("NCa0", audioSource)
-        localAudioTrack!!.setEnabled(false)
+
+        // 根据权限初始化麦克风状态
+        val shouldEnableAudio = canPublishAudioStream && permissionUtil?.isMicrophonePermissionGranted() == true
+        localAudioTrack!!.setEnabled(shouldEnableAudio)
         localStream!!.addTrack(localAudioTrack)
-        Log.d("Ray", "microphoneInitialization...")
-        localCallParticipantModel.isAudioEnabled = false
+
+        microphoneOn = shouldEnableAudio
+        localCallParticipantModel.isAudioEnabled = shouldEnableAudio
+
+        if (shouldEnableAudio) {
+            binding?.microphoneButton?.setImageResource(R.drawable.ic_mic_white_24px)
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -2228,11 +2236,11 @@ class CallActivity : CallBaseActivity() {
         left: Collection<Participant>,
         unchanged: Collection<Participant>
     ) {
-        Log.d(TAG, "handleCallParticipantsChanged")
-        Log.d("Ray", "joined: ${joined.toString()}")
-        Log.d("Ray", "updated: ${updated.toString()}")
-        Log.d("Ray", "left: ${left.toString()}")
-        Log.d("Ray", "unchanged: ${unchanged.toString()}")
+        Log.d("Ray", "handleCallParticipantsChanged hasExternalSignalingServer = $hasExternalSignalingServer")
+        Log.d("Ray", "handleCallParticipantsChanged joined: ${joined.toString()}")
+        Log.d("Ray", "handleCallParticipantsChanged updated: ${updated.toString()}")
+        Log.d("Ray", "handleCallParticipantsChanged left: ${left.toString()}")
+        Log.d("Ray", "handleCallParticipantsChanged unchanged: ${unchanged.toString()}")
 
         Log.d("Ray", "================start=================")
 
@@ -2245,52 +2253,14 @@ class CallActivity : CallBaseActivity() {
 
         // The signaling session is the same as the Nextcloud session only when the MCU is not used.
         var currentSessionId = callSession
-        Log.e("Ray", "webSocketClient!!.sessionId = ${webSocketClient!!.sessionId}")
+        Log.e("Ray", "webSocketClient!!.sessionId = ${webSocketClient?.sessionId}")
         Log.e("Ray", "isOneToOneConversation = $isOneToOneConversation")
         Log.e("Ray", "hasExternalSignalingServer = $hasExternalSignalingServer")
 
-        if (hasMCU) {
+        if (hasMCU && webSocketClient != null) {
             currentSessionId = webSocketClient!!.sessionId
         }
-
-        // 另一种方案，判断账户环境conversationUser.baseUrl.toUri().host == "talk.clpsgroup.com.cn"
-        if (hasExternalSignalingServer) {
-            if (isOneToOneConversation) {
-                // 生产环境有信令服务，单人通话需要改为当前webSocketClient的sessionId，保证加入通话正常
-                currentSessionId = webSocketClient!!.sessionId
-            } else {
-                // 多人通话
-                Log.d("Ray", "isIncomingCallFromNotification = ${isIncomingCallFromNotification}")
-                Log.d("Ray", "isOneToOneConversation = ${isOneToOneConversation}")
-                /**
-                 * fix: 修复独立通讯信用服务器接通通话自动退出通话问题问题
-                 * add by ray on 2026/03/03
-                 */
-                joined.forEach {
-                    Log.d("Ray", "   joined: ${it.userId}")
-                    if (it.userId == conversationUser.userId) {
-                        it.sessionId = currentSessionId
-                        Log.d("Ray", "   joined: ${it.sessionId}")
-                    }
-                }
-                updated.forEach {
-                    Log.d("Ray", "   updated: ${it.userId}")
-                    if (it.userId == conversationUser.userId) {
-                        it.sessionId = currentSessionId
-                        Log.d("Ray", "   updated: ${it.sessionId}")
-                    }
-                }
-                unchanged.forEach {
-                    Log.d("Ray", "   unchanged: ${it.userId}")
-                    if (it.userId == conversationUser.userId) {
-                        it.sessionId = currentSessionId
-                        Log.d("Ray", "   unchanged: ${it.sessionId}")
-                    }
-                }
-                Log.d("Ray", "---------------------------------------------")
-            }
-        }
-        Log.d("Ray", "   currentSessionId is $currentSessionId")
+        Log.e("Ray", "callSession = $callSession")
 
         val participantsInCall: MutableList<Participant> = ArrayList()
         participantsInCall.addAll(joined)
@@ -2302,23 +2272,15 @@ class CallActivity : CallBaseActivity() {
 
         for (participant in participantsInCall) {
             val inCallFlag = participant.inCall
-            Log.e("Ray", "currentSessionId = $currentSessionId")
-            Log.e("Ray", "participant.sessionId = ${participant.sessionId}")
-            Log.e("Ray", "participant.sessionId != currentSessionId = ${participant.sessionId != currentSessionId}")
-            Log.e("Ray", "inCallFlag = $inCallFlag")
 
-            Log.e("Ray", "conversationUser = ${conversationUser.userId}")
-            Log.e("Ray", "participant.userId = ${participant.userId}")
-
-            if (participant.sessionId != currentSessionId) {
-                Log.d(
-                    TAG,
-                    "   inCallFlag of participant " +
-                        participant.sessionId!!.substring(0, SESSION_ID_PREFFIX_END) +
-                        " : " +
-                        inCallFlag
-                )
+            // 使用 userId 识别自己（外部信令服务器下 sessionId 不等于 callSession）
+            val isSelf = if (hasExternalSignalingServer) {
+                participant.userId == conversationUser.userId
             } else {
+                participant.sessionId == currentSessionId
+            }
+
+            if (isSelf) {
                 Log.d(TAG, "   inCallFlag of currentSessionId: $inCallFlag")
                 isSelfInCall = inCallFlag != 0L
                 Log.e("Ray", "isSelfInCall = $isSelfInCall")
@@ -2360,7 +2322,7 @@ class CallActivity : CallBaseActivity() {
         if (currentCallStatus === CallStatus.LEAVING) {
             return
         }
-        if (hasMCU) {
+        if (hasMCU && webSocketClient != null) {
             // Ensure that own publishing peer is set up.
             getOrCreatePeerConnectionWrapperForSessionIdAndType(
                 webSocketClient!!.sessionId,
@@ -2401,12 +2363,24 @@ class CallActivity : CallBaseActivity() {
                 Log.w(TAG, "Null sessionId for call participant, this should not happen: $participant")
                 continue
             }
-            if (sessionId == currentSessionId) {
+
+            // 使用 userId 识别自己，不依赖 sessionId 比较
+            val isSelf = if (hasExternalSignalingServer) {
+                participant.userId == conversationUser.userId
+            } else {
+                sessionId == currentSessionId
+            }
+
+            if (isSelf) {
                 selfJoined = true
                 continue
             }
             Log.d(TAG, "   newSession joined: $sessionId")
             addCallParticipant(sessionId)
+
+            if ((participant.inCall and Participant.InCallFlags.WITH_AUDIO.toLong()) > 0) {
+                callViewModel.getParticipant(sessionId)?.setAudioEnabled(true)
+            }
 
             if (participant.actorType != null && participant.actorId != null) {
                 callViewModel.getParticipant(sessionId)?.updateActor(participant.actorType, participant.actorId)
@@ -2439,27 +2413,32 @@ class CallActivity : CallBaseActivity() {
             // remote session ID. However, if the other participant does not have audio nor video that participant
             // will not send an offer, so no connection is actually established when the remote participant has a
             // higher session ID but is not publishing media.
+            // 使用信令 sessionId 作为 currentSessionId 进行 offer/answer 决策
+            val effectiveCurrentSessionId = if (hasExternalSignalingServer) {
+                webSocketClient?.sessionId ?: currentSessionId
+            } else {
+                currentSessionId
+            }
             if (hasMCUAndAudioVideo(participantHasAudioOrVideo) ||
                 hasNoMCUAndAudioVideo(
                     participantHasAudioOrVideo,
                     selfParticipantHasAudioOrVideo,
                     sessionId,
-                    currentSessionId!!
+                    effectiveCurrentSessionId!!
                 )
             ) {
                 getOrCreatePeerConnectionWrapperForSessionIdAndType(sessionId, VIDEO_STREAM_TYPE_VIDEO, false)
             }
         }
 
-
-        // othersInCall = if (selfJoined) {
-        //     joined.size > 1
-        // } else {
-        //     joined.isNotEmpty()
-        // }
         // 修复：othersInCall 应该检查所有集合中的非自己参与者
         val allParticipantsExceptSelf = (joined + updated + unchanged)
-            .filter { it.sessionId != null && it.sessionId != currentSessionId }
+            .filter { it.sessionId != null &&
+                (if (hasExternalSignalingServer)
+                    it.userId != conversationUser.userId
+                else
+                    it.sessionId != currentSessionId)
+            }
         othersInCall = allParticipantsExceptSelf.isNotEmpty()
     }
 
@@ -2608,7 +2587,7 @@ class CallActivity : CallBaseActivity() {
             iceServers,
             tempSdpConstraints,
             sessionId,
-            callSession,
+            effectiveLocalSession,
             tempLocalStream,
             tempIsMCUPublisher,
             tempHasMCU,

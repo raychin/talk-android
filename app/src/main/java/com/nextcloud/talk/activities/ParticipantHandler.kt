@@ -99,6 +99,9 @@ class ParticipantHandler(
         }
     }
 
+    // 标记是否已收到过明确的音频/视频状态（来自 inCallFlags、DataChannel 或 Signaling）
+    private var hasReceivedAudioState = false
+    private var hasReceivedStreamState = false
     private fun handleIceConnectionStateChange(iceConnectionState: IceConnectionState?) {
         Log.d(TAG, "handleIceConnectionStateChange " + _uiState.value.nick + " " + iceConnectionState)
 
@@ -108,8 +111,12 @@ class ParticipantHandler(
             // 仅在尚未收到对端实际状态时才重置
             // 防止覆盖 DataChannel/Signaling 已同步的状态
             if (!_uiState.value.isConnected) {
-                _uiState.update { it.copy(isAudioEnabled = false) }
-                _uiState.update { it.copy(isStreamEnabled = false) }
+                if (!hasReceivedAudioState) {
+                    _uiState.update { it.copy(isAudioEnabled = false) }
+                }
+                if (!hasReceivedStreamState) {
+                    _uiState.update { it.copy(isStreamEnabled = false) }
+                }
             }
         }
 
@@ -118,18 +125,22 @@ class ParticipantHandler(
 
     private val dataChannelMessageListener: DataChannelMessageListener = object : DataChannelMessageListener {
         override fun onAudioOn() {
+            hasReceivedAudioState = true
             _uiState.update { it.copy(isAudioEnabled = true) }
         }
 
         override fun onAudioOff() {
+            hasReceivedAudioState = true
             _uiState.update { it.copy(isAudioEnabled = false) }
         }
 
         override fun onVideoOn() {
+            hasReceivedStreamState = true
             _uiState.update { it.copy(isStreamEnabled = true) }
         }
 
         override fun onVideoOff() {
+            hasReceivedStreamState  = true
             _uiState.update { it.copy(isStreamEnabled = false) }
         }
 
@@ -153,18 +164,22 @@ class ParticipantHandler(
         }
 
         override fun onMuteAudio() {
+            hasReceivedAudioState = true
             _uiState.update { it.copy(isAudioEnabled = false) }
         }
 
         override fun onUnmuteAudio() {
+            hasReceivedAudioState = true
             _uiState.update { it.copy(isAudioEnabled = true) }
         }
 
         override fun onMuteVideo() {
+            hasReceivedStreamState = true
             _uiState.update { it.copy(isStreamEnabled = false) }
         }
 
         override fun onUnmuteVideo() {
+            hasReceivedStreamState = true
             _uiState.update { it.copy(isStreamEnabled = true) }
         }
     }
@@ -229,6 +244,16 @@ class ParticipantHandler(
     fun updateNick(nick: String?) = _uiState.update { it.copy(nick = nick ?: "Guest") }
 
     fun updateIsInternal(isInternal: Boolean) = _uiState.update { it.copy(isInternal = isInternal) }
+
+    fun setAudioEnabled(enabled: Boolean) {
+        hasReceivedAudioState = true
+        _uiState.update { it.copy(isAudioEnabled = enabled) }
+    }
+
+    fun setStreamEnabled(enabled: Boolean) {
+        hasReceivedStreamState = true
+        _uiState.update { it.copy(isStreamEnabled = enabled) }
+    }
 
     fun updateActor(actorType: Participant.ActorType?, actorId: String?) {
         _uiState.update { it.copy(actorType = actorType, actorId = actorId) }
