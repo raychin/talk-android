@@ -259,8 +259,8 @@ class NextcloudTalkApplication :
 
         val periodicPushCheckWork = PeriodicWorkRequest.Builder(
             TalkBackgroundWorker::class.java,
-            1,                          // 重复间隔：1小时（最小15分钟太频繁）
-            TimeUnit.HOURS
+            // 改为15分钟
+            15, TimeUnit.MINUTES
         )
             .setConstraints(constraints)
             .setBackoffCriteria(         // 失败后指数退避
