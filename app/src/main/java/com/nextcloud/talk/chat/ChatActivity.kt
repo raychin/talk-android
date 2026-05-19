@@ -103,6 +103,7 @@ import coil.transform.CircleCropTransformation
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.GsonBuilder
 import com.lib.picture_editor.Editor
 import com.lib.picture_selector.basic.PictureSelector
 import com.lib.picture_selector.config.PictureConfig
@@ -143,6 +144,7 @@ import com.nextcloud.talk.adapters.messages.VoiceMessageInterface
 import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.chat.clps.ChatBottomMessageMenuFragment
+import com.nextcloud.talk.chat.clps.ChatBottomMessageMenuFragment.SimplifiedChatMessage
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.chat.data.model.clps.isMultiMessage
 import com.nextcloud.talk.chat.data.model.clps.isSharedMessagesJson
@@ -256,8 +258,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -3548,7 +3552,7 @@ class ChatActivity :
         }
 
         var shouldRefreshRoom = false
-
+        // 发送消息不能即时更新，原始逻辑
         for (chatMessage in chatMessageList) {
             chatMessage.activeUser = conversationUser
 
@@ -3575,6 +3579,41 @@ class ChatActivity :
                 shouldRefreshRoom = true
             }
         }
+        // // fix: 发送消息无法即时更新问题
+        // for (chatMessage in chatMessageList) {
+        //     chatMessage.activeUser = conversationUser
+        //
+        //     adapter?.let {
+        //         // 去重：如果 adapter 中已存在相同 id 的消息，则跳过
+        //         val existingPos = it.getMessagePositionById(chatMessage.id)
+        //         if (existingPos != null && existingPos >= 0) {
+        //             // 已存在，原地更新而非重复添加
+        //             it.update(chatMessage)
+        //         } else {
+        //             // 不存在，添加新消息
+        //             val previousChatMessage = it.items?.getOrNull(1)?.item
+        //             if (previousChatMessage != null && previousChatMessage is ChatMessage) {
+        //                 chatMessage.isGrouped = groupMessages(chatMessage, previousChatMessage)
+        //             }
+        //             chatMessage.isOneToOneConversation =
+        //                 (currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL)
+        //             chatMessage.isFormerOneToOneConversation =
+        //                 (currentConversation?.type == ConversationEnums.ConversationType.FORMER_ONE_TO_ONE)
+        //             Log.d(TAG, "chatMessage to add:" + chatMessage.message)
+        //             it.addToStart(chatMessage, scrollToBottom)
+        //         }
+        //     }
+        //
+        //     val systemMessageType = chatMessage.systemMessageType
+        //     if (systemMessageType != null &&
+        //         (
+        //             systemMessageType == ChatMessage.SystemMessageType.MESSAGE_PINNED ||
+        //                 systemMessageType == ChatMessage.SystemMessageType.MESSAGE_UNPINNED
+        //             )
+        //     ) {
+        //         shouldRefreshRoom = true
+        //     }
+        // }
 
         if (shouldRefreshRoom) {
             chatViewModel.refreshRoom()
@@ -4988,14 +5027,127 @@ class ChatActivity :
 
     private fun setMessageAsDeleted(message: IMessage?) {
         val messageTemp = message as ChatMessage
-        messageTemp.isDeleted = true
-        messageTemp.message = getString(R.string.message_hidden_by_you)
+        Log.e("Ray", "deleteChatMessages, setMessageAsDeleted message = ${messageTemp.message}")
+        Log.e("Ray", "deleteChatMessages, setMessageAsDeleted parentMessage = ${messageTemp.parentMessage?.message}")
+
+        // 判断是否允许重新编辑
+        val isTextMessage = ChatMessage.MessageType.REGULAR_TEXT_MESSAGE ==
+            messageTemp.getCalculateMessageType()
+        // val isRecentEnough = !messageTemp.createdAt
+        //     .before(Date(System.currentTimeMillis() - RE_EDIT_TIME_THRESHOLD))
+        val isRecentEnough = true
+        // val isOwnMessage = messageTemp.actorId == conversationUser?.userId
+        val isOwnMessage = true
+        val hasNoAttachments = !messageTemp.hasFileAttachment() &&
+            !messageTemp.hasGeoLocation() &&
+            !messageTemp.isPoll()
+
+        // 判断当前用户是创建消息的用户，并且消息类型为文本非合并消息时，id、时间戳和消息内容存储到本地缓存列表
+        if (isOwnMessage && isTextMessage && !messageTemp.isMultiMessage()) {
+            val originalContent = messageTemp.message
+            val parentMessageJson = messageTemp.parentMessage?.let { parent ->
+                val messageParent = SimplifiedChatMessage(
+                    jsonMessageId = parent.jsonMessageId,
+                    timestamp = parent.timestamp,
+                    message = parent.message,
+                    actorDisplayName = parent.actorDisplayName,
+                    actorType = parent.actorType,
+                    actorId = parent.actorId,
+                    messageType = parent.messageType,
+                    messageParameters = if (parent.messageParameters != null) {
+                        parent.messageParameters
+                    } else {
+                        HashMap()
+                    },
+                    parentMessageId = parent.parentMessageId,
+                    reactions = if (parent.reactions != null) {
+                        parent.reactions
+                    } else {
+                        LinkedHashMap()
+                    },
+                    isTemporary = parent.isTemporary,
+                    referenceId = parent.referenceId,
+                    id = parent.id,
+                    expirationTimestamp = 0,
+                    isReplyable = parent.replyable,
+                    markdown = parent.renderMarkdown,
+                    systemMessage = parent.getSystemMessage(),
+                    token = parent.token,
+                    // parent = extractParentMessageSafely(parent)
+                    parent = null
+                )
+                val gson = GsonBuilder().serializeNulls().create()
+                gson.toJson(messageParent)
+            } ?: ""
+            if (!originalContent.isNullOrEmpty()) {
+                appPreferences.addRecalledMessage(
+                    messageTemp.id,
+                    System.currentTimeMillis(),
+                    originalContent,
+                    messageTemp.messageParameters,
+                    parentMessageJson
+                )
+                Log.d(TAG, "Recalled message cached: id=${messageTemp.id}, timestamp=${messageTemp.timestamp}")
+            }
+        }
 
         messageTemp.isOneToOneConversation =
             currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
         messageTemp.activeUser = conversationUser
 
+        // 转换为系统消息类型（类似微信的"你撤回了一条消息"）
+        messageTemp.systemMessageType = ChatMessage.SystemMessageType.MESSAGE_DELETED
+        messageTemp.messageType = "system"
+
+        messageTemp.isDeleted = true
+        messageTemp.message = getString(R.string.message_hidden_by_you)
+
         adapter?.update(messageTemp)
+    }
+
+    // ====== 新增 reEditMessage() 方法 ======
+    /**
+     * 重新编辑被撤回的消息
+     * 借鉴微信: 点击"重新编辑"后将原文填入输入框
+     */
+    fun reEditMessage(message: IMessage?, recallMessage: JSONObject?) {
+        if (message == null || recallMessage == null) return
+        val content = recallMessage.optString("content", "")
+        if (content.isEmpty()) return
+
+        val parentMessageJson = recallMessage.optString("parentMessageJson", "")
+        val parentChatMessage = if (parentMessageJson.isNotEmpty()) {
+            val gson = GsonBuilder().serializeNulls().create()
+            gson.fromJson(parentMessageJson, ChatMessage::class.java)
+        } else {
+            null
+        }
+        if (parentChatMessage != null) {
+            messageInputViewModel.reply(parentChatMessage)
+        }
+
+        // 反序列化 messageParameters
+        val messageParameters = HashMap<String?, HashMap<String?, String?>>()
+        val paramsJson = recallMessage.optJSONObject("messageParameters")
+        if (paramsJson != null) {
+            for (key in paramsJson.keys()) {
+                val valueJson = paramsJson.getJSONObject(key)
+                val valueMap = HashMap<String?, String?>()
+                for (vk in valueJson.keys()) {
+                    valueMap[vk] = valueJson.optString(vk)
+                }
+                messageParameters[key] = valueMap
+            }
+        }
+
+        messageInputFragment.setMessage(content, messageParameters)
+
+        // if (message == null || messageText.isNullOrEmpty()) return
+        //
+        // messageInputFragment.setMessage(messageText)
+        //
+        // // // 可选: 自动聚焦输入框
+        // // binding.messageInput.requestFocus()
     }
 
     private fun setMessageAsHidden(message: IMessage?) {
@@ -5032,6 +5184,7 @@ class ChatActivity :
     }
 
     private fun updateMessageInsideAdapter(message: IMessage?) {
+        // 发送消息不能即时更新，原始逻辑
         message?.let {
             val messageTemp = message as ChatMessage
 
@@ -5042,6 +5195,50 @@ class ChatActivity :
 
             adapter?.update(messageTemp)
         }
+        // // fix: 发送消息无法即时更新问题
+        // message?.let {
+        //     val newMessage = message as ChatMessage
+        //     newMessage.isOneToOneConversation =
+        //         currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
+        //     newMessage.activeUser = conversationUser
+        //
+        //     // 先尝试按 ID 正常更新
+        //     val pos = adapter?.getMessagePositionById(newMessage.id)
+        //     if (pos != null && pos >= 0) {
+        //         adapter?.update(newMessage)
+        //     } else {
+        //         // ID 未找到 — 临时消息→确认消息的 ID 变更场景
+        //         // 通过 referenceId 在 adapter 中查找临时消息
+        //         val refId = newMessage.referenceId
+        //         if (refId != null) {
+        //             val tempPos = findAdapterPositionByReferenceId(refId)
+        //             if (tempPos >= 0) {
+        //                 val tempMessage = adapter?.items?.get(tempPos)?.item as ChatMessage
+        //                 // 保留 adapter 中的视觉状态
+        //                 newMessage.isGrouped = tempMessage.isGrouped
+        //                 newMessage.previousMessageId = tempMessage.previousMessageId
+        //                 // 关键：将临时消息的 jsonMessageId 更新为确认消息的 ID
+        //                 // 这样 adapter.update() 才能通过新 ID 找到它
+        //                 tempMessage.jsonMessageId = newMessage.jsonMessageId
+        //                 adapter?.update(newMessage)
+        //             }
+        //         }
+        //     }
+        // }
+    }
+
+    /**
+     * 通过 referenceId 在 adapter 中查找消息位置
+     * 用于临时消息→确认消息的 ID 变更场景
+     */
+    private fun findAdapterPositionByReferenceId(referenceId: String): Int {
+        for (i in 0 until (adapter?.items?.size ?: 0)) {
+            val item = adapter?.items?.get(i)?.item
+            if (item is ChatMessage && item.referenceId == referenceId) {
+                return i
+            }
+        }
+        return -1
     }
 
     fun updateUiToAddReaction(message: ChatMessage, emoji: String) {
@@ -5491,5 +5688,8 @@ class ChatActivity :
         const val ZERO_INDEX = 0
         const val ONE_INDEX = 1
         const val MAX_AMOUNT_MEDIA_FILE_PICKER = 10
+
+        // 重新编辑的时间限制（毫秒）- 参考微信约2分钟
+        private const val RE_EDIT_TIME_THRESHOLD: Long = 120_000L  // 2分钟
     }
 }

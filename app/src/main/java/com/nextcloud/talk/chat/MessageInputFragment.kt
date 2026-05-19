@@ -15,6 +15,7 @@ import android.os.CountDownTimer
 import android.os.SystemClock
 import android.text.Editable
 import android.text.InputFilter
+import android.text.Spannable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.util.Log
@@ -81,6 +82,7 @@ import com.nextcloud.talk.utils.CapabilitiesUtil
 import com.nextcloud.talk.utils.CharPolicy
 import com.nextcloud.talk.utils.ConversationUtils
 import com.nextcloud.talk.utils.DateUtils
+import com.nextcloud.talk.utils.DisplayUtils
 import com.nextcloud.talk.utils.EmojiTextInputEditText
 import com.nextcloud.talk.utils.ImageEmojiEditText
 import com.nextcloud.talk.utils.SpreedFeatures
@@ -96,6 +98,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import third.parties.fresco.BetterImageSpan
 import java.util.Objects
 import javax.inject.Inject
 
@@ -1236,6 +1239,149 @@ class MessageInputFragment : Fragment() {
     private fun isInReplyState(): Boolean {
         val jsonId = chatActivity.chatViewModel.messageDraft.quotedJsonId
         return jsonId != null
+    }
+
+    /**
+     * 将撤回消息内容填入输入框
+     * @param rawMessage 原始消息（可能含 {mention-1} 占位符）
+     * @param messageParameters 消息参数（用于还原 @成员 MentionChipSpan）
+     */
+    fun setMessage(rawMessage: String, messageParameters: HashMap<String?, HashMap<String?, String?>>?) {
+        // 将rawMessage复制到输入框中，且光标移动到最后
+        // binding.fragmentMessageInputView.inputEditText.append(rawMessage)
+        // val end = binding.fragmentMessageInputView.inputEditText.text.length
+        // binding.fragmentMessageInputView.inputEditText.setSelection(end)
+        val editText = binding.fragmentMessageInputView.inputEditText ?: return
+        val editable = editText.editableText
+
+        if (messageParameters != null && messageParameters.isNotEmpty()) {
+            // 1) 用 getParsedMessage 将占位符替换为 @DisplayName，得到显示文本
+            val displayText = ChatUtils.getParsedMessage(rawMessage, messageParameters) ?: rawMessage
+
+            // 2) 追加显示文本到输入框
+            val startPos = editable.length
+            editable.append(displayText)
+
+            // 3) 在文本中找到每个 @DisplayName，创建并设置 MentionChipSpan
+            for ((key, valueMap) in messageParameters) {
+                if (key == null || valueMap == null) continue
+                val type = valueMap["type"] ?: continue
+                val name = valueMap["name"] ?: continue
+                val mentionId = valueMap["mention-id"] ?: valueMap["id"] ?: continue
+
+                // 只有这些类型才创建 MentionChipSpan
+                if (type != "user" && type != "guest" && type != "call" &&
+                    type != "email" && type != "user-group" && type != "circle") {
+                    continue
+                }
+
+                // val displayName = "@$name"
+                // val spanStart = editable.indexOf(displayName, startPos)
+                // if (spanStart != -1) {
+                //     val spanEnd = spanStart + displayName.length
+                //
+                //     // 使用 chip_you 保持和手动 @ 选择一致的样式
+                //     val drawable = DisplayUtils.getDrawableForMentionChipSpan(
+                //         requireContext(),
+                //         mentionId,
+                //         chatActivity.roomToken,
+                //         name,
+                //         chatActivity.conversationUser!!,
+                //         type,
+                //         R.xml.chip_you,           // ← 修改1: chip_others → chip_you
+                //         editText,
+                //         viewThemeUtils,
+                //         "federated_users" == type
+                //     )
+                //
+                //     val mentionChipSpan = Spans.MentionChipSpan(
+                //         drawable,
+                //         BetterImageSpan.ALIGN_CENTER,
+                //         mentionId,
+                //         name
+                //     )
+                //     editable.setSpan(
+                //         mentionChipSpan,
+                //         spanStart,
+                //         spanEnd,
+                //         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                //     )
+                //
+                //     // 修改2: chip_you 需要额外设置前景色 span（白色文字）
+                //     // 参照 DisplayUtils.searchAndReplaceWithMentionSpan
+                //     editable.setSpan(
+                //         viewThemeUtils.talk.themeForegroundColorSpan(requireContext()),
+                //         spanStart,
+                //         spanEnd,
+                //         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                //     )
+                // }
+                val searchText = "@$name"
+                val atSignIndex = editable.indexOf(searchText, startPos)
+                if (atSignIndex != -1) {
+                    // val spanStart = atSignIndex + 1  // 跳过@符号，span 只覆盖名字
+                    // val spanEnd = atSignIndex + searchText.length
+
+                    // 将 "@名字" 替换为 " 名字 "，去掉@符号，前后加空格
+                    // 和 MentionAutocompleteCallback 完全一致
+                    val replacement = " $name "
+                    editable.replace(atSignIndex, atSignIndex + searchText.length, replacement)
+
+                    // span 只覆盖 "名字" 部分（前导空格之后）
+                    val spanStart = atSignIndex + 1  // 跳过前导空格
+                    val spanEnd = spanStart + name.length
+
+                    val drawable = DisplayUtils.getDrawableForMentionChipSpan(
+                        requireContext(),
+                        mentionId,
+                        chatActivity.roomToken,
+                        name,
+                        chatActivity.conversationUser!!,
+                        type,
+                        R.xml.chip_you,
+                        editText,
+                        viewThemeUtils,
+                        "federated_users" == type
+                    )
+
+                    val mentionChipSpan = Spans.MentionChipSpan(
+                        drawable,
+                        BetterImageSpan.ALIGN_CENTER,
+                        mentionId,
+                        name
+                    )
+                    editable.setSpan(
+                        mentionChipSpan,
+                        spanStart,
+                        spanEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+
+                    // chip_you 需要额外设置前景色 span（白色文字）
+                    editable.setSpan(
+                        viewThemeUtils.talk.themeForegroundColorSpan(requireContext()),
+                        spanStart,
+                        spanEnd,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+        } else {
+            // 无 @成员，直接追加原始文本
+            editable.append(rawMessage)
+        }
+
+        // 光标移到末尾
+        val end = editable.length
+        editText.setSelection(end)
+
+        // 关闭由 @字符 触发的自动补全弹窗
+        // 使用 post 确保在所有待处理的文本变更事件之后执行
+        binding.root.post {
+            if (mentionAutocomplete != null && mentionAutocomplete!!.isPopupShowing) {
+                mentionAutocomplete?.dismissPopup()
+            }
+        }
     }
 
     companion object {

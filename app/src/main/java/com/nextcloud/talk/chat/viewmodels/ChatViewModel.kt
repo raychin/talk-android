@@ -596,6 +596,51 @@ class ChatViewModel @Inject constructor(
                 }
 
                 override fun onNext(t: ChatOverallSingleMessage) {
+                    // 根据id更新本地数据库ChatMessages中的systemMessage消息类型为MESSAGE_DELETED
+                    Log.e("Ray", "deleteChatMessages ChatOverallSingleMessage is ${t.ocs?.data}")
+                    viewModelScope.launch {
+                        try {
+                            val messageIdLong = messageId.toLongOrNull()
+
+                            val currentUserId = currentUser.id ?: run {
+                                Log.e("Ray", "❌ currentUser.id is NULL!")
+                                return@launch
+                            }
+
+                            // ✅ 使用显式拼接代替字符串模板（避免隐式拆箱/装箱导致的 NPE）
+                            val internalConversationId = "$currentUserId@$chatRoomToken"
+                            Log.e("Ray", "deleteChatMessages internalConversationId is $internalConversationId")
+                            Log.e("Ray", "deleteChatMessages messageIdLong is $messageIdLong")
+
+                            if (messageIdLong != null) {
+                                // Step 1: 从数据库查询当前消息
+                                val existingMessage = chatRepository.getChatMessageEntity(
+                                    internalConversationId,
+                                    messageIdLong
+                                )
+
+                                Log.e("Ray", "deleteChatMessages existingMessage is ${existingMessage?.message}")
+
+                                existingMessage?.let { message ->
+                                    // Step 2: 修改 systemMessageType 字段
+                                    message.systemMessageType = ChatMessage.SystemMessageType.MESSAGE_DELETED
+                                    message.messageType = "system"
+
+                                    // Step 3: 使用 @Update 更新回数据库
+                                    chatRepository.updateChatMessage(message)
+
+                                    Log.d("Ray", "Successfully updated message $messageIdLong to MESSAGE_DELETED")
+                                } ?: run {
+                                    Log.e("Ray", "Message $messageIdLong not found in database")
+                                }
+                            } else {
+                                Log.e("Ray", "Message ID is null, cannot update database")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("Ray", "Error updating message type in local database", e)
+                        }
+                    }
+
                     _deleteChatMessageViewState.value = DeleteChatMessageSuccessState(t)
                 }
             })

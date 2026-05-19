@@ -13,6 +13,10 @@ import android.annotation.SuppressLint;
 
 import com.nextcloud.talk.ui.PlaybackSpeed;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
+
 import kotlin.Pair;
 
 @SuppressLint("NonConstantResourceId")
@@ -206,4 +210,27 @@ public interface AppPreferences {
     String getAppLanguage();
 
     void setAppLanguage(String language);
+
+    // ====== 撤回消息缓存（重新编辑功能）======
+    /**
+     * 缓存被撤回的消息内容
+     * @param messageId 消息ID
+     * @param timestamp 撤回时间戳
+     * @param content 原始消息内容
+     */
+    void addRecalledMessage(String messageId, long timestamp, String content, HashMap<String,
+        HashMap<String, String>> messageParameters, String parentMessageJson);
+
+    /**
+     * 获取被撤回消息的内容
+     * @param messageId 消息ID
+     * @return 原始消息内容，不存在返回null
+     */
+    JSONObject getRecalledMessage(String messageId);
+
+    /**
+     * 移除被撤回消息的缓存
+     * @param messageId 消息ID
+     */
+    void removeRecalledMessage(String messageId);
 }

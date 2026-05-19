@@ -61,6 +61,20 @@
                 tools:text="System message" />
 
             <TextView
+                android:id="@+id/reEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/clps_re_edit_message"
+                android:gravity="end"
+                android:textColor="@color/colorPrimaryDark"
+                android:textIsSelectable="false"
+                app:layout_alignSelf="flex_end"
+                app:layout_flexGrow="1"
+                app:layout_wrapBefore="false"
+                tools:text="re edit" />
+
+            <TextView
                 android:id="@id/messageTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

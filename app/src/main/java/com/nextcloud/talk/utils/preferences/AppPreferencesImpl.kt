@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import org.json.JSONObject
 
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "DeferredResultUnused", "EmptyFunctionBlock")
@@ -655,6 +656,47 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         runBlocking<Unit> {
             async { writeString(APP_LANGUAGE, language) }
         }
+
+    // ====== 撤回消息缓存（重新编辑功能）======
+    private val recalledMessagesPrefs: SharedPreferences by lazy {
+        context.getSharedPreferences("recalled_messages_cache", Context.MODE_PRIVATE)
+    }
+
+    override fun addRecalledMessage(messageId: String, timestamp: Long, content: String, messageParameters:
+    HashMap<String?, HashMap<String?, String?>>?, parentMessageJson: String) {
+        val entry = JSONObject().apply {
+            put("timestamp", timestamp)
+            put("content", content)
+            if (messageParameters != null) {
+                val paramsJson = JSONObject()
+                for ((key, valueMap) in messageParameters) {
+                    if (key != null && valueMap != null) {
+                        val valueJson = JSONObject()
+                        for ((k, v) in valueMap) {
+                            if (k != null && v != null) valueJson.put(k, v)
+                        }
+                        paramsJson.put(key, valueJson)
+                    }
+                }
+                put("messageParameters", paramsJson)
+            }
+            put("parentMessageJson", parentMessageJson)
+        }
+        recalledMessagesPrefs.edit().putString(messageId, entry.toString()).apply()
+    }
+
+    override fun getRecalledMessage(messageId: String): JSONObject? {
+        val json = recalledMessagesPrefs.getString(messageId, null) ?: return null
+        return try {
+            JSONObject(json)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    override fun removeRecalledMessage(messageId: String) {
+        recalledMessagesPrefs.edit().remove(messageId).apply()
+    }
 
     companion object {
         @Suppress("UnusedPrivateProperty")

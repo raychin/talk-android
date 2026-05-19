@@ -902,6 +902,7 @@ class OfflineFirstChatRepository @Inject constructor(
                 threadTitle
             )
 
+            // 发送消息不能即时更新，原始逻辑
             val chatMessageModel = response.ocs?.data?.asModel()
 
             val sentMessage = if (this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
@@ -922,6 +923,55 @@ class OfflineFirstChatRepository @Inject constructor(
 
             Log.d(TAG, "sending chat message succeeded: " + message)
             emit(Result.success(chatMessageModel))
+
+            // // fix: 发送消息无法即时更新问题
+            // val chatMessageJson = response.ocs?.data
+            // val chatMessageModel = chatMessageJson?.asModel()
+            //
+            // if (chatMessageJson != null && this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
+            //     // 1. 从 adapter 移除临时消息（通过 removeMessageFlow，按临时消息 id 查找删除）
+            //     val tempMessage = chatDao.getTempMessageForConversation(
+            //         internalConversationId,
+            //         referenceId,
+            //         threadId
+            //     ).firstOrNull()
+            //     tempMessage?.let {
+            //         _removeMessageFlow.emit(it.asModel())
+            //     }
+            //
+            //     // 2. 从 DB 删除临时消息
+            //     chatDao.deleteTempChatMessages(
+            //         internalConversationId,
+            //         listOf(referenceId)
+            //     )
+            //
+            //     // 3. 将确认消息插入 DB
+            //     val confirmedEntity = chatMessageJson.asEntity(currentUser.id!!)
+            //     chatDao.upsertChatMessage(confirmedEntity)
+            //
+            //     // 4. 将确认消息添加到 adapter（通过 _messageFlow）
+            //     val confirmedModel = confirmedEntity.asModel()
+            //     val triple = Triple(true, false, listOf(confirmedModel))
+            //     _messageFlow.emit(triple)
+            // } else {
+            //     // 降级处理：服务器返回数据为空，仅更新发送状态
+            //     val sentMessage = if (this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
+            //         chatDao.getTempMessageForConversation(
+            //             internalConversationId,
+            //             referenceId,
+            //             threadId
+            //         ).firstOrNull()
+            //     } else {
+            //         null
+            //     }
+            //     sentMessage?.let {
+            //         it.sendStatus = SendStatus.SENT_PENDING_ACK
+            //         chatDao.updateChatMessage(it)
+            //     }
+            // }
+            //
+            // Log.d(TAG, "sending chat message succeeded: $message")
+            // emit(Result.success(chatMessageModel))
         }
             .catch { e ->
                 Log.e(TAG, "Error when sending message", e)
@@ -1197,6 +1247,29 @@ class OfflineFirstChatRepository @Inject constructor(
     override suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long) {
         chatDao.deleteChatMessageById(internalConversationId, messageId)
         Log.d("Ray", "Deleted chat message with id: $messageId from internalConversation: $internalConversationId")
+    }
+
+    /**
+     * 查找撤回消息
+     * add by ray on 2026/05/14
+     */
+    override suspend fun getChatMessageEntity(
+        internalConversationId: String,
+        messageId: Long
+    ): ChatMessageEntity? =
+        chatDao.getChatMessageEntity(
+            internalConversationId,
+            messageId,
+            threadId
+        )
+
+    /**
+     * 更新撤回消息
+     * add by ray on 2026/05/14
+     */
+    override suspend fun updateChatMessage(entity: ChatMessageEntity) {
+        chatDao.updateChatMessage(entity)  // 复用已有的 @Update 方法（DAO 第130行）
+        Log.d("Ray", "Updated chat message with id: ${entity.id}")
     }
 
     private fun createChatMessageEntity(

@@ -58,8 +58,16 @@ class DummyChatMessagesDaoImpl : ChatMessagesDao {
     override suspend fun getChatMessageEntity(internalConversationId: String, messageId: Long): ChatMessageEntity? =
         null
 
+    override suspend fun getChatMessageEntity(
+        internalConversationId: String,
+        messageId: Long,
+        threadId: Long?
+    ): ChatMessageEntity? {
+        TODO("Not yet implemented")
+    }
+
     override fun deleteChatMessages(internalIds: List<String>) {
-        /* */
+
     }
 
     override fun deleteTempChatMessages(internalConversationId: String, referenceIds: List<String>) {

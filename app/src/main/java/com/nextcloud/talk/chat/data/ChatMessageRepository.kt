@@ -10,6 +10,7 @@ package com.nextcloud.talk.chat.data
 import android.os.Bundle
 import com.nextcloud.talk.chat.data.io.LifecycleAwareManager
 import com.nextcloud.talk.chat.data.model.ChatMessage
+import com.nextcloud.talk.data.database.model.ChatMessageEntity
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.models.domain.ConversationModel
 import com.nextcloud.talk.models.json.chat.ChatOverallSingleMessage
@@ -154,4 +155,13 @@ interface ChatMessageRepository : LifecycleAwareManager {
     suspend fun getScheduledChatMessages(credentials: String, url: String): Flow<Result<List<ChatMessage>>>
 
     suspend fun deleteChatMessageById(internalConversationId: String, messageId: Long)
+
+    // 新增：查询单条消息
+    suspend fun getChatMessageEntity(
+        internalConversationId: String,
+        messageId: Long
+    ): ChatMessageEntity?
+
+    // 新增：更新整个消息实体
+    suspend fun updateChatMessage(entity: ChatMessageEntity)
 }

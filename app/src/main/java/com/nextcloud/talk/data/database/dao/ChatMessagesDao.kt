@@ -100,6 +100,17 @@ interface ChatMessagesDao {
     suspend fun getChatMessageEntity(internalConversationId: String, messageId: Long): ChatMessageEntity?
 
     @Query(
+        """
+        SELECT * 
+        FROM ChatMessages
+        WHERE internalConversationId = :internalConversationId 
+        AND id = :messageId
+        AND (:threadId IS NULL OR threadId = :threadId)
+        """
+    )
+    suspend fun getChatMessageEntity(internalConversationId: String, messageId: Long, threadId: Long?): ChatMessageEntity?
+
+    @Query(
         value = """
             DELETE FROM ChatMessages
             WHERE internalId in (:internalIds)
