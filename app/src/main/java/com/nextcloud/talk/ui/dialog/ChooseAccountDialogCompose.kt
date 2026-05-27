@@ -408,16 +408,19 @@ private fun ChooseAccountDialogContent(
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-                if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT && showEcosystem) {
-                    EcosystemAppsSection(
-                        onFilesClick = onEcosystemFilesClick,
-                        onNotesClick = onEcosystemNotesClick,
-                        onMoreClick = onEcosystemMoreClick
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
+
+                // fix: 不显示第三方应用入口 remove by ray on 2026/05/27
+                // if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT && showEcosystem) {
+                //     EcosystemAppsSection(
+                //         onFilesClick = onEcosystemFilesClick,
+                //         onNotesClick = onEcosystemNotesClick,
+                //         onMoreClick = onEcosystemMoreClick
+                //     )
+                //     HorizontalDivider(
+                //         modifier = Modifier.padding(vertical = 8.dp)
+                //     )
+                // }
+
                 LazyColumn(
                     modifier = Modifier
                         .padding(start = 8.dp)

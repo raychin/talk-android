@@ -254,11 +254,12 @@ class SettingsActivity :
     }
 
     private fun setupEcosystemSetting() {
-        if (getResources().getBoolean(R.bool.is_branded_client)) {
-            binding.settingsShowEcosystem.visibility = View.GONE
-        } else {
-            binding.settingsShowEcosystem.visibility = View.VISIBLE
-        }
+        binding.settingsShowEcosystem.visibility = View.GONE
+        // if (getResources().getBoolean(R.bool.is_branded_client)) {
+        //     binding.settingsShowEcosystem.visibility = View.GONE
+        // } else {
+        //     binding.settingsShowEcosystem.visibility = View.VISIBLE
+        // }
     }
 
     @Suppress("MagicNumber")
