@@ -112,6 +112,7 @@ class SystemMessageViewHolder(itemView: View) :
         recallCountDownTimer = null
         val recallMessage = appPreferences?.getRecalledMessage(message.id)
         val showEdit: Boolean
+        val chatActivity = systemMessageInterface as? ChatActivity
         if (recallMessage != null) {
             val recallTimestamp = recallMessage.optLong("timestamp", 0L)
             val elapsed = System.currentTimeMillis() - recallTimestamp
@@ -122,7 +123,6 @@ class SystemMessageViewHolder(itemView: View) :
                 showEdit = false
             } else {
                 showEdit = true
-                val chatActivity = systemMessageInterface as? ChatActivity
                 binding.reEdit.setOnClickListener {
                     Log.d("Ray", "reEdit: ${recallMessage.getString("content")}")
                     chatActivity!!.reEditMessage(message, recallMessage)
@@ -211,8 +211,12 @@ class SystemMessageViewHolder(itemView: View) :
                 binding.messageText.text = messageString
                 binding.messageText.movementMethod = LinkMovementMethod.getInstance()
                 binding.expandCollapseIcon.setImageDrawable(null)
-                binding.systemMessageLayout.setOnClickListener(null)
+                // binding.systemMessageLayout.setOnClickListener(null)
                 binding.messageText.setOnClickListener(null)
+                binding.systemMessageLayout.setOnClickListener {
+                    Log.d("Ray", "reEdit systemMessageLayout: ${recallMessage?.getString("content")}")
+                    chatActivity!!.reEditMessage(message, recallMessage)
+                }
                 binding.systemMessageLayout.visibility = View.VISIBLE
             } else if (message.expandableParent) {
                 processExpandableParent(message, messageString)
