@@ -33,6 +33,7 @@
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@style/AppWindowAnimation</item>
     </style>
 
     <style name="ThemeOverlay.AppTheme.PopupMenu" parent="ThemeOverlay.Material3.Dark">
@@ -371,6 +372,13 @@
         <item name="cornerFamilyTopRight">rounded</item>
         <item name="cornerSizeBottomLeft">12dp</item>
         <item name="cornerFamilyTopLeft">rounded</item>
+    </style>
+
+    <style name="AppWindowAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 
 </resources>

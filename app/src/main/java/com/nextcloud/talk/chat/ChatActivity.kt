@@ -459,6 +459,8 @@ class ChatActivity :
             } else {
                 val intent = Intent(this@ChatActivity, ConversationsListActivity::class.java)
                 startActivity(intent)
+                // fix: 重写跳转动画 add by ray on 2026/05/28
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
             }
         }
     }
