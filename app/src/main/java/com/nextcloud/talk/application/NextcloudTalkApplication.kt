@@ -10,11 +10,13 @@
 package com.nextcloud.talk.application
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
+import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.emoji2.bundled.BundledEmojiCompatConfig
@@ -67,6 +69,7 @@ import com.nextcloud.talk.ui.theme.ThemeModule
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
 import com.nextcloud.talk.utils.DeviceUtils
 import com.nextcloud.talk.utils.NotificationUtils
+import com.nextcloud.talk.utils.download.OtaUpgradeManager
 import com.nextcloud.talk.utils.database.arbitrarystorage.ArbitraryStorageModule
 import com.nextcloud.talk.utils.database.user.UserModule
 import com.nextcloud.talk.utils.preferences.AppPreferences
@@ -222,6 +225,30 @@ class NextcloudTalkApplication :
         EmojiManager.install(GoogleEmojiProvider())
 
         NotificationUtils.registerNotificationChannels(applicationContext, appPreferences)
+
+        // 初始化全局 OTA 升级管理器
+        initOtaUpgradeManager()
+    }
+
+    private fun initOtaUpgradeManager() {
+        val otaManager = OtaUpgradeManager.getInstance(applicationContext)
+        otaManager.initialize()
+
+        registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+            override fun onActivityStarted(activity: Activity) {}
+            override fun onActivityResumed(activity: Activity) {
+                otaManager.onActivityResumed(activity)
+            }
+            override fun onActivityPaused(activity: Activity) {
+                otaManager.onActivityPaused(activity)
+            }
+            override fun onActivityStopped(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {
+                otaManager.onActivityDestroyed(activity)
+            }
+        })
     }
 
     private fun initPush() {

@@ -65,6 +65,7 @@ import com.nextcloud.talk.diagnosis.DiagnosisActivity
 import com.nextcloud.talk.jobs.AccountRemovalWorker
 import com.nextcloud.talk.jobs.CapabilitiesWorker
 import com.nextcloud.talk.jobs.ContactAddressBookWorker
+import com.nextcloud.talk.jobs.clps.OtaUpgradeWorker
 import com.nextcloud.talk.jobs.ContactAddressBookWorker.Companion.checkPermission
 import com.nextcloud.talk.jobs.ContactAddressBookWorker.Companion.deleteAll
 import com.nextcloud.talk.models.json.generic.GenericOverall
@@ -251,6 +252,8 @@ class SettingsActivity :
         if (openedByNotificationWarning) {
             scrollToNotificationCategory()
         }
+
+        setupCheckForUpdate()
     }
 
     private fun setupEcosystemSetting() {
@@ -1096,6 +1099,54 @@ class SettingsActivity :
             binding.settingsTypingStatus.isEnabled = false
             binding.settingsTypingStatus.alpha = DISABLED_ALPHA
         }
+    }
+
+    private fun setupCheckForUpdate() {
+        binding.settingsAppInfoWrapper.setOnClickListener {
+            // 清空检查日期，强制重新检测
+            getSharedPreferences(OtaUpgradeWorker.PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .remove(OtaUpgradeWorker.PREF_KEY_OTA_CHECK_DATE)
+                .apply()
+
+            val otaWork = OneTimeWorkRequest.Builder(OtaUpgradeWorker::class.java).build()
+            WorkManager.getInstance(context).enqueue(otaWork)
+
+            WorkManager.getInstance(context).getWorkInfoByIdLiveData(otaWork.id)
+                .observe(this) { workInfo ->
+                    if (workInfo?.state == WorkInfo.State.SUCCEEDED) {
+                        // 延迟一小段时间等待 OtaUpgradeManager 处理事件
+                        binding.root.postDelayed({
+                            showOtaCheckResult()
+                        }, 500)
+                    } else if (workInfo?.state == WorkInfo.State.FAILED) {
+                        Toast.makeText(context, "检查更新失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+            Toast.makeText(context, "正在检查更新...", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * 显示手动检查更新的结果。
+     * 与 Application 级别的自动检查不同：无更新时也弹框提示用户当前已是最新版本
+     */
+    private fun showOtaCheckResult() {
+        val otaManager = com.nextcloud.talk.utils.download.OtaUpgradeManager.getInstance(context)
+        val hasUpdateDialog = otaManager.hasActiveDialog()
+
+        if (hasUpdateDialog) {
+            // OtaUpgradeManager 已处理了更新弹框（通过 EventBus），无需额外操作
+            return
+        }
+
+        // 无更新 → 弹框提示已是最新版本
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.ota_check_for_update)
+            .setMessage(R.string.ota_already_latest)
+            .setPositiveButton(R.string.nc_ok, null)
+            .show()
     }
 
     private fun setupScreenLockSetting() {

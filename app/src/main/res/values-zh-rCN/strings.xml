@@ -1024,4 +1024,25 @@ How to translate with transifex:
     <string name="clps_re_edit_message">重新编辑</string>
     <string name="clps_call_answer">接听</string>
     <string name="clps_call_un_answer">拒绝</string>
+
+    <!-- OTA Upgrade -->
+    <string name="ota_update_title">发现新版本</string>
+    <string name="ota_update_message">发现新版本 %1$s，是否立即更新？</string>
+    <string name="ota_force_update_title">强制更新</string>
+    <string name="ota_force_update_message">发现新版本 %1$s，请更新后继续使用</string>
+    <string name="ota_download_progress">正在下载…</string>
+    <string name="ota_download_cancel">取消</string>
+    <string name="ota_download_background">后台下载</string>
+    <string name="ota_downloading_title">正在下载新版本</string>
+    <string name="ota_download_complete">下载完成</string>
+    <string name="ota_download_failed">下载失败</string>
+    <string name="ota_check_for_update">检查更新</string>
+    <string name="ota_already_latest">当前已是最新版本</string>
+    <string name="ota_browser_download_hint">已打开浏览器，请在浏览器中完成下载和安装</string>
+    <string name="ota_open_browser_failed">无法打开浏览器</string>
+    <string name="ota_download_started">已开始下载，请在通知栏查看进度</string>
+    <string name="ota_download_error">下载出错：%1$s</string>
+    <string name="ota_download_paused">下载已暂停</string>
+    <string name="ota_install_error">安装失败</string>
+    <string name="ota_download_background_desc">正在下载更新文件</string>
 </resources>

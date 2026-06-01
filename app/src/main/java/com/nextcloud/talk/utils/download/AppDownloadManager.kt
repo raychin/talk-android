@@ -69,6 +69,7 @@ class AppDownloadManager private constructor(private val context: Context) {
     private var speedCalculator = SpeedCalculator()
     private var totalContentLength: Long = 0L
     private var isPaused = false
+    private var progressListener: OnDownloadProgressListener? = null
 
     // OkDownload 单例初始化（必须在属性初始化之后）
     init {
@@ -117,8 +118,20 @@ class AppDownloadManager private constructor(private val context: Context) {
      * @param activity 当前Activity（用于回调更新UI）
      */
     fun startDownload(url: String, fileName: String, activity: Activity?) {
+        startDownload(url, fileName, activity, null)
+    }
+
+    /**
+     * 开始下载APK文件（带进度回调）
+     * @param url 下载地址
+     * @param fileName 文件名
+     * @param activity 当前Activity（用于回调上下文）
+     * @param listener 进度回调监听器（优先于 activity 接口实现）
+     */
+    fun startDownload(url: String, fileName: String, activity: Activity?, listener: OnDownloadProgressListener?) {
         this.downloadUrl = url
         this.activityRef = WeakReference(activity)
+        this.progressListener = listener
         isPaused = false
 
         val dir = File(context.getExternalFilesDir(null), "updates")
@@ -290,6 +303,14 @@ class AppDownloadManager private constructor(private val context: Context) {
     }
 
     /**
+     * 更新当前 Activity 引用（用于跨页面切换时更新回调目标）
+     * @param activity 新的前台 Activity
+     */
+    fun updateActivityRef(activity: Activity?) {
+        this.activityRef = WeakReference(activity)
+    }
+
+    /**
      * 是否正在下载中
      */
     fun isDownloading(): Boolean = currentTask != null && !isPaused
@@ -325,13 +346,14 @@ class AppDownloadManager private constructor(private val context: Context) {
             .build()
         notificationManager.notify(NOTIFICATION_ID, notification)
 
-        // 通知 Activity 更新 UI
+        // 通知回调更新 UI（优先使用 listener，其次尝试 activity 接口）
+        val callback = progressListener ?: (activityRef?.get() as? OnDownloadProgressListener)
         activityRef?.get()?.let { activity ->
             if (!activity.isFinishing && !activity.isDestroyed) {
-                activity.runOnUiThread {
-                    (activity as? OnDownloadProgressListener)?.onDownloadProgressChanged(
-                        progress, speed, currentOffset, totalLength
-                    )
+                callback?.let { listener ->
+                    activity.runOnUiThread {
+                        listener.onDownloadProgressChanged(progress, speed, currentOffset, totalLength)
+                    }
                 }
             }
         }
@@ -401,20 +423,26 @@ class AppDownloadManager private constructor(private val context: Context) {
     // ==================== Activity 通知 ====================
 
     private fun notifyActivityCancel() {
+        val callback = progressListener ?: (activityRef?.get() as? OnDownloadProgressListener)
         activityRef?.get()?.let { activity ->
             if (!activity.isFinishing && !activity.isDestroyed) {
-                activity.runOnUiThread {
-                    (activity as? OnDownloadProgressListener)?.onDownloadCanceled()
+                callback?.let { listener ->
+                    activity.runOnUiThread {
+                        listener.onDownloadCanceled()
+                    }
                 }
             }
         }
     }
 
     private fun notifyActivityError(error: Exception?) {
+        val callback = progressListener ?: (activityRef?.get() as? OnDownloadProgressListener)
         activityRef?.get()?.let { activity ->
             if (!activity.isFinishing && !activity.isDestroyed) {
-                activity.runOnUiThread {
-                    (activity as? OnDownloadProgressListener)?.onDownloadError(error?.message ?: "未知错误")
+                callback?.let { listener ->
+                    activity.runOnUiThread {
+                        listener.onDownloadError(error?.message ?: "未知错误")
+                    }
                 }
             }
         }

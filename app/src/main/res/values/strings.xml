@@ -1030,19 +1030,28 @@ How to translate with transifex:
     <string name="screen_share_started">Screen sharing started</string>
     <string name="screen_share_stopped">Screen sharing stopped</string>
 
-    <string name="clps_re_edit_message">重新编辑</string>
-    <string name="clps_call_answer">接听</string>
-    <string name="clps_call_un_answer">拒绝</string>
+    <string name="clps_re_edit_message">Re-edit</string>
+    <string name="clps_call_answer">Answer</string>
+    <string name="clps_call_un_answer">Decline</string>
 
     <!-- OTA Upgrade -->
-    <string name="ota_update_title">发现新版本</string>
-    <string name="ota_update_message">发现新版本 %1$s ，是否立即更新？</string>
-    <string name="ota_force_update_title">强制更新</string>
-    <string name="ota_force_update_message">发现新版本 %1$s ，请更新后继续使用</string>
-    <string name="ota_download_progress">正在下载...</string>
-    <string name="ota_download_cancel">取消</string>
-    <string name="ota_download_background">后台下载</string>
-    <string name="ota_downloading_title">正在下载新版本</string>
-    <string name="ota_download_complete">下载完成</string>
-    <string name="ota_download_failed">下载失败</string>
+    <string name="ota_update_title">New Version Available</string>
+    <string name="ota_update_message">Version %1$s is available. Update now?</string>
+    <string name="ota_force_update_title">Required Update</string>
+    <string name="ota_force_update_message">Version %1$s is required. Please update to continue.</string>
+    <string name="ota_download_progress">Downloading…</string>
+    <string name="ota_download_cancel">Cancel</string>
+    <string name="ota_download_background">Download in Background</string>
+    <string name="ota_downloading_title">Downloading New Version</string>
+    <string name="ota_download_complete">Download Complete</string>
+    <string name="ota_download_failed">Download Failed</string>
+    <string name="ota_check_for_update">Check for Updates</string>
+    <string name="ota_already_latest">Already up to date</string>
+    <string name="ota_browser_download_hint">Browser opened. Please complete download and installation in browser.</string>
+    <string name="ota_open_browser_failed">Unable to open browser</string>
+    <string name="ota_download_started">Download started. Check notification bar for progress.</string>
+    <string name="ota_download_error">Download error: %1$s</string>
+    <string name="ota_download_paused">Download paused</string>
+    <string name="ota_install_error">Installation failed</string>
+    <string name="ota_download_background_desc">Downloading update file</string>
 </resources>

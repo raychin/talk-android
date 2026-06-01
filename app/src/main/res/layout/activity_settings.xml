@@ -917,16 +917,18 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="?android:attr/selectableItemBackground"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:paddingBottom="@dimen/standard_double_padding">
 
                     <LinearLayout
+                        android:id="@+id/settings_app_info_wrapper"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
                         tools:ignore="UselessParent">
 
                         <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/settings_app_name_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_margin="@dimen/standard_margin"
@@ -934,13 +936,23 @@
                             android:textSize="@dimen/headline_text_size" />
 
                         <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/settings_version_summary"
+                            android:id="@+id/settings_check_update_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/standard_margin"
-                            android:textSize="@dimen/supporting_text_text_size" />
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="@dimen/standard_margin"
+                            android:text="@string/ota_check_for_update"
+                            android:textSize="14sp"
+                            android:textColor="?attr/colorPrimary" />
 
                     </LinearLayout>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/settings_version_summary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/standard_margin"
+                        android:textSize="@dimen/supporting_text_text_size" />
                 </LinearLayout>
             </LinearLayout>
 
