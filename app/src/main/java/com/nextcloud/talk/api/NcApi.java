@@ -23,6 +23,7 @@ import com.nextcloud.talk.models.json.invitation.InvitationOverall;
 import com.nextcloud.talk.models.json.mention.MentionOverall;
 import com.nextcloud.talk.models.json.notifications.NotificationOverall;
 import com.nextcloud.talk.models.json.opengraph.OpenGraphOverall;
+import com.nextcloud.talk.models.json.ota.OtaUpgradeOverall;
 import com.nextcloud.talk.models.json.participants.AddParticipantOverall;
 import com.nextcloud.talk.models.json.participants.ParticipantsOverall;
 import com.nextcloud.talk.models.json.participants.TalkBanOverall;
@@ -645,4 +646,11 @@ public interface NcApi {
     @DELETE
     Observable<GenericOverall> rejectInvitation(@Header("Authorization") String authorization,
                                                 @Url String url);
+
+    /**
+     * 检查OTA升级
+     * Server URL is: baseUrl + /apps/spreed/api/v1/ota/checkUpgrade?version={versionName}&clientType=android
+     */
+    @GET
+    Observable<OtaUpgradeOverall> checkOtaUpgrade(@Header("Authorization") String authorization, @Url String url);
 }

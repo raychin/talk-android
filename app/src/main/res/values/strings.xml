@@ -1033,4 +1033,16 @@ How to translate with transifex:
     <string name="clps_re_edit_message">重新编辑</string>
     <string name="clps_call_answer">接听</string>
     <string name="clps_call_un_answer">拒绝</string>
+
+    <!-- OTA Upgrade -->
+    <string name="ota_update_title">发现新版本</string>
+    <string name="ota_update_message">发现新版本 %1$s ，是否立即更新？</string>
+    <string name="ota_force_update_title">强制更新</string>
+    <string name="ota_force_update_message">发现新版本 %1$s ，请更新后继续使用</string>
+    <string name="ota_download_progress">正在下载...</string>
+    <string name="ota_download_cancel">取消</string>
+    <string name="ota_download_background">后台下载</string>
+    <string name="ota_downloading_title">正在下载新版本</string>
+    <string name="ota_download_complete">下载完成</string>
+    <string name="ota_download_failed">下载失败</string>
 </resources>

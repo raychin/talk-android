@@ -570,4 +570,7 @@ object ApiUtils {
 
     fun getUrlForPortals(baseUrl: String): String =
         "$baseUrl$OCS_API_VERSION/apps/spreed/api/v4/clps-rooms"
+
+    fun getUrlForOtaUpgrade(baseUrl: String, versionName: String): String =
+        "$baseUrl/ocs/v2.php/apps/spreed/api/v1/ota/checkUpgrade?version=${versionName}&clientType=android"
 }
