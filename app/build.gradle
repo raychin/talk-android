@@ -46,8 +46,8 @@ android {
 
         // mayor.minor.hotfix.increment (for increment: 01-50=Alpha / 51-89=RC / 90-99=stable)
         // xx   .xxx  .xx    .xx
-        versionCode 230000023
-        versionName "30.4.6"
+        versionCode 230000024
+        versionName "30.4.7-Alpha01"
 
         flavorDimensions "default"
         renderscriptTargetApi = 19
@@ -482,6 +482,13 @@ dependencies {
     kapt 'com.github.bumptech.glide:compiler:4.16.0'
 
 //    implementation "me.leolin:ShortcutBadger:${shortcutBadger}@aar"
+
+    // okdownload - 支持断点续传的下载库
+    implementation 'com.liulishuo.okdownload:okdownload:1.0.7'
+    implementation 'com.liulishuo.okdownload:sqlite:1.0.7'
+    implementation 'com.liulishuo.okdownload:filedownloader:1.0.7'
+    implementation 'com.liulishuo.okdownload:ktx:1.0.7'
+
 }
 
 tasks.register('installGitHooks', Copy) {
