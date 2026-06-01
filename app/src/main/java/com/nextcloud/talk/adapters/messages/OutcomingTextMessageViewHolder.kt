@@ -48,6 +48,8 @@ import com.nextcloud.talk.data.database.model.SendStatus
 import com.nextcloud.talk.data.network.NetworkMonitor
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ItemCustomOutcomingTextMessageBinding
+import com.nextcloud.talk.extensions.configureQuotedMessageImageSize
+import com.nextcloud.talk.extensions.loadRoundedImageFor8px
 import com.nextcloud.talk.models.json.chat.ChatUtils
 import com.nextcloud.talk.models.json.chat.ReadStatus
 import com.nextcloud.talk.models.json.conversations.ConversationEnums
@@ -543,7 +545,8 @@ class OutcomingTextMessageViewHolder(itemView: View) :
 
                     parentChatMessage.imageUrl?.let {
                         binding.messageQuote.quotedMessageImage.visibility = View.VISIBLE
-                        binding.messageQuote.quotedMessageImage.load(it) {
+                        binding.messageQuote.quotedMessageImage.configureQuotedMessageImageSize(context)
+                        binding.messageQuote.quotedMessageImage.loadRoundedImageFor8px(it) {
                             addHeader(
                                 "Authorization",
                                 ApiUtils.getCredentials(message.activeUser!!.username, message.activeUser!!.token)!!

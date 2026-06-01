@@ -28,6 +28,8 @@ import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedA
 import com.nextcloud.talk.chat.ChatActivity
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.databinding.ItemCustomIncomingVoiceMessageBinding
+import com.nextcloud.talk.extensions.configureQuotedMessageImageSize
+import com.nextcloud.talk.extensions.loadRoundedImageFor8px
 import com.nextcloud.talk.ui.theme.ViewThemeUtils
 import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.ChatMessageUtils
@@ -335,7 +337,8 @@ class IncomingVoiceMessageViewHolder(incomingView: View, payload: Any) :
                     parentChatMessage.activeUser = message.activeUser
                     parentChatMessage.imageUrl?.let {
                         binding.messageQuote.quotedMessageImage.visibility = View.VISIBLE
-                        binding.messageQuote.quotedMessageImage.load(it) {
+                        binding.messageQuote.quotedMessageImage.configureQuotedMessageImageSize(context!!)
+                        binding.messageQuote.quotedMessageImage.loadRoundedImageFor8px(it) {
                             addHeader(
                                 "Authorization",
                                 ApiUtils.getCredentials(message.activeUser!!.username, message.activeUser!!.token)!!

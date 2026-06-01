@@ -12,6 +12,10 @@ package com.nextcloud.talk.adapters.messages
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.ColorFilter
+import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.util.Base64
@@ -110,19 +114,17 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
 
         image.minimumHeight = DisplayUtils.convertDpToPixel(MIN_IMAGE_HEIGHT, context!!).toInt()
 
-        // 设置图片最大宽度
+        // 设置图片最大宽高约束，配合 adjustViewBounds 实现自适应完整显示
         val screenWidth = DisplayUtils.getScreenWidth(context!!)
         val maxImageWidth = (screenWidth * MAX_IMAGE_WIDTH_RATIO).toInt()
-        // 获取屏幕高度
         val screenHeight = DisplayUtils.getScreenHeight(context!!)
-        // 计算最大高度
         val maxImageHeight = (screenHeight * MAX_IMAGE_HEIGHT_RATIO).toInt()
-        val layoutParams = image.layoutParams
-        if (layoutParams != null) {
-            // layoutParams.width = maxImageWidth
-            layoutParams.height = maxImageHeight
-            image.layoutParams = layoutParams
-        }
+        image.maxWidth = maxImageWidth
+        image.maxHeight = maxImageHeight
+
+        // image.minimumWidth = DisplayUtils.convertDpToPixel(72F, context!!).toInt()
+        // image.minimumHeight = DisplayUtils.convertDpToPixel(72F, context!!).toInt()
+
 
         if (message.lastEditTimestamp != 0L && !message.isDeleted) {
             time.text = dateUtils.getLocalTimeStringFromTimestamp(message.lastEditTimestamp!!)
@@ -135,8 +137,9 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
             val mimetype = message.selectedIndividualHashMap!![KEY_MIMETYPE]
             // 判断是否为非图片类型，如果是则直接显示文件图标并阻止图片加载
             if (!isImageMimetype(mimetype)) {
-                if (image != null && imageLoader != null) {
-                    imageLoader.loadImage(image, "", getPayloadForImageLoader(message))
+                val payload = getPayloadForImageLoader(message)
+                if (payload is Drawable) {
+                    image.setImageDrawable(payload)
                 }
             }
         }
@@ -315,7 +318,11 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
             ) {
                 drawable = viewThemeUtils?.platform?.tintDrawable(context!!, drawable)
             }
-            placeholder = drawable
+            // placeholder = drawable
+            placeholder = FixedSizeIconDrawable(
+                drawable!!,
+                DisplayUtils.convertDpToPixel(ERROR_ICON_SIZE_DP, context!!).toInt()
+            )
         } else {
             fetchFileInformation(
                 "/" + message.selectedIndividualHashMap!![KEY_PATH],
@@ -324,6 +331,45 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
         }
 
         return placeholder
+    }
+
+    /**
+     * 将内部图标以固定尺寸居中绘制在 Drawable 边界内。
+     * 用于图片加载失败时显示固定大小的文件类型图标（类似微信文件图标风格），不显示边框。
+     */
+    private class FixedSizeIconDrawable(
+        private val icon: Drawable,
+        private val iconSizePx: Int
+    ) : Drawable() {
+
+        private val iconBounds = Rect()
+
+        override fun onBoundsChange(bounds: Rect) {
+            super.onBoundsChange(bounds)
+            val left = bounds.centerX() - iconSizePx / 2
+            val top = bounds.centerY() - iconSizePx / 2
+            iconBounds.set(left, top, left + iconSizePx, top + iconSizePx)
+        }
+
+        override fun draw(canvas: Canvas) {
+            icon.bounds = iconBounds
+            icon.draw(canvas)
+        }
+
+        override fun setAlpha(alpha: Int) {
+            icon.alpha = alpha
+        }
+
+        override fun setColorFilter(colorFilter: ColorFilter?) {
+            icon.colorFilter = colorFilter
+        }
+
+        @Deprecated("Deprecated in API 29")
+        override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
+
+        override fun getIntrinsicWidth(): Int = iconSizePx
+
+        override fun getIntrinsicHeight(): Int = iconSizePx
     }
 
     private fun getDrawableFromContactDetails(context: Context?, base64: String?): Drawable? {
@@ -412,11 +458,14 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
 
         // const val MIN_IMAGE_HEIGHT = 100F
         // 参照微信图片预览尺寸设置
-        const val MIN_IMAGE_HEIGHT = 120F  // 最小高度从 100 改为 60，类似微信的缩略图大小
-        const val MAX_IMAGE_WIDTH_RATIO = 0.75f  // 最大宽度为屏幕宽度
-        const val MAX_IMAGE_HEIGHT_RATIO = 0.18f  // 最大宽度为屏幕高度
+        const val MIN_IMAGE_HEIGHT = 100F  // 最小高度从 100 改为 60，类似微信的缩略图大小
+        const val MAX_IMAGE_WIDTH_RATIO = 0.5f  // 最大宽度为屏幕宽度
+        const val MAX_IMAGE_HEIGHT_RATIO = 0.35f  // 最大宽度为屏幕高度
         const val IMAGE_GRID_SIZE = 120F  // 网格预览尺寸（类似微信聊天列表中的小图）
         const val PREVIEW_MAX_WIDTH = 1024  // 预览图最大宽度
         const val PREVIEW_MAX_HEIGHT = 1024  // 预览图最大高度
+
+        // 添加常量
+        const val ERROR_ICON_SIZE_DP = 72F
     }
 }

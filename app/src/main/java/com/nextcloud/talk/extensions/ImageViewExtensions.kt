@@ -32,15 +32,18 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
+import coil.ImageLoader
 import coil.annotation.ExperimentalCoilApi
 import coil.imageLoader
 import coil.load
 import coil.request.CachePolicy
+import coil.request.Disposable
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import coil.result
 import coil.transform.CircleCropTransformation
 import coil.transform.RoundedCornersTransformation
+import com.google.android.flexbox.FlexboxLayout
 import com.nextcloud.talk.R
 import com.nextcloud.talk.chat.data.model.ChatMessage
 import com.nextcloud.talk.data.user.model.User
@@ -503,4 +506,37 @@ private class CircularDrawable(private val sourceDrawable: Drawable) : Drawable(
             return drawable.toBitmap(width, height, Bitmap.Config.ARGB_8888)
         }
     }
+}
+
+private const val MIN_IMAGE_HEIGHT = 100F
+private const val MAX_IMAGE_WIDTH_RATIO = 0.5f
+private const val MAX_IMAGE_HEIGHT_RATIO = 0.26f
+private const val ROUNDING_minWidth = 72F
+private const val ROUNDING_minHeight = 72F
+fun ImageView.configureQuotedMessageImageSize(context: Context) {
+    val maxImageWidth = (DisplayUtils.getScreenWidth(context) * MAX_IMAGE_WIDTH_RATIO).toInt()
+    val screenHeight = DisplayUtils.getScreenHeight(context)
+    val maxImageHeight = (screenHeight * MAX_IMAGE_HEIGHT_RATIO).toInt()
+    this.maxWidth = maxImageWidth
+    this.maxHeight = maxImageHeight
+    this.minimumHeight = DisplayUtils.convertDpToPixel(MIN_IMAGE_HEIGHT, context).toInt()
+    this.minimumWidth = DisplayUtils.convertDpToPixel(ROUNDING_minWidth, context).toInt()
+    this.minimumHeight = DisplayUtils.convertDpToPixel(ROUNDING_minHeight, context).toInt()
+    val layoutParams = this.layoutParams as? FlexboxLayout.LayoutParams
+    layoutParams?.flexGrow = 0f
+    this.layoutParams = layoutParams
+}
+
+private const val ROUNDING_PIXEL_8 = 8f
+fun ImageView.loadRoundedImageFor8px(
+    data: Any?,
+    imageLoader: ImageLoader = context.imageLoader,
+    builder: ImageRequest.Builder.() -> Unit = {}
+): Disposable {
+    val request = ImageRequest.Builder(context)
+        .data(data)
+        .target(this)
+        .apply(builder).transformations(RoundedCornersTransformation(ROUNDING_PIXEL_8))
+        .build()
+    return imageLoader.enqueue(request)
 }
