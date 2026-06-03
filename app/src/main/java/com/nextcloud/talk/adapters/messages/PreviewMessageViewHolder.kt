@@ -21,6 +21,7 @@ import android.os.Handler
 import android.util.Base64
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -133,6 +134,25 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
             time.text = dateUtils.getLocalTimeStringFromTimestamp(message.timestamp)
             messageEditIndicator.visibility = View.GONE
         }
+        val cardView = previewContainer as MaterialCardView
+        cardView.strokeWidth = 2
+
+        // 1. 获取布局参数
+        val layoutParams = cardView.layoutParams as? ViewGroup.MarginLayoutParams
+        // 2. 设置新边距
+        layoutParams?.apply {
+            setMargins(
+                // left
+                0,
+                // top
+                0,
+                // right
+                0,
+                // bottom
+                DisplayUtils.convertDpToPixel(4f, context!!).toInt()
+            )
+        }
+
         if (message.selectedIndividualHashMap!!.containsKey(KEY_MIMETYPE)) {
             val mimetype = message.selectedIndividualHashMap!![KEY_MIMETYPE]
             // 判断是否为非图片类型，如果是则直接显示文件图标并阻止图片加载
@@ -141,8 +161,25 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
                 if (payload is Drawable) {
                     image.setImageDrawable(payload)
                 }
+                cardView.strokeWidth = 0
+                layoutParams?.apply {
+                    setMargins(
+                        // left
+                        0,
+                        // top
+                        0,
+                        // right
+                        0,
+                        // bottom
+                        0
+                    )
+                }
             }
         }
+
+        // 3. 将参数应用回去并请求重新布局
+        cardView.layoutParams = layoutParams
+        cardView.requestLayout()
 
         time.text = dateUtils.getLocalTimeStringFromTimestamp(message.timestamp)
 

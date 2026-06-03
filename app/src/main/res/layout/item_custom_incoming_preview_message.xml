@@ -100,6 +100,7 @@
                 app:cardPreventCornerOverlap="true"
                 app:layout_alignSelf="flex_start"
                 app:layout_wrapBefore="true"
+                android:layout_marginBottom="4dp"
                 tools:visibility="gone">
 
                 <ImageView

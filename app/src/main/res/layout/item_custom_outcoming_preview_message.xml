@@ -76,6 +76,7 @@
                 app:cardPreventCornerOverlap="true"
                 app:layout_alignSelf="flex_start"
                 app:layout_wrapBefore="true"
+                android:layout_marginBottom="4dp"
                 tools:visibility="gone">
 
                 <ImageView
@@ -87,7 +88,7 @@
                     android:adjustViewBounds="true"
                     android:scaleType="fitCenter"
                     tools:ignore="ContentDescription"
-                    tools:src="@drawable/ic_call_black_24dp" />
+                    tools:src="@mipmap/ic_launcher" />
 
                 <ProgressBar
                     android:id="@+id/progress_bar"
