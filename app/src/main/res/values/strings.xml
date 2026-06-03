@@ -1054,4 +1054,9 @@ How to translate with transifex:
     <string name="ota_download_paused">Download paused</string>
     <string name="ota_install_error">Installation failed</string>
     <string name="ota_download_background_desc">Downloading update file</string>
+    <string name="ota_check_failed">Failed to check for updates, please try again later</string>
+    <string name="ota_check_for_update_">Checking for Updates…</string>
+    <string name="ota_install_permission_required">Please allow installation of unknown apps and try again</string>
+    <string name="ota_install_manual_hint">Download completed, please find the installer in the file manager to install manually</string>
+    <string name="ota_install_failed">Installation failed, please manually locate the downloaded installer to install</string>
 </resources>

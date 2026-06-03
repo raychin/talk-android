@@ -1028,4 +1028,9 @@ How to translate with transifex:
     <string name="ota_download_paused">下載已暫停</string>
     <string name="ota_install_error">安裝失敗</string>
     <string name="ota_download_background_desc">正在下載更新檔案</string>
+    <string name="ota_check_failed">檢查更新失敗，請稍後再試</string>
+    <string name="ota_check_for_update_">正在檢查更新...</string>
+    <string name="ota_install_permission_required">請允許安裝未知應用程式後再試</string>
+    <string name="ota_install_manual_hint">下載完成，請在檔案管理員中找到安裝包手動安裝</string>
+    <string name="ota_install_failed">安裝失敗，請手動找到下載的安裝包進行安裝</string>
 </resources>

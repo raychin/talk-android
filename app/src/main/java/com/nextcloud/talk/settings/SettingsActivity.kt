@@ -106,6 +106,7 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.util.Locale
 import javax.inject.Inject
+import androidx.core.content.edit
 
 @Suppress("LargeClass", "TooManyFunctions")
 @AutoInjector(NextcloudTalkApplication::class)
@@ -1102,12 +1103,20 @@ class SettingsActivity :
     }
 
     private fun setupCheckForUpdate() {
+        var lastClickTime = 0L
         binding.settingsAppInfoWrapper.setOnClickListener {
+            // 添加防抖动机制，防止快速连续点击
+            val currentTime = System.currentTimeMillis()
+            // 1秒内的点击只响应一次
+            if (currentTime - lastClickTime < 1000) {
+                return@setOnClickListener
+            }
+            lastClickTime = currentTime
             // 清空检查日期，强制重新检测
             getSharedPreferences(OtaUpgradeWorker.PREFS_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .remove(OtaUpgradeWorker.PREF_KEY_OTA_CHECK_DATE)
-                .apply()
+                .edit {
+                    remove(OtaUpgradeWorker.PREF_KEY_OTA_CHECK_DATE)
+                }
 
             val otaWork = OneTimeWorkRequest.Builder(OtaUpgradeWorker::class.java).build()
             WorkManager.getInstance(context).enqueue(otaWork)
@@ -1120,11 +1129,11 @@ class SettingsActivity :
                             showOtaCheckResult()
                         }, 500)
                     } else if (workInfo?.state == WorkInfo.State.FAILED) {
-                        Toast.makeText(context, "检查更新失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.ota_check_failed, Toast.LENGTH_SHORT).show()
                     }
                 }
 
-            Toast.makeText(context, "正在检查更新...", Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, R.string.ota_check_for_update_, Snackbar.LENGTH_SHORT).show()
         }
     }
 

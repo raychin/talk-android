@@ -16,4 +16,6 @@
         name="external_files"
         path="." />
 <!--    <external-cache-path name="name" path="." />-->
+    <!-- 添加：支持外部公共下载目录（系统 DownloadManager 下载的 APK） -->
+    <external-path name="downloads" path="." />
 </paths>

@@ -6,13 +6,19 @@
  */
 package com.nextcloud.talk.utils.download
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.nextcloud.talk.R
 import com.nextcloud.talk.events.OtaUpgradeEvent
@@ -24,6 +30,8 @@ import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.net.toUri
+import androidx.core.content.edit
 
 /**
  * 全局 OTA 升级管理器，独立于 Activity 生命周期运行。
@@ -37,6 +45,7 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
 
     companion object {
         private const val TAG = "OtaUpgradeManager"
+        @SuppressLint("StaticFieldLeak")
         @Volatile
         private var instance: OtaUpgradeManager? = null
 
@@ -104,6 +113,14 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
         }
         dismissAllDialogs()
         cancelDownload()
+
+        try {
+            activityRef?.get()?.let { activity ->
+                unregisterDownloadReceiver(activity)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     // ==================== EventBus 订阅 ====================
@@ -220,7 +237,8 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
         val url = currentDownloadUrl ?: return
 
         // TODO RAY 跳转到系统自带下载管理器，使用url进行下载
-        openBrowserForDownload(activity, url, supportBackgroundDownload)
+        // openBrowserForDownload(activity, url, supportBackgroundDownload)
+        downloadWithSystemManager(activity, url, supportBackgroundDownload)
         return
 
         this.supportBackgroundDownload = supportBackgroundDownload
@@ -236,19 +254,292 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
         appDownloadManager.startDownload(url, fileName, activity, downloadProgressListener)
     }
 
+    // 系统下载管理器相关
+    private var currentDownloadId: Long = -1L
+    private var downloadCompleteReceiver: BroadcastReceiver? = null
+    /**
+     * 使用系统下载管理器进行下载
+     */
+    private fun downloadWithSystemManager(activity: Activity, url: String, supportBackgroundDownload: Boolean) {
+        try {
+            val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+
+            val uri = url.toUri()
+            val fileName = extractFileName(url) ?: "talk_download_${System.currentTimeMillis()}.apk"
+
+            val request = DownloadManager.Request(uri)
+                .setTitle(fileName)
+                .setDescription(activity.getString(R.string.nc_app_name))
+                // .setMimeType("application/vnd.android.package-archive")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                // 允许在移动数据下下载
+                .setAllowedOverMetered(true)
+                // 允许漫游时下载
+                .setAllowedOverRoaming(true)
+
+            currentDownloadId = downloadManager.enqueue(request)
+
+            // 注册下载完成广播
+            registerDownloadCompleteReceiver(activity)
+
+            Toast.makeText(
+                activity,
+                activity.getString(R.string.ota_download_background_desc),
+                Toast.LENGTH_LONG
+            ).show()
+
+            if (supportBackgroundDownload) {
+                dismissAllDialogs()
+                resetState()
+                saveOtaCheckDate()
+            }
+
+            // // 跳转到系统下载管理界面
+            // try {
+            //     val intent = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
+            //     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            //     activity.startActivity(intent)
+            // } catch (e: Exception) {
+            //     // 如果无法打开下载管理器，保持原有的逻辑
+            //     e.printStackTrace()
+            // }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // 如果系统下载管理器不可用，则回退到浏览器下载
+            openBrowserForDownload(activity, url, supportBackgroundDownload)
+        }
+    }
+
+    /**
+     * 注销下载完成广播接收器
+     */
+    private fun unregisterDownloadReceiver(activity: Activity) {
+        downloadCompleteReceiver?.let {
+            try {
+                activity.unregisterReceiver(it)
+                downloadCompleteReceiver = null
+            } catch (_: Exception) { }
+        }
+    }
+    /**
+     * 注册下载完成广播接收器
+     */
+    private fun registerDownloadCompleteReceiver(activity: Activity) {
+        // 先取消之前的注册
+        unregisterDownloadReceiver(activity)
+
+        if (downloadCompleteReceiver == null) {
+            downloadCompleteReceiver = object : android.content.BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
+                    if (id == currentDownloadId) {
+                        handleDownloadComplete(id)
+                    }
+                }
+            }
+        }
+
+        val filter = android.content.IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        ContextCompat.registerReceiver(activity, downloadCompleteReceiver, filter, ContextCompat.RECEIVER_EXPORTED)
+    }
+
+    /**
+     * 处理系统下载管理器下载完成
+     */
+    private fun handleDownloadComplete(downloadId: Long) {
+        val downloadManager = appContext.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+            ?: return
+
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        val cursor = downloadManager.query(query)
+
+        if (cursor != null && cursor.moveToFirst()) {
+            val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+            val status = cursor.getInt(statusIndex)
+
+            if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                // 获取下载文件的 URI
+                val uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+                val localUri = cursor.getString(uriIndex)
+
+                // 获取下载文件的 content URI（优先使用）
+                val contentUri = downloadManager.getUriForDownloadedFile(downloadId)
+
+                cursor.close()
+                try {
+                    activityRef?.get()?.let { activity ->
+                        unregisterDownloadReceiver(activity)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                // 发起安装
+                if (contentUri != null) {
+                    installApkFromUri(contentUri)
+                } else if (localUri != null) {
+                    installApkFromLocalUri(localUri)
+                }
+            } else if (status == DownloadManager.STATUS_FAILED) {
+                val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
+                val reason = cursor.getInt(reasonIndex)
+                cursor.close()
+
+                try {
+                    activityRef?.get()?.let { activity ->
+                        unregisterDownloadReceiver(activity)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                android.util.Log.e(TAG, "OTA下载失败, reason=$reason")
+            } else {
+                cursor.close()
+            }
+        } else {
+            cursor?.close()
+        }
+    }
+
+    /**
+     * 通过 content URI 安装 APK（DownloadManager 返回的 URI）
+     */
+    private fun installApkFromUri(uri: android.net.Uri) {
+        try {
+            // Android 8.0+ 检查安装未知应用权限
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val canInstall = appContext.packageManager.canRequestPackageInstalls()
+                if (!canInstall) {
+                    // 跳转到安装未知应用设置页面
+                    val intent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                        data = "package:${appContext.packageName}".toUri()
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    appContext.startActivity(intent)
+                    Toast.makeText(
+                        appContext,
+                        appContext.getString(R.string.ota_install_permission_required),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return
+                }
+            }
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            appContext.startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "安装APK失败", e)
+            // 回退：尝试用 FileProvider 方式安装
+            tryAlternativeInstall(uri)
+        }
+    }
+    /**
+     * 备用安装方式：通过文件路径使用 FileProvider 安装
+     */
+    private fun tryAlternativeInstall(contentUri: android.net.Uri) {
+        try {
+            // 尝试通过 contentUri 解析文件路径
+            val filePath = getFilePathFromContentUri(contentUri)
+            if (filePath != null) {
+                val file = java.io.File(filePath)
+                if (file.exists()) {
+                    val fileProviderUri = androidx.core.content.FileProvider.getUriForFile(
+                        appContext,
+                        appContext.packageName,
+                        file
+                    )
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(fileProviderUri, "application/vnd.android.package-archive")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    appContext.startActivity(intent)
+                    return
+                }
+            }
+            // 最后回退：打开文件管理器让用户手动安装
+            Toast.makeText(
+                appContext,
+                appContext.getString(R.string.ota_install_manual_hint),
+                Toast.LENGTH_LONG
+            ).show()
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "备用安装方式也失败了", e)
+            Toast.makeText(
+                appContext,
+                appContext.getString(R.string.ota_install_failed),
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    /**
+     * 从 content URI 获取文件路径
+     */
+    private fun getFilePathFromContentUri(uri: android.net.Uri): String? {
+        return try {
+            val cursor = appContext.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (columnIndex >= 0) {
+                        val displayName = it.getString(columnIndex)
+                        val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                        val file = java.io.File(downloadDir, displayName)
+                        if (file.exists()) return file.absolutePath
+                    }
+                }
+            }
+            // 如果 content URI 是 file:// 格式
+            uri.path
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "获取文件路径失败", e)
+            null
+        }
+    }
+
+    /**
+     * 通过本地文件路径安装 APK（需要 FileProvider）
+     */
+    private fun installApkFromLocalUri(localUri: String) {
+        try {
+            val file = java.io.File(localUri.toUri().path ?: return)
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                appContext,
+                // 必须与 AndroidManifest 中的 authorities 一致
+                appContext.packageName,
+                file
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            appContext.startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "通过本地路径安装APK失败", e)
+        }
+    }
+
     /**
      * 跳转到浏览器进行下载
      */
     private fun openBrowserForDownload(activity: Activity, url: String, supportBackgroundDownload: Boolean) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             activity.startActivity(intent)
 
-            android.widget.Toast.makeText(
+            Toast.makeText(
                 activity,
                 activity.getString(R.string.ota_browser_download_hint),
-                android.widget.Toast.LENGTH_LONG
+                Toast.LENGTH_LONG
             ).show()
 
             if (supportBackgroundDownload) {
@@ -258,10 +549,10 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            android.widget.Toast.makeText(
+            Toast.makeText(
                 activity,
                 activity.getString(R.string.ota_open_browser_failed),
-                android.widget.Toast.LENGTH_SHORT
+                Toast.LENGTH_SHORT
             ).show()
         }
     }
@@ -359,8 +650,8 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
         val activity = activityRef?.get()
         if (activity != null && !activity.isFinishing && !activity.isDestroyed) {
             dismissAllDialogs()
-            android.widget.Toast.makeText(
-                activity, errorMessage, android.widget.Toast.LENGTH_SHORT
+            Toast.makeText(
+                activity, errorMessage, Toast.LENGTH_SHORT
             ).show()
             resetState()
         }
@@ -397,6 +688,7 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
         currentProgress = 0
         currentSpeed = 0L
         supportBackgroundDownload = false
+        currentDownloadId = -1L
     }
 
     private fun formatSize(bytes: Long): String {
@@ -419,8 +711,8 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
     private fun saveOtaCheckDate() {
         val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         appContext.getSharedPreferences("ota_preferences", Context.MODE_PRIVATE)
-            .edit()
-            .putString("ota_check_date", currentDate)
-            .apply()
+            .edit {
+                putString("ota_check_date", currentDate)
+            }
     }
 }

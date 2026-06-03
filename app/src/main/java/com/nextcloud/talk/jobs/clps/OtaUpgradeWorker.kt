@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import androidx.core.content.edit
 
 @AutoInjector(NextcloudTalkApplication::class)
 class OtaUpgradeWorker(context: Context, workerParams: WorkerParameters) :
@@ -126,8 +127,8 @@ class OtaUpgradeWorker(context: Context, workerParams: WorkerParameters) :
     private fun saveOtaCheckDate(context: Context) {
         val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(PREF_KEY_OTA_CHECK_DATE, currentDate)
-            .apply()
+            .edit {
+                putString(PREF_KEY_OTA_CHECK_DATE, currentDate)
+            }
     }
 }
