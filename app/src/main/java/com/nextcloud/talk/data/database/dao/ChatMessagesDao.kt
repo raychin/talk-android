@@ -251,4 +251,13 @@ interface ChatMessagesDao {
     """
     )
     fun getNumberOfThreadReplies(internalConversationId: String, threadId: Long): Int
+
+    @Query(
+        """
+    DELETE FROM ChatMessages
+    WHERE messageType = 'system'
+    AND (expirationTimestamp IS NULL OR expirationTimestamp = 0 OR expirationTimestamp < :currentTimestamp)
+    """
+    )
+    fun deleteExpiredSystemMessages(currentTimestamp: Int): Int
 }

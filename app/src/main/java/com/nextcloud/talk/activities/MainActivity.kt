@@ -34,6 +34,7 @@ import com.nextcloud.talk.conversationlist.ConversationsListActivity
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.databinding.ActivityMainBinding
 import com.nextcloud.talk.invitation.InvitationsActivity
+import com.nextcloud.talk.jobs.clps.ChatSystemMessageCleanWorker
 import com.nextcloud.talk.jobs.clps.OtaUpgradeWorker
 import com.nextcloud.talk.lock.LockedActivity
 import com.nextcloud.talk.models.json.conversations.RoomOverall
@@ -253,6 +254,17 @@ class MainActivity :
             otaUpgradeWork
         )
         Log.d("OtaUpgradeWorker", "=== initWorkers end ===")
+
+        // 清理过期的系统消息
+        val cleanWork = OneTimeWorkRequest.Builder(ChatSystemMessageCleanWorker::class.java)
+            .addTag("chat_system_message_clean")
+            .build()
+        workManager.enqueueUniqueWork(
+            "ChatSystemMessageCleanWork",
+            ExistingWorkPolicy.KEEP,
+            cleanWork
+        )
+
 
         val internalUserId = intent.extras?.getLong(BundleKeys.KEY_INTERNAL_USER_ID)
 
