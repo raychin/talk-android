@@ -1108,7 +1108,7 @@ class SettingsActivity :
             // 添加防抖动机制，防止快速连续点击
             val currentTime = System.currentTimeMillis()
             // 1秒内的点击只响应一次
-            if (currentTime - lastClickTime < 1000) {
+            if (lastClickTime != 0L && currentTime - lastClickTime < 1000) {
                 return@setOnClickListener
             }
             lastClickTime = currentTime
@@ -1154,7 +1154,7 @@ class SettingsActivity :
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.ota_check_for_update)
             .setMessage(R.string.ota_already_latest)
-            .setPositiveButton(R.string.nc_ok, null)
+            .setPositiveButton(R.string.ota_update_sure, null)
             .show()
     }
 

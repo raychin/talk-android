@@ -1058,4 +1058,8 @@ How to translate with transifex:
     <string name="ota_install_permission_required">Please allow installation of unknown apps and try again</string>
     <string name="ota_install_manual_hint">Download completed, please find the installer in the file manager to install manually</string>
     <string name="ota_install_failed">Installation failed, please manually locate the downloaded installer to install</string>
+    <string name="ota_update_sure">OK</string>
+    <string name="ota_update_cancel">Cancel</string>
+    <string name="ota_update_sure_">Update Now</string>
+    <string name="ota_update_cancel_later">Not Now</string>
 </resources>

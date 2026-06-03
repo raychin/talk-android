@@ -193,12 +193,12 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
         MaterialAlertDialogBuilder(activity)
             .setTitle(R.string.ota_update_title)
             .setMessage(activity.getString(R.string.ota_update_message, data.latestVersion ?: ""))
-            .setPositiveButton(R.string.nc_yes) { dialog, _ ->
+            .setPositiveButton(R.string.ota_update_sure_) { dialog, _ ->
                 dialog.dismiss()
                 dialogState = DialogState.NONE
                 startDownload(activity, supportBackgroundDownload = true)
             }
-            .setNegativeButton(R.string.nc_no) { dialog, _ ->
+            .setNegativeButton(R.string.ota_update_cancel_later) { dialog, _ ->
                 dialog.dismiss()
                 resetState()
                 saveOtaCheckDate()
@@ -212,13 +212,13 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
         MaterialAlertDialogBuilder(activity)
             .setTitle(R.string.ota_force_update_title)
             .setMessage(activity.getString(R.string.ota_force_update_message, data.latestVersion ?: ""))
-            .setPositiveButton(R.string.nc_yes) { dialog, _ ->
+            .setPositiveButton(R.string.ota_update_sure_) { dialog, _ ->
                 // 跳转到浏览器下载，暂不关闭
                 // dialog.dismiss()
                 // dialogState = DialogState.NONE
                 startDownload(activity, supportBackgroundDownload = false)
             }
-            .setNegativeButton(R.string.nc_no) { dialog, _ ->
+            .setNegativeButton(R.string.ota_update_cancel) { dialog, _ ->
                 dialog.dismiss()
                 resetState()
                 activity.finishAffinity()
@@ -236,7 +236,7 @@ class OtaUpgradeManager private constructor(private val appContext: Context) {
     private fun startDownload(activity: Activity, supportBackgroundDownload: Boolean) {
         val url = currentDownloadUrl ?: return
 
-        // TODO RAY 跳转到系统自带下载管理器，使用url进行下载
+        // 跳转到系统自带下载管理器，使用url进行下载
         // openBrowserForDownload(activity, url, supportBackgroundDownload)
         downloadWithSystemManager(activity, url, supportBackgroundDownload)
         return
