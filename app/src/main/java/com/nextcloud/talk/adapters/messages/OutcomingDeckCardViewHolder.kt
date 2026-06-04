@@ -18,7 +18,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import autodagger.AutoInjector
-import coil.load
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
 import com.nextcloud.talk.api.NcApi
@@ -106,6 +105,12 @@ class OutcomingDeckCardViewHolder(outcomingView: View) :
             else -> null
         }
 
+        // fix: 设置已读图标颜色为绿色 add by ray on 2026/06/04
+        val readStatusTintColor = when (message.readStatus) {
+            ReadStatus.READ -> ContextCompat.getColor(context, R.color.green_read)
+            else -> ContextCompat.getColor(context, R.color.high_emphasis_text)
+        }
+
         val readStatusContentDescriptionString = when (message.readStatus) {
             ReadStatus.READ -> context.resources?.getString(R.string.nc_message_read)
             ReadStatus.SENT -> context.resources?.getString(R.string.nc_message_sent)
@@ -115,7 +120,7 @@ class OutcomingDeckCardViewHolder(outcomingView: View) :
         readStatusDrawableInt?.let { drawableInt ->
             AppCompatResources.getDrawable(context, drawableInt)?.let {
                 binding.checkMark.setImageDrawable(it)
-                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark)
+                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark, readStatusTintColor)
             }
         }
 

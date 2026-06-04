@@ -98,8 +98,11 @@ public class OutcomingPreviewMessageViewHolder extends PreviewMessageViewHolder 
         binding.checkMark.setVisibility(View.GONE);
         Integer readStatusDrawableInt = null;
         String readStatusContentDescriptionString = null;
+        // fix: 设置已读图标颜色为绿色 add by ray on 2026/06/04
+        int readStatusTintColor = ContextCompat.getColor(binding.checkMark.getContext(), R.color.high_emphasis_text);
         if (message.getReadStatus() == ReadStatus.READ) {
             readStatusDrawableInt = R.drawable.ic_check_all;
+            readStatusTintColor = ContextCompat.getColor(binding.checkMark.getContext(), R.color.green_read);
             readStatusContentDescriptionString =
                 binding.checkMark.getContext().getString(R.string.nc_message_read);
         } else if (message.getReadStatus() == ReadStatus.SENT) {
@@ -113,7 +116,7 @@ public class OutcomingPreviewMessageViewHolder extends PreviewMessageViewHolder 
             binding.checkMark.setImageDrawable(ContextCompat.getDrawable(binding.checkMark.getContext(),
                                                                          readStatusDrawableInt));
             if (viewThemeUtils != null) {
-                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark);
+                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark, readStatusTintColor);
             }
         }
         binding.checkMark.setContentDescription(readStatusContentDescriptionString);

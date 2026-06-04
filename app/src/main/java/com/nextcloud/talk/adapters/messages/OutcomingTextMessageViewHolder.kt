@@ -19,11 +19,11 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.toSpanned
 import androidx.lifecycle.lifecycleScope
 import autodagger.AutoInjector
-import coil.load
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
@@ -263,7 +263,9 @@ class OutcomingTextMessageViewHolder(itemView: View) :
         } else if (message.isTemporary) {
             updateStatus(R.drawable.baseline_schedule_24, context.resources?.getString(R.string.nc_message_sending))
         } else if (message.readStatus == ReadStatus.READ) {
-            updateStatus(R.drawable.ic_check_all, context.resources?.getString(R.string.nc_message_read))
+            // fix: 设置已读图标颜色为绿色 modify by ray on 2026/06/04
+            updateStatus(R.drawable.ic_check_all, context.resources?.getString(R.string
+                .nc_message_read), ContextCompat.getColor(chatActivity!!.context, R.color.green_read))
         } else if (message.readStatus == ReadStatus.SENT) {
             updateStatus(R.drawable.ic_check, context.resources?.getString(R.string.nc_message_sent))
         }
@@ -500,6 +502,21 @@ class OutcomingTextMessageViewHolder(itemView: View) :
             ResourcesCompat.getDrawable(context.resources, drawableInt, null)?.let {
                 binding.checkMark.setImageDrawable(it)
                 viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark)
+            }
+        }
+        binding.checkMark.contentDescription = description
+    }
+
+    /**
+     * fix: 设置已读图标颜色为绿色 add by ray on 2026/06/04
+     */
+    private fun updateStatus(readStatusDrawableInt: Int, description: String?, color: Int) {
+        binding.sendingProgress.visibility = View.GONE
+        binding.checkMark.visibility = View.VISIBLE
+        readStatusDrawableInt.let { drawableInt ->
+            ResourcesCompat.getDrawable(context.resources, drawableInt, null)?.let {
+                binding.checkMark.setImageDrawable(it)
+                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark, color)
             }
         }
         binding.checkMark.contentDescription = description

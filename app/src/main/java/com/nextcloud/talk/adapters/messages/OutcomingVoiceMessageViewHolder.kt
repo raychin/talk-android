@@ -21,10 +21,8 @@ import androidx.core.content.ContextCompat
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import autodagger.AutoInjector
-import coil.load
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
-import com.nextcloud.talk.adapters.messages.clps.MessageCheckboxHelper
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.chat.ChatActivity
@@ -179,6 +177,12 @@ class OutcomingVoiceMessageViewHolder(outcomingView: View) :
             else -> null
         }
 
+        // fix: 设置已读图标颜色为绿色 add by ray on 2026/06/04
+        val readStatusTintColor = when (message.readStatus) {
+            ReadStatus.READ -> ContextCompat.getColor(context!!, R.color.green_read)
+            else -> ContextCompat.getColor(context!!, R.color.high_emphasis_text)
+        }
+
         val readStatusContentDescriptionString = when (readStatus) {
             ReadStatus.READ -> context?.resources?.getString(R.string.nc_message_read)
             ReadStatus.SENT -> context?.resources?.getString(R.string.nc_message_sent)
@@ -188,7 +192,7 @@ class OutcomingVoiceMessageViewHolder(outcomingView: View) :
         if (readStatusDrawableInt != null) {
             AppCompatResources.getDrawable(context!!, readStatusDrawableInt)?.let {
                 binding.checkMark.setImageDrawable(it)
-                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark)
+                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark, readStatusTintColor)
             }
             binding.checkMark.visibility = View.VISIBLE
         } else {

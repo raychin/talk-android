@@ -63,7 +63,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,6 +87,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
 import androidx.core.text.toSpanned
@@ -245,6 +245,7 @@ class ComposeChatAdapter(
         Color.Black.toArgb()
     }
     val highEmphasisColor = Color(highEmphasisColorInt)
+    val readColor = Color(ContextCompat.getColor(viewModel.context, R.color.green_read))
 
     fun addMessages(messages: MutableList<ChatMessage>, append: Boolean) {
         if (messages.isEmpty()) return
@@ -769,13 +770,14 @@ class ComposeChatAdapter(
     private fun ReadStatus(message: ChatMessage) {
         if (message.readStatus == ReadStatus.NONE) {
             val read = painterResource(R.drawable.ic_check_all)
+            // fix: 设置已读图标颜色为绿色 modify by ray on 2026/06/04
             Icon(
                 read,
                 "",
                 modifier = Modifier
                     .padding(start = 4.dp)
                     .size(16.dp),
-                tint = highEmphasisColor
+                tint = readColor
             )
         }
     }
@@ -1065,13 +1067,15 @@ class ComposeChatAdapter(
                 )
                 if (message.readStatus == ReadStatus.NONE) {
                     val read = painterResource(R.drawable.ic_check_all)
+                    // fix: 设置已读图标颜色为绿色 modify by ray on 2026/06/04
                     Icon(
                         read,
                         "",
                         modifier = Modifier
                             .padding(start = 4.dp)
                             .size(16.dp)
-                            .align(Alignment.CenterVertically)
+                            .align(Alignment.CenterVertically),
+                        tint = readColor
                     )
                 }
             }

@@ -392,6 +392,15 @@ class TalkSpecificViewThemeUtils @Inject constructor(
         }
     }
 
+    /**
+     * fix: 设置已读图标颜色为绿色 add by ray on 2026/06/04
+     */
+    fun themeMessageCheckMark(imageView: ImageView, color: Int) {
+        withScheme(imageView) { scheme ->
+            imageView.setColorFilter(color)
+        }
+    }
+
     fun themeMarkdown(context: Context, message: String, incoming: Boolean): Spanned {
         return withScheme(context) { scheme ->
             return@withScheme if (incoming) {

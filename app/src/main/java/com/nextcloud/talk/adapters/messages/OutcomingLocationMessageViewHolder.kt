@@ -18,9 +18,9 @@ import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import autodagger.AutoInjector
-import coil.load
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
@@ -104,6 +104,12 @@ class OutcomingLocationMessageViewHolder(incomingView: View) :
             else -> null
         }
 
+        // fix: 设置已读图标颜色为绿色 add by ray on 2026/06/04
+        val readStatusTintColor = when (message.readStatus) {
+            ReadStatus.READ -> ContextCompat.getColor(context, R.color.green_read)
+            else -> ContextCompat.getColor(context, R.color.high_emphasis_text)
+        }
+
         val readStatusContentDescriptionString = when (message.readStatus) {
             ReadStatus.READ -> context.resources?.getString(R.string.nc_message_read)
             ReadStatus.SENT -> context.resources?.getString(R.string.nc_message_sent)
@@ -113,7 +119,7 @@ class OutcomingLocationMessageViewHolder(incomingView: View) :
         readStatusDrawableInt?.let { drawableInt ->
             AppCompatResources.getDrawable(context, drawableInt)?.let {
                 binding.checkMark.setImageDrawable(it)
-                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark)
+                viewThemeUtils.talk.themeMessageCheckMark(binding.checkMark, readStatusTintColor)
             }
         }
 
