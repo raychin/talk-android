@@ -153,10 +153,12 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
             )
         }
 
+        var imageFile = false
         if (message.selectedIndividualHashMap!!.containsKey(KEY_MIMETYPE)) {
             val mimetype = message.selectedIndividualHashMap!![KEY_MIMETYPE]
+            imageFile = isImageMimetype(mimetype)
             // 判断是否为非图片类型，如果是则直接显示文件图标并阻止图片加载
-            if (!isImageMimetype(mimetype)) {
+            if (!imageFile) {
                 val payload = getPayloadForImageLoader(message)
                 if (payload is Drawable) {
                     image.setImageDrawable(payload)
@@ -210,13 +212,15 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
             } else {
                 Log.e(TAG, "failed to set click listener because activeUser, username or baseUrl were null")
             }
-            fileViewerUtils!!.resumeToUpdateViewsByProgress(
-                message.selectedIndividualHashMap!![KEY_NAME]!!,
-                message.selectedIndividualHashMap!![KEY_ID]!!,
-                message.selectedIndividualHashMap!![KEY_MIMETYPE],
-                message.openWhenDownloaded,
-                ProgressUi(progressBar, messageText, image)
-            )
+            if (imageFile) {
+                fileViewerUtils!!.resumeToUpdateViewsByProgress(
+                    message.selectedIndividualHashMap!![KEY_NAME]!!,
+                    message.selectedIndividualHashMap!![KEY_ID]!!,
+                    message.selectedIndividualHashMap!![KEY_MIMETYPE],
+                    message.openWhenDownloaded,
+                    ProgressUi(progressBar, messageText, image)
+                )
+            }
         } else if (message.getCalculateMessageType() === ChatMessage.MessageType.SINGLE_LINK_GIPHY_MESSAGE) {
             messageText.text = "GIPHY"
             DisplayUtils.setClickableString("GIPHY", "https://giphy.com", messageText)
@@ -238,13 +242,15 @@ abstract class PreviewMessageViewHolder(itemView: View?, payload: Any?) :
         itemView.setTag(R.string.replyable_message_view_tag, message.replyable)
 
         val chatActivity = commonMessageInterface as ChatActivity
-        Thread().showThreadPreview(
-            chatActivity,
-            message,
-            threadBinding = threadsBinding!!,
-            reactionsBinding = reactionsBinding!!,
-            openThread = { openThread(message) }
-        )
+        if (imageFile) {
+            Thread().showThreadPreview(
+                chatActivity,
+                message,
+                threadBinding = threadsBinding!!,
+                reactionsBinding = reactionsBinding!!,
+                openThread = { openThread(message) }
+            )
+        }
 
         val paddingSide = DisplayUtils.convertDpToPixel(HORIZONTAL_REACTION_PADDING, context!!).toInt()
         Reaction().showReactions(
