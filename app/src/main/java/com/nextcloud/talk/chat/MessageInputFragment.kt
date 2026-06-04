@@ -131,6 +131,7 @@ class MessageInputFragment : Fragment() {
     private var typingTimer: CountDownTimer? = null
     private lateinit var chatActivity: ChatActivity
     private var emojiPopup: EmojiPopup? = null
+    private var isEmojiPopupShowing = false
     private var mentionAutocomplete: Autocomplete<*>? = null
     private var xcounter = 0f
     private var ycounter = 0f
@@ -166,6 +167,10 @@ class MessageInputFragment : Fragment() {
         if (mentionAutocomplete != null && mentionAutocomplete!!.isPopupShowing) {
             mentionAutocomplete?.dismissPopup()
         }
+
+        // 新增：清理 emojiPopup
+        emojiPopup?.dismiss()
+        emojiPopup = null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -861,6 +866,10 @@ class MessageInputFragment : Fragment() {
     }
 
     private fun initSmileyKeyboardToggler() {
+        // 先关闭并清理旧的 emojiPopup
+        emojiPopup?.dismiss()
+        emojiPopup = null
+
         val smileyButton = binding.fragmentMessageInputView.findViewById<ImageButton>(R.id.smileyButton)
 
         emojiPopup = binding.fragmentMessageInputView.inputEditText?.let {
@@ -868,11 +877,13 @@ class MessageInputFragment : Fragment() {
                 rootView = binding.root,
                 editText = it,
                 onEmojiPopupShownListener = {
+                    isEmojiPopupShowing = true
                     smileyButton?.setImageDrawable(
                         ContextCompat.getDrawable(requireContext(), R.drawable.ic_baseline_keyboard_24)
                     )
                 },
                 onEmojiPopupDismissListener = {
+                    isEmojiPopupShowing = false
                     smileyButton?.setImageDrawable(
                         ContextCompat.getDrawable(requireContext(), R.drawable.ic_insert_emoticon_black_24dp)
                     )
@@ -881,6 +892,9 @@ class MessageInputFragment : Fragment() {
                     binding.fragmentMessageInputView.inputEditText?.editableText?.append(" ")
                 }
             )
+            // 此处参照com.nextcloud.talk.ui.dialog.MessageActionsDialog
+            // smileyButton?.installDisableKeyboardInput(emojiPopup!!)
+            // smileyButton?.installForceSingleEmoji()
         }
 
         smileyButton?.setOnClickListener {
@@ -1382,6 +1396,12 @@ class MessageInputFragment : Fragment() {
                 mentionAutocomplete?.dismissPopup()
             }
         }
+    }
+
+    fun isEmojiPopupShowing(): Boolean = emojiPopup?.isShowing == true
+
+    fun dismissEmojiPopup() {
+        emojiPopup?.dismiss()
     }
 
     companion object {

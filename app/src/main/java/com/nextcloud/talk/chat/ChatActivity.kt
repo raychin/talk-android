@@ -448,6 +448,12 @@ class ChatActivity :
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
 
+            // 优先关闭 EmojiPopup
+            if (messageInputFragment.isEmojiPopupShowing()) {
+                messageInputFragment.dismissEmojiPopup()
+                return
+            }
+
             if (selectorMode) {
                 forwardSelectorMode(false)
                 return
