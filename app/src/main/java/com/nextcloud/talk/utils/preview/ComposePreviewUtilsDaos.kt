@@ -117,6 +117,17 @@ class DummyChatMessagesDaoImpl : ChatMessagesDao {
 
     override fun getNumberOfThreadReplies(internalConversationId: String, threadId: Long): Int = 0
     override fun deleteExpiredSystemMessages(currentTimestamp: Int): Int = 0
+    override fun getDeletableExpiredMessageIds(currentTimestamp: Int): List<Long> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteExpiredMessagesByIds(messageIds: List<Long>): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteExpiredMessages(currentTimestamp: Int): Int {
+        TODO("Not yet implemented")
+    }
 }
 
 class DummyUserDaoImpl : UsersDao() {

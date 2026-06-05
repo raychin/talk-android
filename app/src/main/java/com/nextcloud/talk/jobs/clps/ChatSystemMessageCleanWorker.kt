@@ -43,6 +43,14 @@ class ChatSystemMessageCleanWorker(context: Context, workerParams: WorkerParamet
             val currentTimestamp = (System.currentTimeMillis() / 1000).toInt()
             val database = TalkDatabase.getInstance(applicationContext)
             val dao = database.chatMessagesDao()
+
+            // val deleteIds = dao.getDeletableExpiredMessageIds(currentTimestamp)
+            // Log.d(TAG, "Deleted deleteIds $deleteIds")
+            Log.d(TAG, "currentTimestamp $currentTimestamp")
+
+            val deletedRecallCount = dao.deleteExpiredMessages(currentTimestamp)
+            Log.d(TAG, "Deleted $deletedRecallCount expired system messages")
+
             val deletedCount = dao.deleteExpiredSystemMessages(currentTimestamp)
             Log.d(TAG, "Deleted $deletedCount expired system messages")
             Result.success()

@@ -254,10 +254,56 @@ interface ChatMessagesDao {
 
     @Query(
         """
-    DELETE FROM ChatMessages
-    WHERE messageType = 'system'
-    AND (expirationTimestamp IS NULL OR expirationTimestamp = 0 OR expirationTimestamp < :currentTimestamp)
+        DELETE FROM ChatMessages
+        WHERE messageType = 'system'
+        AND (expirationTimestamp IS NULL OR expirationTimestamp = 0 OR expirationTimestamp < :currentTimestamp)
     """
     )
     fun deleteExpiredSystemMessages(currentTimestamp: Int): Int
+
+    @Query(
+        """
+        SELECT p.id FROM ChatMessages m
+        INNER JOIN ChatMessages p ON p.id = m.parent
+        WHERE m.messageType = 'system'
+        AND m.parent IS NOT NULL
+        AND (m.expirationTimestamp IS NULL OR m.expirationTimestamp = 0 OR m.expirationTimestamp < :currentTimestamp)
+        AND p.messageType = 'comment_deleted'
+        AND p.deleted = 1
+        AND (p.expirationTimestamp IS NULL OR p.expirationTimestamp = 0 OR p.expirationTimestamp < :currentTimestamp)
+        
+        UNION
+    
+        SELECT id FROM ChatMessages
+        WHERE messageType = 'comment_deleted'
+        AND deleted = 1
+        AND timestamp < (:currentTimestamp - 86400)
+    """)
+    fun getDeletableExpiredMessageIds(currentTimestamp: Int): List<Long>
+
+    @Query("DELETE FROM ChatMessages WHERE id IN (:messageIds)")
+    suspend fun deleteExpiredMessagesByIds(messageIds: List<Long>): Int
+
+    @Query(
+        """
+        DELETE FROM ChatMessages
+        WHERE id IN (
+            SELECT p.id FROM ChatMessages m
+            INNER JOIN ChatMessages p ON p.id = m.parent
+            WHERE m.messageType = 'system'
+            AND m.parent IS NOT NULL
+            AND (m.expirationTimestamp IS NULL OR m.expirationTimestamp = 0 OR m.expirationTimestamp < :currentTimestamp)
+            AND p.messageType = 'comment_deleted'
+            AND p.deleted = 1
+            AND (p.expirationTimestamp IS NULL OR p.expirationTimestamp = 0 OR p.expirationTimestamp < :currentTimestamp)
+            
+            UNION
+    
+            SELECT id FROM ChatMessages
+            WHERE messageType = 'comment_deleted'
+            AND deleted = 1
+            AND timestamp < (:currentTimestamp - 86400)
+        )
+    """)
+    fun deleteExpiredMessages(currentTimestamp: Int): Int
 }
