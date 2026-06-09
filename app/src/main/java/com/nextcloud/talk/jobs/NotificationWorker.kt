@@ -52,6 +52,8 @@ import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedA
 import com.nextcloud.talk.arbitrarystorage.ArbitraryStorageManager
 import com.nextcloud.talk.callnotification.CallNotificationActivity
 import com.nextcloud.talk.chat.data.network.ChatNetworkDataSource
+import com.nextcloud.talk.conversationlist.clps.ConversationListRefreshEvent
+import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.models.SignatureVerification
 import com.nextcloud.talk.models.domain.ConversationModel
 import com.nextcloud.talk.models.json.chat.ChatUtils.Companion.getParsedMessage
@@ -106,6 +108,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
+import org.greenrobot.eventbus.EventBus
 import retrofit2.Retrofit
 import java.net.CookieManager
 import java.security.InvalidKeyException
@@ -416,6 +419,9 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                         threadId?.let { intent.putExtra(KEY_THREAD_ID, it) }
 
                         showNotification(intent, ncNotification)
+
+                        // 通过 EventBus 通知会话列表页刷新
+                        notifyConversationListRefresh(user)
                     }
                 }
 
@@ -431,11 +437,11 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                     showNotification(intent, null)
 
                     Log.e(TAG, "Failed to get NC notification. Using decrypted data from push notification itself", e)
-                    if (BuildConfig.DEBUG) {
-                        Handler(Looper.getMainLooper()).post {
-                            Toast.makeText(context, "Failed to get NC notification", Toast.LENGTH_LONG).show()
-                        }
-                    }
+                    // if (BuildConfig.DEBUG) {
+                    //     Handler(Looper.getMainLooper()).post {
+                    //         Toast.makeText(context, "Failed to get NC notification", Toast.LENGTH_LONG).show()
+                    //     }
+                    // }
                 }
 
                 override fun onComplete() {
@@ -1123,6 +1129,20 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
     }
 
     private fun getIntentFlags(): Int = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+    /**
+     * 通过 EventBus 通知会话列表页刷新
+     */
+    private fun notifyConversationListRefresh(user: User) {
+        try {
+            val event = ConversationListRefreshEvent(userId = user.id!!)
+            EventBus.getDefault().post(event)
+
+            Log.d(TAG, "Posted ConversationListRefreshEvent for user: ${user.id}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error posting ConversationListRefreshEvent", e)
+        }
+    }
 
     @Suppress("TooGenericExceptionCaught", "LongMethod")
     private fun syncLatestMessagesToDb() {

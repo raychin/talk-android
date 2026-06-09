@@ -117,6 +117,7 @@ import com.nextcloud.talk.ui.BackgroundVoiceMessageCard
 import com.nextcloud.talk.ui.dialog.ChooseAccountDialogCompose
 import com.nextcloud.talk.ui.chooseaccount.ChooseAccountShareToDialogFragment
 import com.nextcloud.talk.contextchat.ContextChatViewModel
+import com.nextcloud.talk.conversationlist.clps.ConversationListRefreshEvent
 import com.nextcloud.talk.extensions.generateImageUrl
 import com.nextcloud.talk.extensions.loadAvatarOrImagePreview
 import com.nextcloud.talk.ui.dialog.ConversationsListBottomDialog
@@ -131,7 +132,6 @@ import com.nextcloud.talk.utils.CapabilitiesUtil.hasSpreedFeatureCapability
 import com.nextcloud.talk.utils.CapabilitiesUtil.isServerEOL
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
 import com.nextcloud.talk.utils.ConversationUtils
-import com.nextcloud.talk.extensions.loadAvatarOrImagePreviewGlide
 import com.nextcloud.talk.utils.FileUtils
 import com.nextcloud.talk.utils.Mimetype
 import com.nextcloud.talk.utils.NotificationUtils
@@ -375,8 +375,24 @@ class ConversationsListActivity :
     fun onEvent(event: ConversationsListFetchDataEvent) {
         fetchRooms()
     }
-    // ... ray add code ...
 
+    /**
+     * 监听会话列表刷新事件（来自通知）
+     * 当收到新消息通知时，静默刷新会话列表
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onConversationListRefreshEvent(event: ConversationListRefreshEvent) {
+        Log.d(TAG, "Received ConversationListRefreshEvent for user: ${event.userId}")
+
+        // 验证当前用户是否匹配
+        if (currentUser?.id == event.userId) {
+            Log.d(TAG, "Current user matches, refreshing conversation list silently")
+            // 静默刷新，不显示加载动画
+            fetchRoomsSilently()
+        } else {
+            Log.d(TAG, "User ID mismatch, ignoring refresh event. Current: ${currentUser?.id}, Event: ${event.userId}")
+        }
+    }
 
     override fun onResume() {
         super.onResume()
