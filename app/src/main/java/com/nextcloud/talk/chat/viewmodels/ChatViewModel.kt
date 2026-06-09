@@ -109,6 +109,7 @@ class ChatViewModel @Inject constructor(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
+        Log.d(LOG_TAG, "ChatViewModel.onResume: calling chatRepository.handleOnResume()")
         currentLifeCycleFlag = LifeCycleFlag.RESUMED
         mediaRecorderManager.handleOnResume()
         chatRepository.handleOnResume()
@@ -117,6 +118,7 @@ class ChatViewModel @Inject constructor(
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
+        Log.d(LOG_TAG, "ChatViewModel.onPause: calling chatRepository.handleOnPause()")
         currentLifeCycleFlag = LifeCycleFlag.PAUSED
         disposableSet.forEach { disposable -> disposable.dispose() }
         disposableSet.clear()
@@ -539,6 +541,7 @@ class ChatViewModel @Inject constructor(
     }
 
     fun loadMessages(withCredentials: String, withUrl: String) {
+        Log.d(LOG_TAG, "ChatViewModel.loadMessages: calling initScopeAndLoadInitialMessages")
         val bundle = Bundle()
         bundle.putString(BundleKeys.KEY_CHAT_URL, withUrl)
         bundle.putString(BundleKeys.KEY_CREDENTIALS, withCredentials)
@@ -1243,6 +1246,7 @@ class ChatViewModel @Inject constructor(
 
     companion object {
         private val TAG = ChatViewModel::class.simpleName
+        private const val LOG_TAG = "RayMessage"
         const val JOIN_ROOM_RETRY_COUNT: Long = 3
         const val HTTP_CODE_OK: Int = 200
     }

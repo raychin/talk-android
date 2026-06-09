@@ -140,12 +140,14 @@ class OfflineFirstChatRepository @Inject constructor(
     }
 
     override fun initScopeAndLoadInitialMessages(withNetworkParams: Bundle) {
+        Log.d(LOG_TAG, "initScopeAndLoadInitialMessages: creating scope and loading initial messages")
         scope = CoroutineScope(Dispatchers.IO)
         loadInitialMessages(withNetworkParams)
     }
 
     private fun loadInitialMessages(withNetworkParams: Bundle): Job =
         scope.launch {
+            Log.d(LOG_TAG, "=== loadInitialMessages START ===")
             Log.d(TAG, "---- loadInitialMessages ------------")
             newXChatLastCommonRead = conversationModel.lastCommonReadMessage
 
@@ -166,10 +168,12 @@ class OfflineFirstChatRepository @Inject constructor(
                     "Initial online request is skipped because offline messages are up to date" +
                         " until lastReadMessage"
                 )
+                Log.d(LOG_TAG, "loadInitialMessages: SKIPPED network request (local data up-to-date)")
                 Log.d(TAG, "For messages newer than lastRead, lookIntoFuture will load them.")
             } else {
                 if (!weAlreadyHaveSomeOfflineMessages) {
                     Log.d(TAG, "An online request for newest 100 messages is made because offline chat is empty")
+                    Log.d(LOG_TAG, "loadInitialMessages: network needed (offline chat empty)")
                     if (networkMonitor.isOnline.value.not()) {
                         _generalUIFlow.emit(ChatActivity.NO_OFFLINE_MESSAGES_FOUND)
                     }
@@ -179,6 +183,7 @@ class OfflineFirstChatRepository @Inject constructor(
                         "An online request for newest 100 messages is made because we don't have the lastReadMessage " +
                             "(gaps could be closed by scrolling up to merge the chatblocks)"
                     )
+                    Log.d(LOG_TAG, "loadInitialMessages: network needed (missing lastReadMessage)")
                 }
 
                 // set up field map to load the newest messages
@@ -203,8 +208,9 @@ class OfflineFirstChatRepository @Inject constructor(
             }
 
             handleMessagesFromDb(newestMessageIdFromDb)
-
+            Log.d(LOG_TAG, "loadInitialMessages: calling initMessagePolling with newestMessageId=$newestMessageIdFromDb")
             initMessagePolling(newestMessageIdFromDb)
+            Log.d(LOG_TAG, "=== loadInitialMessages END ===")
         }
 
     private suspend fun handleMessagesFromDb(newestMessageIdFromDb: Long) {
@@ -307,6 +313,7 @@ class OfflineFirstChatRepository @Inject constructor(
 
     override fun initMessagePolling(initialMessageId: Long): Job =
         scope.launch {
+            Log.d(LOG_TAG, "=== initMessagePolling START, initialMessageId=$initialMessageId ===")
             Log.d(TAG, "---- initMessagePolling ------------")
 
             Log.d(TAG, "newestMessage: $initialMessageId")
@@ -333,9 +340,11 @@ class OfflineFirstChatRepository @Inject constructor(
                     // (This is a long blocking call because long polling (lookIntoFuture) is set)
                     networkParams.putSerializable(BundleKeys.KEY_FIELD_MAP, fieldMap)
 
+                    Log.d(LOG_TAG, "initMessagePolling: starting long poll request...")
                     Log.d(TAG, "Starting online request for long polling")
                     val resultsFromSync = sync(networkParams)
                     if (!resultsFromSync.isNullOrEmpty()) {
+                        Log.d(LOG_TAG, "initMessagePolling: got ${resultsFromSync.size} new messages from server")
                         val chatMessages = resultsFromSync.map(ChatMessageEntity::asModel)
 
                         val weHaveMessagesFromOurself = chatMessages.any { it.actorId == currentUser.userId }
@@ -352,6 +361,7 @@ class OfflineFirstChatRepository @Inject constructor(
                         }
                     } else {
                         Log.d(TAG, "resultsFromSync are null or empty")
+                        Log.d(LOG_TAG, "initMessagePolling: no new messages from server (null/empty or 304)")
                     }
 
                     updateUiForLastCommonRead()
@@ -360,6 +370,7 @@ class OfflineFirstChatRepository @Inject constructor(
                         internalConversationId,
                         threadId
                     ).toInt()
+                    Log.d(LOG_TAG, "initMessagePolling: newestMessageId in DB=$newestMessage, next poll lastKnown=$newestMessage")
 
                     // update field map vars for next cycle
                     fieldMap = getFieldMap(
@@ -373,13 +384,98 @@ class OfflineFirstChatRepository @Inject constructor(
                     showUnreadMessagesMarker = false
                 }
             }
+            Log.d(LOG_TAG, "=== initMessagePolling END (loop exited, isActive=$isActive) ===")
         }
+
+    /**
+     * 方案3：一次性增量同步（可被外部触发）
+     *
+     * 与长轮询循环不同，此方法执行一次快速的 lookIntoFuture=true, timeout=0 请求，
+     * 立即获取服务器上的新消息并推送到 UI。
+     *
+     * 适用场景：
+     * - WebSocket 收到新消息信号时触发
+     * - NotificationWorker 预同步后用户进入聊天时补充增量
+     * - 从通知栏点击进入聊天时立即刷新
+     * - 其他需要即时同步的场景
+     *
+     * @param triggerSource 触发来源标识，用于日志追踪
+     */
+    override fun triggerIncrementalSync(triggerSource: String) {
+        if (!this::scope.isInitialized) {
+            Log.w(LOG_TAG, "triggerIncrementalSync[$triggerSource]: scope not initialized, skipping")
+            return
+        }
+        if (!scope.isActive) {
+            Log.w(LOG_TAG, "triggerIncrementalSync[$triggerSource]: scope not active, skipping")
+            return
+        }
+        if (!networkMonitor.isOnline.value) {
+            Log.d(LOG_TAG, "triggerIncrementalSync[$triggerSource]: device offline, skipping")
+            return
+        }
+
+        scope.launch {
+            val newestMessageIdFromDb = chatBlocksDao.getNewestMessageIdFromChatBlocks(
+                internalConversationId,
+                threadId
+            )
+            if (newestMessageIdFromDb <= 0) {
+                Log.d(
+                    LOG_TAG,
+                    "triggerIncrementalSync[$triggerSource]: no local data, skipping"
+                )
+                return@launch
+            }
+
+            Log.d(
+                LOG_TAG,
+                "triggerIncrementalSync[$triggerSource]: starting quick sync from newestMessageId=$newestMessageIdFromDb"
+            )
+
+            // 构建 lookIntoFuture=true, timeout=0 的快速请求参数
+            val fieldMap = getFieldMap(
+                lookIntoFuture = true,
+                timeout = 0, // 立即返回，不阻塞等待
+                includeLastKnown = false,
+                setReadMarker = true,
+                lastKnown = newestMessageIdFromDb.toInt()
+            )
+            val networkParams = Bundle()
+            networkParams.putSerializable(BundleKeys.KEY_FIELD_MAP, fieldMap)
+
+            val resultsFromSync = sync(networkParams)
+            if (!resultsFromSync.isNullOrEmpty()) {
+                Log.d(
+                    LOG_TAG,
+                    "triggerIncrementalSync[$triggerSource]: got ${resultsFromSync.size} new messages"
+                )
+                val chatMessages = resultsFromSync.map(ChatMessageEntity::asModel)
+                handleNewAndTempMessages(
+                    receivedChatMessages = chatMessages,
+                    lookIntoFuture = true,
+                    showUnreadMessagesMarker = false
+                )
+                updateUiForLastCommonRead()
+            } else {
+                Log.d(
+                    LOG_TAG,
+                    "triggerIncrementalSync[$triggerSource]: no new messages (null/empty or 304)"
+                )
+            }
+        }
+    }
 
     private suspend fun handleNewAndTempMessages(
         receivedChatMessages: List<ChatMessage>,
         lookIntoFuture: Boolean,
         showUnreadMessagesMarker: Boolean
     ) {
+        Log.d(
+            LOG_TAG,
+            "handleNewAndTempMessages: ${receivedChatMessages.size} messages, " +
+                "lookIntoFuture=$lookIntoFuture, showUnreadMarker=$showUnreadMessagesMarker"
+        )
         receivedChatMessages.forEach {
             Log.d(TAG, "receivedChatMessage: " + it.message)
         }
@@ -589,8 +685,11 @@ class OfflineFirstChatRepository @Inject constructor(
     private suspend fun sync(bundle: Bundle): List<ChatMessageEntity>? {
         if (!networkMonitor.isOnline.value) {
             Log.d(TAG, "Device is offline, can't load chat messages from server")
+            Log.d(LOG_TAG, "sync: skipped (device offline)")
             return null
         }
+
+        Log.d(LOG_TAG, "sync: starting network request...")
 
         val result = getMessagesFromServer(bundle)
         if (result == null) {
@@ -624,6 +723,7 @@ class OfflineFirstChatRepository @Inject constructor(
         }
 
         if (result.second.isNotEmpty()) {
+            Log.d(LOG_TAG, "sync: server returned ${result.second.size} messages")
             chatMessagesFromSync = updateMessagesData(
                 result.second,
                 blockContainingQueriedMessage,
@@ -632,6 +732,7 @@ class OfflineFirstChatRepository @Inject constructor(
             )
         } else {
             Log.d(TAG, "no data is updated...")
+            Log.d(LOG_TAG, "sync: no new data from server")
         }
 
         return chatMessagesFromSync
@@ -859,6 +960,7 @@ class OfflineFirstChatRepository @Inject constructor(
     }
 
     override fun handleOnPause() {
+        Log.d(LOG_TAG, "handleOnPause: setting paused=true, cancelling scope")
         itIsPaused = true
         if (this::scope.isInitialized) {
             scope.cancel()
@@ -866,7 +968,42 @@ class OfflineFirstChatRepository @Inject constructor(
     }
 
     override fun handleOnResume() {
+        Log.d(LOG_TAG, "handleOnResume: setting paused=false, checking scope status")
         itIsPaused = false
+        if (this::scope.isInitialized && !scope.isActive) {
+            Log.d(LOG_TAG, "handleOnResume: scope was cancelled, restarting message polling from DB")
+            scope = CoroutineScope(Dispatchers.IO)
+            scope.launch {
+                val newestMessageIdFromDb = chatBlocksDao.getNewestMessageIdFromChatBlocks(
+                    internalConversationId,
+                    threadId
+                )
+                Log.d(
+                    LOG_TAG,
+                    "handleOnResume: newestMessageIdFromDb=$newestMessageIdFromDb, " +
+                        "internalConversationId=$internalConversationId"
+                )
+                if (newestMessageIdFromDb > 0) {
+                    // 本地已有数据，仅恢复轮询获取增量消息
+                    Log.d(LOG_TAG, "handleOnResume: resuming initMessagePolling with newestMessageId=$newestMessageIdFromDb")
+                    initMessagePolling(newestMessageIdFromDb)
+
+                    // 同时发送未发送的消息
+                    sendUnsentChatMessages(credentials, urlForChatting)
+                } else {
+                    // 本地无数据，需要完整重新加载
+                    Log.w(LOG_TAG, "handleOnResume: no local data found, need full reload")
+                    val bundle = Bundle()
+                    bundle.putString(BundleKeys.KEY_CHAT_URL, urlForChatting)
+                    bundle.putString(BundleKeys.KEY_CREDENTIALS, credentials)
+                    loadInitialMessages(bundle)
+                }
+            }
+        } else if (this::scope.isInitialized && scope.isActive) {
+            Log.d(LOG_TAG, "handleOnResume: scope is still active, polling continues normally")
+        } else {
+            Log.d(LOG_TAG, "handleOnResume: scope not initialized yet, skipping resume")
+        }
     }
 
     override fun handleOnStop() {
@@ -1318,6 +1455,7 @@ class OfflineFirstChatRepository @Inject constructor(
 
     companion object {
         val TAG = OfflineFirstChatRepository::class.simpleName
+        private const val LOG_TAG = "RayMessage"
         private const val HTTP_CODE_OK: Int = 200
         private const val HTTP_CODE_NOT_MODIFIED = 304
         private const val HTTP_CODE_PRECONDITION_FAILED = 412

@@ -167,6 +167,17 @@ public abstract class SignalingMessageReceiver {
     public interface ConversationMessageListener {
         void onStartTyping(String userId, String session);
         void onStopTyping(String userId,String session);
+
+        /**
+         * Called when a new message signal is received via WebSocket.
+         * This can be used to trigger an immediate incremental sync
+         * instead of waiting for the long poll timeout.
+         *
+         * @param type The signaling message type that triggered this callback.
+         */
+        default void onNewMessageSignal(String type) {
+            // Default no-op: existing implementations don't need to override unless they want to use this.
+        }
     }
 
     /**
@@ -542,6 +553,25 @@ public abstract class SignalingMessageReceiver {
 
             if ("stoppedTyping".equals(type)) {
                 conversationMessageNotifier.notifyStopTyping(userId, sessionId);
+            }
+
+            // 方案3：对于非 typing 类型的消息信号，通知监听器触发增量同步
+            // 这使得当服务器通过 WebSocket 推送新的信号类型时，ChatActivity 可以立即响应
+            // 常见的可能触发类型：消息更新、已读回执变化、房间设置变更等
+            if (type != null &&
+                !"startedTyping".equals(type) &&
+                !"stoppedTyping".equals(type) &&
+                !"offer".equals(type) &&
+                !"answer".equals(type) &&
+                !"candidate".equals(type) &&
+                !"endOfCandidates".equals(type) &&
+                !"raiseHand".equals(type) &&
+                !"reaction".equals(type) &&
+                !"unshareScreen".equals(type) &&
+                !"mute".equals(type) &&
+                !"unmute".equals(type)) {
+
+                conversationMessageNotifier.notifyNewMessageSignal(type);
             }
         }
     }

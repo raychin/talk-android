@@ -526,6 +526,15 @@ class ChatActivity :
                 updateTypingIndicator()
             }
         }
+
+        /**
+         * 方案3：WebSocket 收到新消息信号时触发即时增量同步
+         * 不再等待长轮询的 30s 超时，立即向服务器请求最新消息
+         */
+        override fun onNewMessageSignal(type: String) {
+            Log.d(LOG_TAG, "onNewMessageSignal: received signaling type=$type, triggering incremental sync")
+            chatViewModel.getChatRepository().triggerIncrementalSync("WebSocket:$type")
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -840,9 +849,12 @@ class ChatActivity :
                     logConversationInfos("GetRoomSuccessState")
 
                     if (adapter == null) {
+                        Log.d(LOG_TAG, "GetRoomSuccessState: adapter is null, creating new adapter")
                         initAdapter()
                         binding.messagesListView.setAdapter(adapter)
                         layoutManager = binding.messagesListView.layoutManager as? LinearLayoutManager
+                    } else {
+                        Log.d(LOG_TAG, "GetRoomSuccessState: adapter already exists (items:${adapter?.itemCount}), reusing")
                     }
 
                     chatViewModel.getCapabilities(conversationUser!!, roomToken, conversationModel)
@@ -1038,6 +1050,7 @@ class ChatActivity :
                         val urlForChatting =
                             ApiUtils.getUrlForChat(chatApiVersion, conversationUser?.baseUrl, roomToken)
 
+                        Log.d(LOG_TAG, "GetCapabilitiesInitialLoadState: calling loadMessages")
                         chatViewModel.loadMessages(
                             withCredentials = credentials!!,
                             withUrl = urlForChatting
@@ -1285,6 +1298,7 @@ class ChatActivity :
         this.lifecycleScope.launch {
             chatViewModel.getMessageFlow
                 .onEach { triple ->
+                    Log.d(LOG_TAG, "messageFlow received: lookIntoFuture=${triple.first}, messages=${triple.third.size}")
                     val lookIntoFuture = triple.first
                     val setUnreadMessagesMarker = triple.second
                     var chatMessageList = triple.third
@@ -1759,6 +1773,7 @@ class ChatActivity :
         super.onResume()
 
         logConversationInfos("onResume")
+        Log.d(LOG_TAG, "onResume: adapter=${if (adapter != null) "cached (items:${adapter?.itemCount})" else "null"}")
 
         pullChatMessagesPending = false
 
@@ -1839,6 +1854,7 @@ class ChatActivity :
     }
 
     private fun initAdapter() {
+        Log.d(LOG_TAG, "initAdapter: creating new TalkMessagesListAdapter")
         val senderId = if (!conversationUser!!.userId.equals("?")) {
             "users/" + conversationUser!!.userId
         } else {
@@ -3252,10 +3268,14 @@ class ChatActivity :
         if (mentionAutocomplete != null && mentionAutocomplete!!.isPopupShowing) {
             mentionAutocomplete?.dismissPopup()
         }
-        // TODO RAY 性能问题，所以清空？导致回到页面需要执行initAdapter
-        if (!selectorMode) {
-            adapter = null
-        }
+        // P1 优化：不再在 onPause 时清空 adapter
+        // 原因：onResume 后 adapter 被清空会导致重新 initAdapter + 重新加载所有消息，体验卡顿
+        // 现改为仅 onDestroy 时才清空（onDestroy 中已有 adapter = null）
+        // 保留 adapter 缓存后，messageFlow 的 lifecycleScope 订阅仍会正常工作，增量消息会自动追加到现有 adapter
+        // if (!selectorMode) {
+        //     adapter = null
+        // }
+        Log.d(LOG_TAG, "onPause: keeping adapter cached (items count: ${adapter?.itemCount ?: 0})")
     }
 
     private fun isActivityNotChangingConfigurations(): Boolean = !isChangingConfigurations
@@ -3542,6 +3562,7 @@ class ChatActivity :
     }
 
     private fun processMessagesFromTheFuture(chatMessageList: List<ChatMessage>, setUnreadMessagesMarker: Boolean) {
+        Log.d(LOG_TAG, "processMessagesFromTheFuture: ${chatMessageList.size} messages, unreadMarker=$setUnreadMessagesMarker")
         binding.scrollDownButton.visibility = View.GONE
 
         val scrollToBottom: Boolean
@@ -3659,6 +3680,7 @@ class ChatActivity :
     }
 
     private fun processMessagesNotFromTheFuture(chatMessageList: List<ChatMessage>) {
+        Log.d(LOG_TAG, "processMessagesNotFromTheFuture: ${chatMessageList.size} messages")
         for (i in chatMessageList.indices) {
             if (chatMessageList.size > i + 1) {
                 chatMessageList[i].isGrouped = groupMessages(chatMessageList[i], chatMessageList[i + 1])
@@ -5638,6 +5660,7 @@ class ChatActivity :
 
     companion object {
         val TAG = ChatActivity::class.simpleName
+        private const val LOG_TAG = "RayMessage"
         private const val CONTENT_TYPE_CALL_STARTED: Byte = 1
         private const val CONTENT_TYPE_SYSTEM_MESSAGE: Byte = 2
         private const val CONTENT_TYPE_UNREAD_NOTICE_MESSAGE: Byte = 3
