@@ -12,7 +12,11 @@ import android.util.Log
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
-import cn.jpush.android.api.*
+import cn.jpush.android.api.CmdMessage
+import cn.jpush.android.api.CustomMessage
+import cn.jpush.android.api.JPushInterface
+import cn.jpush.android.api.JPushMessage
+import cn.jpush.android.api.NotificationMessage
 import cn.jpush.android.service.JPushMessageReceiver
 import com.nextcloud.talk.jobs.NotificationWorker
 import com.nextcloud.talk.utils.bundle.BundleKeys
@@ -25,7 +29,7 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
 
     override fun onMessage(context: Context, customMessage: CustomMessage) {
         super.onMessage(context, customMessage)
-        Log.d("Ray", "Received custom message: $customMessage}")
+        Log.d("RayPush", "Received custom message: $customMessage}")
 
         // 此方法接收自定义消息，不会有Notification
         /**
@@ -41,7 +45,7 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
         /**
          * {notificationId=525271935, msgId='18102837965808291', appkey='37674722073737cd729faf02', notificationContent='新的消息15:34', notificationAlertType=7, notificationTitle='RayExtra', notificationSmallIcon='', notificationLargeIcon='', notificationExtras='{"signature":"signature23424234","subject":"subject121431313213"}', notificationStyle=0, notificationBuilderId=0, notificationBigText='', notificationBigPicPath='', notificationInbox='', notificationPriority=0, notificationImportance=-1, notificationCategory='', developerArg0='', platform=0, notificationChannelId='', displayForeground='', notificationType=0', inAppMsgType=1', inAppMsgShowType=2', inAppMsgShowPos=0', inAppMsgTitle=, inAppMsgContentBody=, inAppType=0, inAppShowTarget=, inAppClickAction=, inAppExtras=, customButtons=null}}
          */
-        Log.d("Ray", "Received notification message: $notificationMessage}")
+        Log.d("RayPush", "Received notification message: $notificationMessage}")
 
         // notificationExtras
         val msgObject = CustomMessage ()
@@ -51,12 +55,12 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
 
     override fun onConnected(context: Context, isConnected: Boolean) {
         super.onConnected(context, isConnected)
-        Log.d("Ray", "onConnected isConnected: $isConnected")
+        Log.d("RayPush", "onConnected isConnected: $isConnected")
     }
 
     override fun onAliasOperatorResult(context: Context?, jPushMessage: JPushMessage?) {
         super.onAliasOperatorResult(context, jPushMessage)
-        Log.d("Ray", "onAliasOperatorResult jPushMessage: ${jPushMessage.toString()}")
+        Log.d("RayPush", "onAliasOperatorResult jPushMessage: ${jPushMessage.toString()}")
     }
 
     override fun onCommandResult(context: Context?, cmdMessage: CmdMessage?) {
@@ -66,9 +70,30 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
          * errorCode: 0 表示未停止，1 表示已停止，其他code 表示其他异常
          * msg: "not stop" 表示未停止，"stopped" 表示已停止
          */
-        Log.d("Ray", "onCommandResult errorCode = ${cmdMessage?.errorCode}, ${
+        Log.d("RayPush", "onCommandResult errorCode = ${cmdMessage?.errorCode}, ${
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         }")
+
+        // cmd 为 10000 时说明为厂商 token 回调
+        if (cmdMessage != null && cmdMessage.cmd == 10000 && cmdMessage.extra != null) {
+            val token = cmdMessage.extra.getString("token")
+            val platform = cmdMessage.extra.getInt("platform")
+            var deviceName = "unkown"
+            when (platform) {
+                1 -> deviceName = "小米"
+                2 -> deviceName = "华为"
+                3 -> deviceName = "魅族"
+                4 -> deviceName = "OPPO"
+                5 -> deviceName = "VIVO"
+                6 -> deviceName = "ASUS"
+                7 -> deviceName = "荣耀"
+                8 -> deviceName = "FCM"
+                16 -> deviceName = "NIO"
+            }
+            Log.e("RayPush", "获取到" + deviceName + "的 token:" + token)
+            Log.e("RayPush", "RegistrationID = " + JPushInterface.getRegistrationID(context))
+        }
+
         if (0 != cmdMessage?.errorCode) {
             JPushInterface.resumePush(context)
         }
@@ -76,7 +101,7 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
 
     override fun onNotifyMessageOpened(context: Context, notificationMessage: NotificationMessage) {
         super.onNotifyMessageOpened(context, notificationMessage)
-        Log.d("Ray", "Notification clicked, extras: ${notificationMessage.toString()}")
+        Log.d("RayPush", "Notification clicked, extras: ${notificationMessage.toString()}")
 
         // 处理通知点击事件
         handleNotificationClick(context, notificationMessage)
@@ -98,7 +123,7 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
         // val extras = bundle.getString(JPushInterface.EXTRA_EXTRA)
 
         // 这里需要根据 Nextcloud Talk 的推送格式处理消息
-        Log.d("Ray", "handlePushMessage custom message: $message}")
+        Log.d("RayPush", "handlePushMessage custom message: $message}")
 
         // 同服务端确定subject和signature从哪里取值
         var dataJson = message.extra
@@ -106,14 +131,14 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
             dataJson = "{}"
         }
         val extraData = jsonToMap(dataJson)
-        Log.d("Ray", "data: $extraData")
+        Log.d("RayPush", "data: $extraData")
         val subject = extraData[KEY_NOTIFICATION_SUBJECT] as? String
         val signature = extraData[KEY_NOTIFICATION_SIGNATURE] as? String
 
-        Log.e("Ray", "subject: $subject")
-        Log.e("Ray", "signature: $signature")
+        Log.e("RayPush", "subject: $subject")
+        Log.e("RayPush", "signature: $signature")
         if (!subject.isNullOrEmpty() && !signature.isNullOrEmpty()) {
-            Log.d("Ray", "-------------------------------")
+            Log.d("RayPush", "-------------------------------")
             val messageData = Data.Builder()
                 .putString(BundleKeys.KEY_NOTIFICATION_SUBJECT, subject)
                 .putString(BundleKeys.KEY_NOTIFICATION_SIGNATURE, signature)
@@ -124,7 +149,7 @@ class CJPushMessageReceiver : JPushMessageReceiver() {
             try {
                 WorkManager.getInstance(context.applicationContext).enqueue(notificationWork)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to enqueue work: ${e.message}", e)
+                Log.e("RayPush", "Failed to enqueue work: ${e.message}", e)
             }
         }
     }

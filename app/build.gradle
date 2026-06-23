@@ -29,6 +29,9 @@ apply plugin: 'kotlinx-serialization'
 
 //apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.huawei.agconnect'
+agcp {
+    manifest = false
+}
 
 static def releaseTime() {
     return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
@@ -77,7 +80,9 @@ android {
             OPPO_APPID : "OP-oppo的APPID",
             OPPO_APPSECRET : "OP-oppo的APPSECRET",
             VIVO_APPKEY : "vivo的APPKEY",
-            VIVO_APPID : "vivo的APPID"
+            VIVO_APPID : "vivo的APPID",
+            HONOR_APPID : "Honor的APP ID",
+            NIO_APPID : "蔚来的APP ID",
         ]
 
         signingConfigs {
@@ -250,7 +255,7 @@ ext {
     media3_version = "1.8.0"
     coroutines_version = "1.10.2"
     mockitoKotlinVersion = "6.0.0"
-    jPushVersion = "6.0.2"
+    jPushVersion = "6.1.0"
     shortcutBadger = "1.1.22"
 }
 
@@ -455,24 +460,48 @@ dependencies {
 //    implementation 'cn.jiguang.sdk:jpush:4.6.0'
 //    // jcore 包
 //    implementation 'cn.jiguang.sdk:jcore:2.8.0'
-
     // 此处以JPush 5.5.3 版本为例, 基础库JCore SDK将自动引用最新
     implementation "cn.jiguang.sdk:jpush:$jPushVersion"
+
     // 接入华为厂商
     implementation "com.huawei.hms:push:6.13.0.301"
     // 极光厂商插件版本与接入 JPush 版本保持一致，下同
     implementation "cn.jiguang.sdk.plugin:huawei:$jPushVersion"
+    implementation 'com.huawei.agconnect:agconnect-core:1.9.1.301'
+
 //    // 接入 FCM 厂商
-//    implementation 'com.google.firebase:firebase-messaging:23.2.0'
+//    implementation 'com.google.firebase:firebase-messaging:24.1.2'
 //    implementation "cn.jiguang.sdk.plugin:fcm:$jPushVersion"
+
     // 接入魅族厂商
     implementation "cn.jiguang.sdk.plugin:meizu:$jPushVersion"
+//    // JPush Android SDK v5.2.3 开始，需要单独引入 魅族 厂商 aar ，请下载官网 SDK 包并把 jpush-android-xxx-release/third-push/meizu/libs 下的 aar 文件单独拷贝一份到应用 module/libs 下
+//    implementation(name: 'push-internal-5.0.3', ext: 'aar')
+
     // 接入 VIVO 厂商
     implementation "cn.jiguang.sdk.plugin:vivo:$jPushVersion"
+
     // 接入 OPPO 厂商
     implementation "cn.jiguang.sdk.plugin:oppo:$jPushVersion"
+//    // JPush Android SDK v4.6.0 开始，需要单独引入 oppo 厂商 aar ，请下载官网 SDK 包并把 jpush-android-xxx-release/third-push/oppo/libs 下的 aar 文件单独拷贝一份到应用 module/libs 下
+//    implementation(name: 'com.heytap.msp_3.5.3', ext: 'aar')
+//    // 以下为 OPPO 3.1.0 aar需要依赖
+//    implementation 'com.google.code.gson:gson:2.10.1'
+//    implementation 'commons-codec:commons-codec:1.6'
+//    implementation 'androidx.annotation:annotation:1.1.0'
+
     // 接入小米厂商
     implementation "cn.jiguang.sdk.plugin:xiaomi:$jPushVersion"
+
+//    // 接入荣耀厂商
+//    implementation "cn.jiguang.sdk.plugin:honor:$jPushVersion"
+//    //需要单独引入荣耀厂商 aar ，请下载官网 SDK 包并把 jpush-android-xxx-release/third-push/honor/libs 下的 aar 文件单独拷贝一份到应用 module/libs 下
+//    implementation(name: 'HiPushSDK-8.0.12.307', ext: 'aar')
+
+//    // 接入蔚来厂商
+//    implementation "cn.jiguang.sdk.plugin:nio:$jPushVersion"
+//    //JPush Android SDK v5.6.0 开始需要单独引入蔚来厂商 aar ，请下载官网 SDK 包并把 jpush-android-xxx-release/third-push/nio/libs 下的 aar 文件单独拷贝一份到应用 module/libs 下
+//    implementation(name: 'niopush-sdk-v1.0', ext: 'aar')
 
     // Glide核心库
     implementation 'com.github.bumptech.glide:glide:4.16.0'
