@@ -1186,6 +1186,27 @@ class ChatActivity :
                 }
 
                 is ChatViewModel.ScheduledMessagesErrorState -> {
+                    /**
+                     * 接口报错导致页面一直加载中，如何抛出异常，同时完成页面加载逻辑
+                     * Error when fetching scheduled messages
+                     *   retrofit2.HttpException: HTTP 404
+                     *   at retrofit2.KotlinExtensions$await$2$2.onResponse(KotlinExtensions.kt:53)
+                     *   at retrofit2.OkHttpCall$1.onResponse(OkHttpCall.java:164)
+                     *   at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:519)
+                     *   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1302)
+                     *   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:677)
+                     *   at java.lang.Thread.run(Thread.java:1119)
+                     * Error when fetching scheduled messages
+                     *   retrofit2.HttpException: HTTP 404
+                     *   at retrofit2.KotlinExtensions$await$2$2.onResponse(KotlinExtensions.kt:53)
+                     *   at retrofit2.OkHttpCall$1.onResponse(OkHttpCall.java:164)
+                     *   at okhttp3.internal.connection.RealCall$AsyncCall.run(RealCall.kt:519)
+                     *   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1302)
+                     *   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:677)
+                     *   at java.lang.Thread.run(Thread.java:1119)
+                     */
+                    binding.progressBar.visibility = View.GONE
+
                     hasScheduledMessages = false
                     messageInputFragment.updateScheduledMessagesAvailability(false)
                     invalidateOptionsMenu()

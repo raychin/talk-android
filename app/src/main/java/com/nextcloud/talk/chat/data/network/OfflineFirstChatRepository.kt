@@ -239,6 +239,13 @@ class OfflineFirstChatRepository @Inject constructor(
 
             updateUiForLastCommonRead()
             updateUiForLastReadMessage(newestMessageIdFromDb)
+        } else {
+            // // fix: 接口报错导致页面一直加载中
+            // handleNewAndTempMessages(
+            //     receivedChatMessages = emptyList(),
+            //     lookIntoFuture = false,
+            //     showUnreadMessagesMarker = false
+            // )
         }
     }
 

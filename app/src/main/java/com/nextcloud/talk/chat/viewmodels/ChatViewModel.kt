@@ -349,6 +349,14 @@ class ChatViewModel @Inject constructor(
                     _scheduledMessagesCount.value = result.getOrNull()?.size ?: 0
                 } else {
                     _scheduledMessagesViewState.value = ScheduledMessagesErrorState
+                    // val exception = result.exceptionOrNull()
+                    // // fix: 接口报错导致页面一直加载中 404 means feature not supported - treat as empty list, not error
+                    // if (exception is retrofit2.HttpException && exception.code() == 404) {
+                    //     _scheduledMessagesViewState.value = ScheduledMessagesSuccessState(emptyList())
+                    //     _scheduledMessagesCount.value = 0
+                    // } else {
+                    //     _scheduledMessagesViewState.value = ScheduledMessagesErrorState
+                    // }
                 }
             }
         }
