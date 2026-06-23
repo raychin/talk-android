@@ -233,4 +233,9 @@ public interface AppPreferences {
      * @param messageId 消息ID
      */
     void removeRecalledMessage(String messageId);
+
+    // 接收通知是否拉去最新消息
+    long getSyncLatestMessage();
+
+    void setSyncLatestMessage(long syncLatestMessage);
 }

@@ -18,14 +18,11 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import android.service.notification.StatusBarNotification
 import android.text.TextUtils
 import android.util.Base64
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -43,7 +40,6 @@ import coil.executeBlocking
 import coil.imageLoader
 import coil.request.ImageRequest
 import com.bluelinelabs.logansquare.LoganSquare
-import com.nextcloud.talk.BuildConfig
 import com.nextcloud.talk.R
 import com.nextcloud.talk.activities.MainActivity
 import com.nextcloud.talk.api.NcApi
@@ -158,7 +154,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         sharedApplication!!.componentApplication.inject(this)
         context = applicationContext
 
-        // TODO RAY 此方法subject和signature异常数据会报错
+        // 此方法subject和signature异常数据会报错
         initDecryptedData(inputData)
         initNcApiAndCredentials()
 
@@ -171,8 +167,14 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         Log.d(TAG, "pushMessage.notificationId: " + pushMessage.notificationId)
         Log.d(TAG, "pushMessage.notificationIds: " + pushMessage.notificationIds)
         Log.d(TAG, "pushMessage.timestamp: " + pushMessage.timestamp)
+        Log.d(TAG, "appPreferences.getSyncLatestMessage(): " + appPreferences.getSyncLatestMessage())
 
         if (pushMessage.delete) {
+            val timestampPoor = System.currentTimeMillis() - appPreferences.getSyncLatestMessage()
+            if (3000 > timestampPoor || 0L == appPreferences.getSyncLatestMessage()) {
+                return Result.success()
+            }
+            // 拉取消息会触发delete消息，增加3s缓冲
             cancelNotification(context, signatureVerification.user!!, pushMessage.notificationId)
         } else if (pushMessage.deleteAll) {
             cancelAllNotificationsForAccount(context, signatureVerification.user!!)
@@ -210,6 +212,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
     private fun handleNonCallPushMessage() {
         val mainActivityIntent = createMainActivityIntent()
         getNcDataAndShowNotification(mainActivityIntent)
+        // 主动拉去最新消息，同步到本地数据
         if (TYPE_CHAT == pushMessage.type) {
             syncLatestMessagesToDb()
         }
@@ -1156,6 +1159,9 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         }
 
         try {
+            // 3s缓冲，拉取消息触发delete推送的消息
+            appPreferences.setSyncLatestMessage(System.currentTimeMillis())
+
             // Step 1: 获取 Conversation 信息 (token, accountId, capabilities)
             val conversation = chatNetworkDataSource?.getRoom(user, roomToken)
                 ?.blockingFirst()
@@ -1188,11 +1194,14 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                 ApiUtils.API_V1
             }
 
-            // Step 4: 构建请求参数 - 使用 lookIntoFuture=1, timeout=0 获取最新消息（非长轮询）
+            /**
+             * Step 4: 构建请求参数 - 使用 lookIntoFuture=1, timeout=0 获取最新消息（非长轮询）
+             * lookIntoFuture=1，会拉去最新消息，同时也会发送delete notification消息，=0不会更新消息
+             */
             val fieldMap = HashMap<String, Int>()
             fieldMap["lookIntoFuture"] = 1
             fieldMap["timeout"] = 0
-            fieldMap["setReadMarker"] = 1
+            fieldMap["setReadMarker"] = 0
             fieldMap["limit"] = 100
             if (newestMessageIdFromDb > 0) {
                 fieldMap["lastKnownMessageId"] = newestMessageIdFromDb.toInt()
@@ -1223,6 +1232,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             }
 
             Log.d(TAG, "syncLatestMessagesToDb: received ${messagesJson.size} messages")
+            // appPreferences.setSyncLatestMessage(System.currentTimeMillis())
 
             // Step 5: JSON -> Entity 并写入 DB
             val messageEntities = messagesJson.map { it.asEntity(user.id!!) }

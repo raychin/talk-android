@@ -698,6 +698,24 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         recalledMessagesPrefs.edit().remove(messageId).apply()
     }
 
+    // 修改通知计数相关方法
+    override fun getSyncLatestMessage(): Long {
+        // 返回 Any
+        return when (val value = notificationPrefs.all[NOTIFICATION_SYNC_LATEST_MESSAGE]) {
+            is Long -> value
+            is Int -> value.toLong()
+            else -> 0
+        }
+        // return notificationPrefs.getLong(NOTIFICATION_SYNC_LATEST_MESSAGE, 0)
+    }
+
+    override fun setSyncLatestMessage(count: Long) {
+        notificationPrefs.edit()
+            .putLong(NOTIFICATION_SYNC_LATEST_MESSAGE, count)
+            // .apply() // 异步提交，性能更好
+            .commit()
+    }
+
     companion object {
         @Suppress("UnusedPrivateProperty")
         private val TAG = AppPreferencesImpl::class.simpleName
@@ -735,6 +753,7 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         const val CONVERSATION_LIST_POSITION_OFFSET = "CONVERSATION_LIST_POSITION_OFFSET"
 
         const val NOTIFICATION_COUNT = "notification_count"
+        const val NOTIFICATION_SYNC_LATEST_MESSAGE = "notification_sync_latest_message"
 
         const val APP_LANGUAGE = "app_language"
 
