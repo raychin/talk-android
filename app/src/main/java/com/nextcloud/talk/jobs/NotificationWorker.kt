@@ -18,6 +18,8 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.service.notification.StatusBarNotification
 import android.text.TextUtils
@@ -310,6 +312,8 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
 
             sendNotification(pushMessage.timestamp.toInt(), notification)
 
+            acquireCallWakeLock()
+
             checkIfCallIsActive(signatureVerification, conversation)
         }
 
@@ -335,6 +339,33 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
                     // unused atm
                 }
             })
+    }
+
+    private fun acquireCallWakeLock() {
+        try {
+            val powerManager = applicationContext.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+            val wakeLock = powerManager.newWakeLock(
+                android.os.PowerManager.FULL_WAKE_LOCK or
+                    android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                    android.os.PowerManager.ON_AFTER_RELEASE,
+                "nctalk:callnotification"
+            )
+            wakeLock.acquire(120 * 1000L) // 2 minutes timeout
+
+            // 使用 Handler 在主线程调度释放
+            val handler = Handler(Looper.getMainLooper())
+            handler.postDelayed({
+                try {
+                    if (wakeLock.isHeld) {
+                        wakeLock.release()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to release wake lock", e)
+                }
+            }, 120 * 1000L)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to acquire wake lock", e)
+        }
     }
 
     private fun initNcApiAndCredentials() {

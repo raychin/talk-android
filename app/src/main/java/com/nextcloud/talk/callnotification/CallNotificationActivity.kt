@@ -8,13 +8,16 @@
 package com.nextcloud.talk.callnotification
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import androidx.core.app.NotificationManagerCompat
 import autodagger.AutoInjector
 import com.nextcloud.talk.R
@@ -69,6 +72,8 @@ class CallNotificationActivity : CallBaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        wakeUpScreen()
+
         sharedApplication!!.componentApplication.inject(this)
         binding = CallNotificationActivityBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
@@ -82,6 +87,33 @@ class CallNotificationActivity : CallBaseActivity() {
         setupAvatar(isOneToOneCall, conversationName)
         initClickListeners()
         setupNotificationCanceledRoutine()
+    }
+
+    private fun wakeUpScreen() {
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+
+            // 使用 Activity 实例来 dismiss Keyguard
+            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as android.app.KeyguardManager
+            keyguardManager.requestDismissKeyguard(this, object : android.app.KeyguardManager.KeyguardDismissCallback() {
+                override fun onDismissSucceeded() {
+                    Log.d(TAG, "Keyguard dismissed successfully")
+                }
+
+                override fun onDismissError() {
+                    Log.e(TAG, "Error dismissing keyguard")
+                }
+            })
+        }
     }
 
     private fun handleExtras() {
