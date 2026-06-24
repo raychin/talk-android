@@ -1000,14 +1000,16 @@ class SettingsActivity :
             binding.settingsShowNotificationWarning.visibility = View.GONE
         }
 
-        if (CapabilitiesUtil.isReadStatusAvailable(currentUser?.capabilities?.spreedCapability) &&
-            isOnline
-        ) {
-            binding.settingsReadPrivacy.visibility = View.VISIBLE
-            binding.settingsReadPrivacySwitch.isChecked = !CapabilitiesUtil.isReadStatusPrivate(currentUser!!)
-        } else {
-            binding.settingsReadPrivacy.visibility = View.GONE
-        }
+        // PM新需求要求暂时隐藏此功能入口 modify by ray on 2026/06/24
+        // if (CapabilitiesUtil.isReadStatusAvailable(currentUser?.capabilities?.spreedCapability) &&
+        //     isOnline
+        // ) {
+        //     binding.settingsReadPrivacy.visibility = View.VISIBLE
+        //     binding.settingsReadPrivacySwitch.isChecked = !CapabilitiesUtil.isReadStatusPrivate(currentUser!!)
+        // } else {
+        //     binding.settingsReadPrivacy.visibility = View.GONE
+        // }
+        binding.settingsReadPrivacy.visibility = View.GONE
 
         setupTypingStatusSetting(isOnline)
         setupProxyUseSetting()
@@ -1100,6 +1102,8 @@ class SettingsActivity :
             binding.settingsTypingStatus.isEnabled = false
             binding.settingsTypingStatus.alpha = DISABLED_ALPHA
         }
+        // PM新需求要求暂时隐藏此功能入口 add by ray on 2026/06/24
+        binding.settingsTypingStatus.visibility = View.GONE
     }
 
     private fun setupCheckForUpdate() {
