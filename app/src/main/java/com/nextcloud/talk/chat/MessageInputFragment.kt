@@ -276,10 +276,10 @@ class MessageInputFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            var wasOnline: Boolean
+            var wasOnline = networkMonitor.isOnline.value
             networkMonitor.isOnline
                 .onEach { isOnline ->
-                    wasOnline = !binding.fragmentConnectionLost.isShown
+                    // wasOnline = !binding.fragmentConnectionLost.isShown
                     val connectionGained = (!wasOnline && isOnline)
                     Log.d(TAG, "isOnline: $isOnline\nwasOnline: $wasOnline\nconnectionGained: $connectionGained")
                     if (connectionGained) {
@@ -293,6 +293,7 @@ class MessageInputFragment : Fragment() {
                         )
                     }
                     handleUI(isOnline, connectionGained)
+                    wasOnline = isOnline
                 }.collect()
         }
 

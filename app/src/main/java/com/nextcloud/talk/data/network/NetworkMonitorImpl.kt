@@ -37,6 +37,9 @@ class NetworkMonitorImpl @Inject constructor(private val context: Context) : Net
     override val isOnline: StateFlow<Boolean> get() = _isOnline
 
     private val _isOnline: StateFlow<Boolean> = callbackFlow {
+        // 发送初始网络状态
+        trySend(isConnected())
+
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
                 super.onCapabilitiesChanged(network, networkCapabilities)
@@ -73,9 +76,15 @@ class NetworkMonitorImpl @Inject constructor(private val context: Context) : Net
         }
     }.stateIn(
         CoroutineScope(Dispatchers.IO),
-        SharingStarted.WhileSubscribed(COROUTINE_TIMEOUT),
-        false
+        SharingStarted.Lazily,
+        isConnected()
     )
+
+    private fun isConnected(): Boolean {
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+    }
 
     companion object {
         private val TAG = NetworkMonitorImpl::class.java.simpleName
