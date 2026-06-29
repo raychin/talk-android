@@ -22,6 +22,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.text.Spannable
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.TextUtils
@@ -57,6 +58,7 @@ import com.google.android.material.chip.ChipDrawable
 import com.nextcloud.talk.PhoneUtils.isPhoneNumber
 import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
+import com.nextcloud.talk.components.RoundedBackgroundSpan
 import com.nextcloud.talk.data.user.model.User
 import com.nextcloud.talk.events.UserMentionClickEvent
 import com.nextcloud.talk.extensions.loadUserAvatar
@@ -248,6 +250,43 @@ object DisplayUtils {
         return chip
     }
 
+    fun searchAndReplaceWithMentionSpanNew(
+        key: String,
+        context: Context,
+        text: Spanned,
+        id: String,
+        roomToken: String?,
+        label: String,
+        type: String,
+        conversationUser: User,
+        @XmlRes chipXmlRes: Int,
+        viewThemeUtils: ViewThemeUtils,
+        isFederated: Boolean
+    ): Spannable {
+        val target = "{$key}"
+        val builder = SpannableStringBuilder(text)
+        var startIndex = builder.indexOf(target)
+        val replaceStr = "@$label"
+        while (startIndex != -1) {
+            val endIndex = startIndex + target.length
+            // 替换
+            builder.replace(startIndex, endIndex, replaceStr)
+            // 设置span
+            val span = RoundedBackgroundSpan(
+                context.getColor(R.color.transparent),
+                context.getColor(R.color.colorPrimary),
+                cornerRadius = 4f,
+                padding = 20f
+            )
+            builder.setSpan(span, startIndex, startIndex + replaceStr.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            // 继续查找下一个，注意索引偏移
+            // 从 startIndex + replaceStr.length 开始找
+            startIndex = builder.indexOf(target, startIndex + replaceStr.length)
+        }
+        // SpannableStringBuilder is Spannable
+        return builder
+    }
+
     fun searchAndReplaceWithMentionSpan(
         key: String,
         context: Context,
@@ -266,11 +305,11 @@ object DisplayUtils {
         val keyWithBrackets = "{$key}"
         val m = Pattern.compile(keyWithBrackets, Pattern.CASE_INSENSITIVE or Pattern.LITERAL or Pattern.MULTILINE)
             .matcher(spannableString)
-        val clickableSpan: ClickableSpan = object : ClickableSpan() {
-            override fun onClick(widget: View) {
-                EventBus.getDefault().post(UserMentionClickEvent(id))
-            }
-        }
+        // val clickableSpan: ClickableSpan = object : ClickableSpan() {
+        //     override fun onClick(widget: View) {
+        //         EventBus.getDefault().post(UserMentionClickEvent(id))
+        //     }
+        // }
         var lastStartIndex = 0
         var mentionChipSpan: MentionChipSpan
         while (m.find()) {
@@ -304,9 +343,10 @@ object DisplayUtils {
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
-            if ("user" == type && conversationUser.userId != id && !isFederated) {
-                spannableString.setSpan(clickableSpan, start, end, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
-            }
+            // PM新需求屏蔽@用户跳转 modify by ray on 2026/06/29
+            // if ("user" == type && conversationUser.userId != id && !isFederated) {
+            //     spannableString.setSpan(clickableSpan, start, end, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+            // }
         }
         return spannableString
     }
