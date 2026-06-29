@@ -105,7 +105,6 @@ public class PeerConnectionWrapper {
         void onIceConnectionStateChanged(PeerConnection.IceConnectionState iceConnectionState);
     }
 
-//    private final PeerConnectionFactory peerConnectionFactory;
     public PeerConnectionWrapper(PeerConnectionFactory peerConnectionFactory,
                                  List<PeerConnection.IceServer> iceServerList,
                                  MediaConstraints mediaConstraints,
@@ -114,7 +113,6 @@ public class PeerConnectionWrapper {
                                  SignalingMessageReceiver signalingMessageReceiver,
                                  SignalingMessageSender signalingMessageSender) {
         this.videoStreamType = videoStreamType;
-//        this.peerConnectionFactory = peerConnectionFactory;  // ← 新增：保存 factory
 
         this.sessionId = sessionId;
         this.mediaConstraints = mediaConstraints;
@@ -126,8 +124,20 @@ public class PeerConnectionWrapper {
         PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServerList);
         configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
-//        // 启用持续 ICE 候选收集，提高在 NAT 环境下的连接成功率，每当网络接口变化，WebRTC 会重新收集并回调 onIceCandidate()
-//        configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+        // 启用持续 ICE 候选收集，提高在 NAT 环境下的连接成功率，每当网络接口变化，WebRTC 会重新收集并回调 onIceCandidate()
+        configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+
+        // 将所有媒体流复用到一个传输通道上，减少端口占用和 NAT 穿透复杂度。
+        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+        // TCP 候选策略：DISABLED (通常推荐)
+        // 除非在严格限制 UDP 的企业网络环境中，否则禁用 TCP 候选项以避免不必要的握手延迟。
+        // 如果必须支持极端受限网络，可设为 ENABLED，但需配合 turn:transport=tcp。
+        configuration.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+        // ICE 候选池大小：2-4 (优化建连速度)
+        // 预先生成少量候选项，加速首次连接建立。0 表示不预生成。
+        configuration.iceCandidatePoolSize = 2;
+        // 如果完全通过 TURN 中继，假设链路可达，加快状态转换
+        configuration.presumeWritableWhenFullyRelayed = true;
 
         peerConnection = peerConnectionFactory.createPeerConnection(configuration, new InitialPeerConnectionObserver());
 
@@ -558,83 +568,6 @@ public class PeerConnectionWrapper {
 
         @Override
         public void onIceCandidate(IceCandidate iceCandidate) {
-            /*
-             * 1.host时，不发送信令
-             * 2.提高relay的优先级
-             */
-            // 解析ICE candidate类型
-            String candidate = iceCandidate.sdp;
-            String type = "";
-            String[] parts = candidate.split(" ");
-            for (int i = 0; i < parts.length; i++) {
-                if (parts[i].equals("typ")) {
-                    type = parts[i + 1];
-                    break;
-                }
-            }
-
-//            // 过滤逻辑
-//            if (type.equals("host")) {
-//                // 丢弃host类型的candidate
-//                return;
-//            }
-
-            // 调整优先级
-            String modifiedCandidate = candidate;
-            switch (type) {
-                case "relay" -> {
-                    // 提升relay类型的优先级
-                    // 找到优先级字段并修改
-                    for (int i = 0; i < parts.length; i++) {
-                        if (i > 0 && parts[i - 1].equals("UDP")) {
-                            // 优先级字段在UDP后面
-                            try {
-                                int priority = Integer.parseInt(parts[i]);
-                                // 提升优先级到最高
-                                parts[i] = String.valueOf(2147483647); // 最大32位整数
-                                modifiedCandidate = String.join(" ", parts);
-                                break;
-                            } catch (NumberFormatException e) {
-                                // 忽略解析错误
-                            }
-                        }
-                    }
-                }
-                case "srflx" -> {
-                    // 降低srflx类型的优先级
-                    for (int i = 0; i < parts.length; i++) {
-                        if (i > 0 && parts[i - 1].equals("UDP")) {
-                            // 优先级字段在UDP后面
-                            try {
-                                int priority = Integer.parseInt(parts[i]);
-                                // 降低优先级
-                                parts[i] = String.valueOf(priority / 2);
-                                modifiedCandidate = String.join(" ", parts);
-                                break;
-                            } catch (NumberFormatException e) {
-                                // 忽略解析错误
-                            }
-                        }
-                    }
-                }
-                case "host" -> {
-                    // 降低 host 类型的优先级，但不丢弃
-                    for (int i = 0; i < parts.length; i++) {
-                        if (i > 0 && parts[i - 1].equals("UDP")) {
-                            try {
-                                int priority = Integer.parseInt(parts[i]);
-                                // 将 host candidate 优先级降低到最低
-                                parts[i] = String.valueOf(Math.max(1, priority / 10));
-                                modifiedCandidate = String.join(" ", parts);
-                                break;
-                            } catch (NumberFormatException e) {
-                                // 忽略解析错误
-                            }
-                        }
-                    }
-                }
-            }
-
             NCSignalingMessage ncSignalingMessage = createBaseSignalingMessage("candidate");
             NCMessagePayload ncMessagePayload = new NCMessagePayload();
             ncMessagePayload.setType("candidate");
@@ -642,8 +575,7 @@ public class PeerConnectionWrapper {
             NCIceCandidate ncIceCandidate = new NCIceCandidate();
             ncIceCandidate.setSdpMid(iceCandidate.sdpMid);
             ncIceCandidate.setSdpMLineIndex(iceCandidate.sdpMLineIndex);
-//            ncIceCandidate.setCandidate(iceCandidate.sdp);
-            ncIceCandidate.setCandidate(modifiedCandidate);
+            ncIceCandidate.setCandidate(iceCandidate.sdp);
             ncMessagePayload.setIceCandidate(ncIceCandidate);
 
             ncSignalingMessage.setPayload(ncMessagePayload);
@@ -722,29 +654,6 @@ public class PeerConnectionWrapper {
 
         @Override
         public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
-//            MediaStreamTrack track = rtpReceiver.track();
-//            if (track == null) {
-//                return;
-//            }
-//
-//            // 方案 A: mediaStreams 有值（某些 WebRTC 版本），直接使用
-//            if (mediaStreams != null && mediaStreams.length > 0 && mediaStreams[0] != null) {
-//                stream = mediaStreams[0];
-//            } else {
-//                // 方案 B: mediaStreams 为空（UNIFIED_PLAN + addTrack 的常见情况）
-//                // 手动从 rtpReceiver 获取 track，创建/更新 MediaStream
-//                if (stream == null) {
-//                    stream = peerConnectionFactory.createLocalMediaStream("remoteStream");
-//                }
-//                if (track instanceof AudioTrack) {
-//                    stream.addTrack((AudioTrack) track);
-//                } else if (track instanceof VideoTrack) {
-//                    stream.addTrack((VideoTrack) track);
-//                }
-//            }
-//
-//            // 每次有新 track 都通知，因为同一 MediaStream 可能会分两次收到 audio/video track
-//            peerConnectionNotifier.notifyStreamAdded(stream);
         }
     }
 

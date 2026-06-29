@@ -1492,9 +1492,6 @@ class CallActivity : CallBaseActivity() {
     }
 
     private fun addIceServers(signalingSettingsOverall: SignalingSettingsOverall, apiVersion: Int) {
-        // 清空信令服务
-        iceServers!!.clear()
-
         if (signalingSettingsOverall.ocs!!.settings!!.stunServers != null) {
             val stunServers = signalingSettingsOverall.ocs!!.settings!!.stunServers
             if (apiVersion == ApiUtils.API_V3) {
@@ -2390,11 +2387,6 @@ class CallActivity : CallBaseActivity() {
                 callViewModel.getParticipant(sessionId)?.updateIsInternal(participant.internal == true)
             }
 
-            // val nick: String? = if (hasExternalSignalingServer) {
-            //     webSocketClient!!.getDisplayNameForSession(sessionId)
-            // } else {
-            //     if (offerAnswerNickProviders[sessionId] != null) offerAnswerNickProviders[sessionId]?.nick else ""
-            // }
             val nick: String? = participant.displayName?.takeIf { it.isNotBlank() }
                 ?: if (hasExternalSignalingServer) {
                     webSocketClient!!.getDisplayNameForSession(sessionId)
@@ -2529,7 +2521,7 @@ class CallActivity : CallBaseActivity() {
                 return screenSharePeerConnectionFactory
             }
 
-            // TODO RAY 接收到屏幕共享
+            // 接收到屏幕共享
             val tempPeerConnectionFactory = if (type == "screen") {
                 screenSharePeerConnectionFactory ?: run {
                     initScreenSharePeerConnectionFactory()
