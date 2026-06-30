@@ -164,13 +164,4 @@ interface ChatMessageRepository : LifecycleAwareManager {
 
     // 新增：更新整个消息实体
     suspend fun updateChatMessage(entity: ChatMessageEntity)
-
-    /**
-     * 方案3：触发一次性增量同步（WebSocket驱动/外部事件触发）
-     * 立即向服务器请求 lookIntoFuture=true, timeout=0 的快速同步，
-     * 获取自上次同步以来的新消息，无需等待长轮询超时。
-     *
-     * @param triggerSource 触发来源标识，用于日志追踪（如 "WebSocket"、"NotificationWorker"、"Manual"）
-     */
-    fun triggerIncrementalSync(triggerSource: String = "unknown")
 }

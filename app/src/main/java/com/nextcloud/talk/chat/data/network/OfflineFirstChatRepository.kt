@@ -27,6 +27,7 @@ import com.nextcloud.talk.models.domain.ConversationModel
 import com.nextcloud.talk.models.json.chat.ChatMessageJson
 import com.nextcloud.talk.models.json.chat.ChatOverall
 import com.nextcloud.talk.models.json.chat.ChatOverallSingleMessage
+import com.nextcloud.talk.models.json.chat.ReadStatus
 import com.nextcloud.talk.models.json.converters.EnumActorTypeConverter
 import com.nextcloud.talk.models.json.generic.GenericOverall
 import com.nextcloud.talk.models.json.participants.Participant
@@ -140,14 +141,12 @@ class OfflineFirstChatRepository @Inject constructor(
     }
 
     override fun initScopeAndLoadInitialMessages(withNetworkParams: Bundle) {
-        Log.d(LOG_TAG, "initScopeAndLoadInitialMessages: creating scope and loading initial messages")
         scope = CoroutineScope(Dispatchers.IO)
         loadInitialMessages(withNetworkParams)
     }
 
     private fun loadInitialMessages(withNetworkParams: Bundle): Job =
         scope.launch {
-            Log.d(LOG_TAG, "=== loadInitialMessages START ===")
             Log.d(TAG, "---- loadInitialMessages ------------")
             newXChatLastCommonRead = conversationModel.lastCommonReadMessage
 
@@ -168,12 +167,10 @@ class OfflineFirstChatRepository @Inject constructor(
                     "Initial online request is skipped because offline messages are up to date" +
                         " until lastReadMessage"
                 )
-                Log.d(LOG_TAG, "loadInitialMessages: SKIPPED network request (local data up-to-date)")
                 Log.d(TAG, "For messages newer than lastRead, lookIntoFuture will load them.")
             } else {
                 if (!weAlreadyHaveSomeOfflineMessages) {
                     Log.d(TAG, "An online request for newest 100 messages is made because offline chat is empty")
-                    Log.d(LOG_TAG, "loadInitialMessages: network needed (offline chat empty)")
                     if (networkMonitor.isOnline.value.not()) {
                         _generalUIFlow.emit(ChatActivity.NO_OFFLINE_MESSAGES_FOUND)
                     }
@@ -183,7 +180,6 @@ class OfflineFirstChatRepository @Inject constructor(
                         "An online request for newest 100 messages is made because we don't have the lastReadMessage " +
                             "(gaps could be closed by scrolling up to merge the chatblocks)"
                     )
-                    Log.d(LOG_TAG, "loadInitialMessages: network needed (missing lastReadMessage)")
                 }
 
                 // set up field map to load the newest messages
@@ -208,9 +204,8 @@ class OfflineFirstChatRepository @Inject constructor(
             }
 
             handleMessagesFromDb(newestMessageIdFromDb)
-            Log.d(LOG_TAG, "loadInitialMessages: calling initMessagePolling with newestMessageId=$newestMessageIdFromDb")
+
             initMessagePolling(newestMessageIdFromDb)
-            Log.d(LOG_TAG, "=== loadInitialMessages END ===")
         }
 
     private suspend fun handleMessagesFromDb(newestMessageIdFromDb: Long) {
@@ -239,13 +234,6 @@ class OfflineFirstChatRepository @Inject constructor(
 
             updateUiForLastCommonRead()
             updateUiForLastReadMessage(newestMessageIdFromDb)
-        } else {
-            // // fix: 接口报错导致页面一直加载中
-            // handleNewAndTempMessages(
-            //     receivedChatMessages = emptyList(),
-            //     lookIntoFuture = false,
-            //     showUnreadMessagesMarker = false
-            // )
         }
     }
 
@@ -320,7 +308,6 @@ class OfflineFirstChatRepository @Inject constructor(
 
     override fun initMessagePolling(initialMessageId: Long): Job =
         scope.launch {
-            Log.d(LOG_TAG, "=== initMessagePolling START, initialMessageId=$initialMessageId ===")
             Log.d(TAG, "---- initMessagePolling ------------")
 
             Log.d(TAG, "newestMessage: $initialMessageId")
@@ -347,11 +334,9 @@ class OfflineFirstChatRepository @Inject constructor(
                     // (This is a long blocking call because long polling (lookIntoFuture) is set)
                     networkParams.putSerializable(BundleKeys.KEY_FIELD_MAP, fieldMap)
 
-                    Log.d(LOG_TAG, "initMessagePolling: starting long poll request...")
                     Log.d(TAG, "Starting online request for long polling")
                     val resultsFromSync = sync(networkParams)
                     if (!resultsFromSync.isNullOrEmpty()) {
-                        Log.d(LOG_TAG, "initMessagePolling: got ${resultsFromSync.size} new messages from server")
                         val chatMessages = resultsFromSync.map(ChatMessageEntity::asModel)
 
                         val weHaveMessagesFromOurself = chatMessages.any { it.actorId == currentUser.userId }
@@ -368,7 +353,6 @@ class OfflineFirstChatRepository @Inject constructor(
                         }
                     } else {
                         Log.d(TAG, "resultsFromSync are null or empty")
-                        Log.d(LOG_TAG, "initMessagePolling: no new messages from server (null/empty or 304)")
                     }
 
                     updateUiForLastCommonRead()
@@ -377,12 +361,11 @@ class OfflineFirstChatRepository @Inject constructor(
                         internalConversationId,
                         threadId
                     ).toInt()
-                    Log.d(LOG_TAG, "initMessagePolling: newestMessageId in DB=$newestMessage, next poll lastKnown=$newestMessage")
 
                     // update field map vars for next cycle
                     fieldMap = getFieldMap(
                         lookIntoFuture = true,
-                        timeout = 30,
+                        timeout = MESSAGE_POLLING_TIMEOUT,
                         includeLastKnown = false,
                         setReadMarker = true,
                         lastKnown = newestMessage
@@ -391,98 +374,13 @@ class OfflineFirstChatRepository @Inject constructor(
                     showUnreadMessagesMarker = false
                 }
             }
-            Log.d(LOG_TAG, "=== initMessagePolling END (loop exited, isActive=$isActive) ===")
         }
-
-    /**
-     * 方案3：一次性增量同步（可被外部触发）
-     *
-     * 与长轮询循环不同，此方法执行一次快速的 lookIntoFuture=true, timeout=0 请求，
-     * 立即获取服务器上的新消息并推送到 UI。
-     *
-     * 适用场景：
-     * - WebSocket 收到新消息信号时触发
-     * - NotificationWorker 预同步后用户进入聊天时补充增量
-     * - 从通知栏点击进入聊天时立即刷新
-     * - 其他需要即时同步的场景
-     *
-     * @param triggerSource 触发来源标识，用于日志追踪
-     */
-    override fun triggerIncrementalSync(triggerSource: String) {
-        if (!this::scope.isInitialized) {
-            Log.w(LOG_TAG, "triggerIncrementalSync[$triggerSource]: scope not initialized, skipping")
-            return
-        }
-        if (!scope.isActive) {
-            Log.w(LOG_TAG, "triggerIncrementalSync[$triggerSource]: scope not active, skipping")
-            return
-        }
-        if (!networkMonitor.isOnline.value) {
-            Log.d(LOG_TAG, "triggerIncrementalSync[$triggerSource]: device offline, skipping")
-            return
-        }
-
-        scope.launch {
-            val newestMessageIdFromDb = chatBlocksDao.getNewestMessageIdFromChatBlocks(
-                internalConversationId,
-                threadId
-            )
-            if (newestMessageIdFromDb <= 0) {
-                Log.d(
-                    LOG_TAG,
-                    "triggerIncrementalSync[$triggerSource]: no local data, skipping"
-                )
-                return@launch
-            }
-
-            Log.d(
-                LOG_TAG,
-                "triggerIncrementalSync[$triggerSource]: starting quick sync from newestMessageId=$newestMessageIdFromDb"
-            )
-
-            // 构建 lookIntoFuture=true, timeout=0 的快速请求参数
-            val fieldMap = getFieldMap(
-                lookIntoFuture = true,
-                timeout = 0, // 立即返回，不阻塞等待
-                includeLastKnown = false,
-                setReadMarker = true,
-                lastKnown = newestMessageIdFromDb.toInt()
-            )
-            val networkParams = Bundle()
-            networkParams.putSerializable(BundleKeys.KEY_FIELD_MAP, fieldMap)
-
-            val resultsFromSync = sync(networkParams)
-            if (!resultsFromSync.isNullOrEmpty()) {
-                Log.d(
-                    LOG_TAG,
-                    "triggerIncrementalSync[$triggerSource]: got ${resultsFromSync.size} new messages"
-                )
-                val chatMessages = resultsFromSync.map(ChatMessageEntity::asModel)
-                handleNewAndTempMessages(
-                    receivedChatMessages = chatMessages,
-                    lookIntoFuture = true,
-                    showUnreadMessagesMarker = false
-                )
-                updateUiForLastCommonRead()
-            } else {
-                Log.d(
-                    LOG_TAG,
-                    "triggerIncrementalSync[$triggerSource]: no new messages (null/empty or 304)"
-                )
-            }
-        }
-    }
 
     private suspend fun handleNewAndTempMessages(
         receivedChatMessages: List<ChatMessage>,
         lookIntoFuture: Boolean,
         showUnreadMessagesMarker: Boolean
     ) {
-        Log.d(
-            LOG_TAG,
-            "handleNewAndTempMessages: ${receivedChatMessages.size} messages, " +
-                "lookIntoFuture=$lookIntoFuture, showUnreadMarker=$showUnreadMessagesMarker"
-        )
         receivedChatMessages.forEach {
             Log.d(TAG, "receivedChatMessage: " + it.message)
         }
@@ -692,11 +590,8 @@ class OfflineFirstChatRepository @Inject constructor(
     private suspend fun sync(bundle: Bundle): List<ChatMessageEntity>? {
         if (!networkMonitor.isOnline.value) {
             Log.d(TAG, "Device is offline, can't load chat messages from server")
-            Log.d(LOG_TAG, "sync: skipped (device offline)")
             return null
         }
-
-        Log.d(LOG_TAG, "sync: starting network request...")
 
         val result = getMessagesFromServer(bundle)
         if (result == null) {
@@ -730,7 +625,6 @@ class OfflineFirstChatRepository @Inject constructor(
         }
 
         if (result.second.isNotEmpty()) {
-            Log.d(LOG_TAG, "sync: server returned ${result.second.size} messages")
             chatMessagesFromSync = updateMessagesData(
                 result.second,
                 blockContainingQueriedMessage,
@@ -739,7 +633,6 @@ class OfflineFirstChatRepository @Inject constructor(
             )
         } else {
             Log.d(TAG, "no data is updated...")
-            Log.d(LOG_TAG, "sync: no new data from server")
         }
 
         return chatMessagesFromSync
@@ -967,7 +860,6 @@ class OfflineFirstChatRepository @Inject constructor(
     }
 
     override fun handleOnPause() {
-        Log.d(LOG_TAG, "handleOnPause: setting paused=true, cancelling scope")
         itIsPaused = true
         if (this::scope.isInitialized) {
             scope.cancel()
@@ -975,42 +867,7 @@ class OfflineFirstChatRepository @Inject constructor(
     }
 
     override fun handleOnResume() {
-        Log.d(LOG_TAG, "handleOnResume: setting paused=false, checking scope status")
         itIsPaused = false
-        if (this::scope.isInitialized && !scope.isActive) {
-            Log.d(LOG_TAG, "handleOnResume: scope was cancelled, restarting message polling from DB")
-            scope = CoroutineScope(Dispatchers.IO)
-            scope.launch {
-                val newestMessageIdFromDb = chatBlocksDao.getNewestMessageIdFromChatBlocks(
-                    internalConversationId,
-                    threadId
-                )
-                Log.d(
-                    LOG_TAG,
-                    "handleOnResume: newestMessageIdFromDb=$newestMessageIdFromDb, " +
-                        "internalConversationId=$internalConversationId"
-                )
-                if (newestMessageIdFromDb > 0) {
-                    // 本地已有数据，仅恢复轮询获取增量消息
-                    Log.d(LOG_TAG, "handleOnResume: resuming initMessagePolling with newestMessageId=$newestMessageIdFromDb")
-                    initMessagePolling(newestMessageIdFromDb)
-
-                    // 同时发送未发送的消息
-                    sendUnsentChatMessages(credentials, urlForChatting)
-                } else {
-                    // 本地无数据，需要完整重新加载
-                    Log.w(LOG_TAG, "handleOnResume: no local data found, need full reload")
-                    val bundle = Bundle()
-                    bundle.putString(BundleKeys.KEY_CHAT_URL, urlForChatting)
-                    bundle.putString(BundleKeys.KEY_CREDENTIALS, credentials)
-                    loadInitialMessages(bundle)
-                }
-            }
-        } else if (this::scope.isInitialized && scope.isActive) {
-            Log.d(LOG_TAG, "handleOnResume: scope is still active, polling continues normally")
-        } else {
-            Log.d(LOG_TAG, "handleOnResume: scope not initialized yet, skipping resume")
-        }
     }
 
     override fun handleOnStop() {
@@ -1046,76 +903,84 @@ class OfflineFirstChatRepository @Inject constructor(
                 threadTitle
             )
 
-            // 发送消息不能即时更新，原始逻辑
-            val chatMessageModel = response.ocs?.data?.asModel()
+            if (!REAL_TIME_UPDATE) {
+                //* 发送消息不能即时更新，原始逻辑
+                val chatMessageModel = response.ocs?.data?.asModel()
 
-            val sentMessage = if (this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
-                chatDao
-                    .getTempMessageForConversation(
+                val sentMessage = if (this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
+                    chatDao
+                        .getTempMessageForConversation(
+                            internalConversationId,
+                            referenceId,
+                            threadId
+                        ).firstOrNull()
+                } else {
+                    null
+                }
+
+                sentMessage?.let {
+                    it.sendStatus = SendStatus.SENT_PENDING_ACK
+                    chatDao.updateChatMessage(it)
+                }
+
+                Log.d(TAG, "sending chat message origin succeeded: " + message)
+                emit(Result.success(chatMessageModel))
+                // 原始逻辑执行完，不会执行后续逻辑
+                return@flow
+            }
+
+            // fix: 发送消息无法即时更新问题
+            val chatMessageJson = response.ocs?.data
+            val chatMessageModel = chatMessageJson?.asModel()
+
+            if (chatMessageJson != null && this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
+                // 1. 从 adapter 移除临时消息（通过 removeMessageFlow，按临时消息 id 查找删除）
+                val tempMessage = chatDao.getTempMessageForConversation(
+                    internalConversationId,
+                    referenceId,
+                    threadId
+                ).firstOrNull()
+                tempMessage?.let {
+                    _removeMessageFlow.emit(it.asModel())
+                }
+
+                // 2. 从 DB 删除临时消息
+                chatDao.deleteTempChatMessages(
+                    internalConversationId,
+                    listOf(referenceId)
+                )
+
+                // 3. 将确认消息插入 DB
+                val confirmedEntity = chatMessageJson.asEntity(currentUser.id!!)
+                Log.e("RayMessage", "----ddd-------${confirmedEntity}")
+                chatDao.upsertChatMessage(confirmedEntity)
+
+                // 4. 将确认消息添加到 adapter（通过 _messageFlow）
+                val confirmedModel = confirmedEntity.asModel()
+                confirmedModel.readStatus = ReadStatus.SENT
+                val triple = Triple(true, false, listOf(confirmedModel))
+                _messageFlow.emit(triple)
+            } else {
+                // 降级处理：服务器返回数据为空，仅更新发送状态
+                val sentMessage = if (this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
+                    chatDao.getTempMessageForConversation(
                         internalConversationId,
                         referenceId,
                         threadId
                     ).firstOrNull()
-            } else {
-                null
+                } else {
+                    null
+                }
+                sentMessage?.let {
+                    it.sendStatus = SendStatus.SENT_PENDING_ACK
+                    chatDao.updateChatMessage(it)
+                }
             }
 
-            sentMessage?.let {
-                it.sendStatus = SendStatus.SENT_PENDING_ACK
-                chatDao.updateChatMessage(it)
-            }
-
-            Log.d(TAG, "sending chat message succeeded: " + message)
+            Log.d(TAG, "sending chat message succeeded: $message")
+            // chatMessageModel?.readStatus = ReadStatus.SENT
             emit(Result.success(chatMessageModel))
 
-            // // fix: 发送消息无法即时更新问题
-            // val chatMessageJson = response.ocs?.data
-            // val chatMessageModel = chatMessageJson?.asModel()
-            //
-            // if (chatMessageJson != null && this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
-            //     // 1. 从 adapter 移除临时消息（通过 removeMessageFlow，按临时消息 id 查找删除）
-            //     val tempMessage = chatDao.getTempMessageForConversation(
-            //         internalConversationId,
-            //         referenceId,
-            //         threadId
-            //     ).firstOrNull()
-            //     tempMessage?.let {
-            //         _removeMessageFlow.emit(it.asModel())
-            //     }
-            //
-            //     // 2. 从 DB 删除临时消息
-            //     chatDao.deleteTempChatMessages(
-            //         internalConversationId,
-            //         listOf(referenceId)
-            //     )
-            //
-            //     // 3. 将确认消息插入 DB
-            //     val confirmedEntity = chatMessageJson.asEntity(currentUser.id!!)
-            //     chatDao.upsertChatMessage(confirmedEntity)
-            //
-            //     // 4. 将确认消息添加到 adapter（通过 _messageFlow）
-            //     val confirmedModel = confirmedEntity.asModel()
-            //     val triple = Triple(true, false, listOf(confirmedModel))
-            //     _messageFlow.emit(triple)
-            // } else {
-            //     // 降级处理：服务器返回数据为空，仅更新发送状态
-            //     val sentMessage = if (this@OfflineFirstChatRepository::internalConversationId.isInitialized) {
-            //         chatDao.getTempMessageForConversation(
-            //             internalConversationId,
-            //             referenceId,
-            //             threadId
-            //         ).firstOrNull()
-            //     } else {
-            //         null
-            //     }
-            //     sentMessage?.let {
-            //         it.sendStatus = SendStatus.SENT_PENDING_ACK
-            //         chatDao.updateChatMessage(it)
-            //     }
-            // }
-            //
-            // Log.d(TAG, "sending chat message succeeded: $message")
-            // emit(Result.success(chatMessageModel))
         }
             .catch { e ->
                 Log.e(TAG, "Error when sending message", e)
@@ -1462,13 +1327,16 @@ class OfflineFirstChatRepository @Inject constructor(
 
     companion object {
         val TAG = OfflineFirstChatRepository::class.simpleName
-        private const val LOG_TAG = "RayMessage"
         private const val HTTP_CODE_OK: Int = 200
         private const val HTTP_CODE_NOT_MODIFIED = 304
         private const val HTTP_CODE_PRECONDITION_FAILED = 412
         private const val HALF_SECOND = 500L
+        // polling message等待，原来30s，改为3s modify by ray on 2026/06/30
+        private const val MESSAGE_POLLING_TIMEOUT = 3
         private const val DELAY_TO_ENSURE_MESSAGES_ARE_ADDED: Long = 100
         private const val DEFAULT_MESSAGES_LIMIT = 100
         private const val MILLIES = 1000
+        // 是否发送消息成功即时更新消息，原始逻辑是false add by ray on 2026/06/30
+        private const val REAL_TIME_UPDATE = false
     }
 }

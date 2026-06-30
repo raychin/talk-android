@@ -109,7 +109,6 @@ class ChatViewModel @Inject constructor(
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
-        Log.d(LOG_TAG, "ChatViewModel.onResume: calling chatRepository.handleOnResume()")
         currentLifeCycleFlag = LifeCycleFlag.RESUMED
         mediaRecorderManager.handleOnResume()
         chatRepository.handleOnResume()
@@ -118,7 +117,6 @@ class ChatViewModel @Inject constructor(
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
-        Log.d(LOG_TAG, "ChatViewModel.onPause: calling chatRepository.handleOnPause()")
         currentLifeCycleFlag = LifeCycleFlag.PAUSED
         disposableSet.forEach { disposable -> disposable.dispose() }
         disposableSet.clear()
@@ -349,14 +347,6 @@ class ChatViewModel @Inject constructor(
                     _scheduledMessagesCount.value = result.getOrNull()?.size ?: 0
                 } else {
                     _scheduledMessagesViewState.value = ScheduledMessagesErrorState
-                    // val exception = result.exceptionOrNull()
-                    // // fix: 接口报错导致页面一直加载中 404 means feature not supported - treat as empty list, not error
-                    // if (exception is retrofit2.HttpException && exception.code() == 404) {
-                    //     _scheduledMessagesViewState.value = ScheduledMessagesSuccessState(emptyList())
-                    //     _scheduledMessagesCount.value = 0
-                    // } else {
-                    //     _scheduledMessagesViewState.value = ScheduledMessagesErrorState
-                    // }
                 }
             }
         }
@@ -549,7 +539,6 @@ class ChatViewModel @Inject constructor(
     }
 
     fun loadMessages(withCredentials: String, withUrl: String) {
-        Log.d(LOG_TAG, "ChatViewModel.loadMessages: calling initScopeAndLoadInitialMessages")
         val bundle = Bundle()
         bundle.putString(BundleKeys.KEY_CHAT_URL, withUrl)
         bundle.putString(BundleKeys.KEY_CREDENTIALS, withCredentials)
@@ -1254,7 +1243,6 @@ class ChatViewModel @Inject constructor(
 
     companion object {
         private val TAG = ChatViewModel::class.simpleName
-        private const val LOG_TAG = "RayMessage"
         const val JOIN_ROOM_RETRY_COUNT: Long = 3
         const val HTTP_CODE_OK: Int = 200
     }

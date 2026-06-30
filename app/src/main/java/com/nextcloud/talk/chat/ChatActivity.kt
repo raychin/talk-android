@@ -526,15 +526,6 @@ class ChatActivity :
                 updateTypingIndicator()
             }
         }
-
-        /**
-         * 方案3：WebSocket 收到新消息信号时触发即时增量同步
-         * 不再等待长轮询的 30s 超时，立即向服务器请求最新消息
-         */
-        override fun onNewMessageSignal(type: String) {
-            Log.d(LOG_TAG, "onNewMessageSignal: received signaling type=$type, triggering incremental sync")
-            chatViewModel.getChatRepository().triggerIncrementalSync("WebSocket:$type")
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -849,12 +840,9 @@ class ChatActivity :
                     logConversationInfos("GetRoomSuccessState")
 
                     if (adapter == null) {
-                        Log.d(LOG_TAG, "GetRoomSuccessState: adapter is null, creating new adapter")
                         initAdapter()
                         binding.messagesListView.setAdapter(adapter)
                         layoutManager = binding.messagesListView.layoutManager as? LinearLayoutManager
-                    } else {
-                        Log.d(LOG_TAG, "GetRoomSuccessState: adapter already exists (items:${adapter?.itemCount}), reusing")
                     }
 
                     chatViewModel.getCapabilities(conversationUser!!, roomToken, conversationModel)
@@ -1050,7 +1038,6 @@ class ChatActivity :
                         val urlForChatting =
                             ApiUtils.getUrlForChat(chatApiVersion, conversationUser?.baseUrl, roomToken)
 
-                        Log.d(LOG_TAG, "GetCapabilitiesInitialLoadState: calling loadMessages")
                         chatViewModel.loadMessages(
                             withCredentials = credentials!!,
                             withUrl = urlForChatting
@@ -1319,7 +1306,6 @@ class ChatActivity :
         this.lifecycleScope.launch {
             chatViewModel.getMessageFlow
                 .onEach { triple ->
-                    Log.d(LOG_TAG, "messageFlow received: lookIntoFuture=${triple.first}, messages=${triple.third.size}")
                     val lookIntoFuture = triple.first
                     val setUnreadMessagesMarker = triple.second
                     var chatMessageList = triple.third
@@ -1794,7 +1780,6 @@ class ChatActivity :
         super.onResume()
 
         logConversationInfos("onResume")
-        Log.d(LOG_TAG, "onResume: adapter=${if (adapter != null) "cached (items:${adapter?.itemCount})" else "null"}")
 
         pullChatMessagesPending = false
 
@@ -1875,7 +1860,7 @@ class ChatActivity :
     }
 
     private fun initAdapter() {
-        Log.d(LOG_TAG, "initAdapter: creating new TalkMessagesListAdapter")
+        Log.d(TAG, "initAdapter: creating new TalkMessagesListAdapter")
         val senderId = if (!conversationUser!!.userId.equals("?")) {
             "users/" + conversationUser!!.userId
         } else {
@@ -3296,7 +3281,7 @@ class ChatActivity :
         // if (!selectorMode) {
         //     adapter = null
         // }
-        Log.d(LOG_TAG, "onPause: keeping adapter cached (items count: ${adapter?.itemCount ?: 0})")
+        Log.d(TAG, "onPause: keeping adapter cached (items count: ${adapter?.itemCount ?: 0})")
     }
 
     private fun isActivityNotChangingConfigurations(): Boolean = !isChangingConfigurations
@@ -3583,7 +3568,6 @@ class ChatActivity :
     }
 
     private fun processMessagesFromTheFuture(chatMessageList: List<ChatMessage>, setUnreadMessagesMarker: Boolean) {
-        Log.d(LOG_TAG, "processMessagesFromTheFuture: ${chatMessageList.size} messages, unreadMarker=$setUnreadMessagesMarker")
         binding.scrollDownButton.visibility = View.GONE
 
         val scrollToBottom: Boolean
@@ -3602,56 +3586,21 @@ class ChatActivity :
         }
 
         var shouldRefreshRoom = false
-        // 发送消息不能即时更新，原始逻辑
-        for (chatMessage in chatMessageList) {
-            chatMessage.activeUser = conversationUser
-
-            adapter?.let {
-                val previousChatMessage = it.items?.getOrNull(1)?.item
-                if (previousChatMessage != null && previousChatMessage is ChatMessage) {
-                    chatMessage.isGrouped = groupMessages(chatMessage, previousChatMessage)
-                }
-                chatMessage.isOneToOneConversation =
-                    (currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL)
-                chatMessage.isFormerOneToOneConversation =
-                    (currentConversation?.type == ConversationEnums.ConversationType.FORMER_ONE_TO_ONE)
-                Log.d(TAG, "chatMessage to add:" + chatMessage.message)
-                it.addToStart(chatMessage, scrollToBottom)
-            }
-
-            val systemMessageType = chatMessage.systemMessageType
-            if (systemMessageType != null &&
-                (
-                    systemMessageType == ChatMessage.SystemMessageType.MESSAGE_PINNED ||
-                        systemMessageType == ChatMessage.SystemMessageType.MESSAGE_UNPINNED
-                    )
-            ) {
-                shouldRefreshRoom = true
-            }
-        }
-        // // fix: 发送消息无法即时更新问题
+        // // 发送消息不能即时更新，原始逻辑
         // for (chatMessage in chatMessageList) {
         //     chatMessage.activeUser = conversationUser
         //
         //     adapter?.let {
-        //         // 去重：如果 adapter 中已存在相同 id 的消息，则跳过
-        //         val existingPos = it.getMessagePositionById(chatMessage.id)
-        //         if (existingPos != null && existingPos >= 0) {
-        //             // 已存在，原地更新而非重复添加
-        //             it.update(chatMessage)
-        //         } else {
-        //             // 不存在，添加新消息
-        //             val previousChatMessage = it.items?.getOrNull(1)?.item
-        //             if (previousChatMessage != null && previousChatMessage is ChatMessage) {
-        //                 chatMessage.isGrouped = groupMessages(chatMessage, previousChatMessage)
-        //             }
-        //             chatMessage.isOneToOneConversation =
-        //                 (currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL)
-        //             chatMessage.isFormerOneToOneConversation =
-        //                 (currentConversation?.type == ConversationEnums.ConversationType.FORMER_ONE_TO_ONE)
-        //             Log.d(TAG, "chatMessage to add:" + chatMessage.message)
-        //             it.addToStart(chatMessage, scrollToBottom)
+        //         val previousChatMessage = it.items?.getOrNull(1)?.item
+        //         if (previousChatMessage != null && previousChatMessage is ChatMessage) {
+        //             chatMessage.isGrouped = groupMessages(chatMessage, previousChatMessage)
         //         }
+        //         chatMessage.isOneToOneConversation =
+        //             (currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL)
+        //         chatMessage.isFormerOneToOneConversation =
+        //             (currentConversation?.type == ConversationEnums.ConversationType.FORMER_ONE_TO_ONE)
+        //         Log.d(TAG, "chatMessage to add:" + chatMessage.message)
+        //         it.addToStart(chatMessage, scrollToBottom)
         //     }
         //
         //     val systemMessageType = chatMessage.systemMessageType
@@ -3664,6 +3613,41 @@ class ChatActivity :
         //         shouldRefreshRoom = true
         //     }
         // }
+        // fix: 发送消息无法即时更新问题
+        for (chatMessage in chatMessageList) {
+            chatMessage.activeUser = conversationUser
+
+            adapter?.let {
+                // 去重：如果 adapter 中已存在相同 id 的消息，则跳过
+                val existingPos = it.getMessagePositionById(chatMessage.id)
+                if (existingPos != null && existingPos >= 0) {
+                    // 已存在，原地更新而非重复添加
+                    it.update(chatMessage)
+                } else {
+                    // 不存在，添加新消息
+                    val previousChatMessage = it.items?.getOrNull(1)?.item
+                    if (previousChatMessage != null && previousChatMessage is ChatMessage) {
+                        chatMessage.isGrouped = groupMessages(chatMessage, previousChatMessage)
+                    }
+                    chatMessage.isOneToOneConversation =
+                        (currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL)
+                    chatMessage.isFormerOneToOneConversation =
+                        (currentConversation?.type == ConversationEnums.ConversationType.FORMER_ONE_TO_ONE)
+                    Log.d(TAG, "chatMessage to add:" + chatMessage.message)
+                    it.addToStart(chatMessage, scrollToBottom)
+                }
+            }
+
+            val systemMessageType = chatMessage.systemMessageType
+            if (systemMessageType != null &&
+                (
+                    systemMessageType == ChatMessage.SystemMessageType.MESSAGE_PINNED ||
+                        systemMessageType == ChatMessage.SystemMessageType.MESSAGE_UNPINNED
+                    )
+            ) {
+                shouldRefreshRoom = true
+            }
+        }
 
         if (shouldRefreshRoom) {
             chatViewModel.refreshRoom()
@@ -3701,7 +3685,6 @@ class ChatActivity :
     }
 
     private fun processMessagesNotFromTheFuture(chatMessageList: List<ChatMessage>) {
-        Log.d(LOG_TAG, "processMessagesNotFromTheFuture: ${chatMessageList.size} messages")
         for (i in chatMessageList.indices) {
             if (chatMessageList.size > i + 1) {
                 chatMessageList[i].isGrouped = groupMessages(chatMessageList[i], chatMessageList[i + 1])
@@ -5235,47 +5218,47 @@ class ChatActivity :
     }
 
     private fun updateMessageInsideAdapter(message: IMessage?) {
-        // 发送消息不能即时更新，原始逻辑
-        message?.let {
-            val messageTemp = message as ChatMessage
-
-            // TODO is this needed?
-            messageTemp.isOneToOneConversation =
-                currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
-            messageTemp.activeUser = conversationUser
-
-            adapter?.update(messageTemp)
-        }
-        // // fix: 发送消息无法即时更新问题
+        // // 发送消息不能即时更新，原始逻辑
         // message?.let {
-        //     val newMessage = message as ChatMessage
-        //     newMessage.isOneToOneConversation =
-        //         currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
-        //     newMessage.activeUser = conversationUser
+        //     val messageTemp = message as ChatMessage
         //
-        //     // 先尝试按 ID 正常更新
-        //     val pos = adapter?.getMessagePositionById(newMessage.id)
-        //     if (pos != null && pos >= 0) {
-        //         adapter?.update(newMessage)
-        //     } else {
-        //         // ID 未找到 — 临时消息→确认消息的 ID 变更场景
-        //         // 通过 referenceId 在 adapter 中查找临时消息
-        //         val refId = newMessage.referenceId
-        //         if (refId != null) {
-        //             val tempPos = findAdapterPositionByReferenceId(refId)
-        //             if (tempPos >= 0) {
-        //                 val tempMessage = adapter?.items?.get(tempPos)?.item as ChatMessage
-        //                 // 保留 adapter 中的视觉状态
-        //                 newMessage.isGrouped = tempMessage.isGrouped
-        //                 newMessage.previousMessageId = tempMessage.previousMessageId
-        //                 // 关键：将临时消息的 jsonMessageId 更新为确认消息的 ID
-        //                 // 这样 adapter.update() 才能通过新 ID 找到它
-        //                 tempMessage.jsonMessageId = newMessage.jsonMessageId
-        //                 adapter?.update(newMessage)
-        //             }
-        //         }
-        //     }
+        //     // TODO is this needed?
+        //     messageTemp.isOneToOneConversation =
+        //         currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
+        //     messageTemp.activeUser = conversationUser
+        //
+        //     adapter?.update(messageTemp)
         // }
+        // fix: 发送消息无法即时更新问题
+        message?.let {
+            val newMessage = message as ChatMessage
+            newMessage.isOneToOneConversation =
+                currentConversation?.type == ConversationEnums.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL
+            newMessage.activeUser = conversationUser
+
+            // 先尝试按 ID 正常更新
+            val pos = adapter?.getMessagePositionById(newMessage.id)
+            if (pos != null && pos >= 0) {
+                adapter?.update(newMessage)
+            } else {
+                // ID 未找到 — 临时消息→确认消息的 ID 变更场景
+                // 通过 referenceId 在 adapter 中查找临时消息
+                val refId = newMessage.referenceId
+                if (refId != null) {
+                    val tempPos = findAdapterPositionByReferenceId(refId)
+                    if (tempPos >= 0) {
+                        val tempMessage = adapter?.items?.get(tempPos)?.item as ChatMessage
+                        // 保留 adapter 中的视觉状态
+                        newMessage.isGrouped = tempMessage.isGrouped
+                        newMessage.previousMessageId = tempMessage.previousMessageId
+                        // 关键：将临时消息的 jsonMessageId 更新为确认消息的 ID
+                        // 这样 adapter.update() 才能通过新 ID 找到它
+                        tempMessage.jsonMessageId = newMessage.jsonMessageId
+                        adapter?.update(newMessage)
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -5681,7 +5664,6 @@ class ChatActivity :
 
     companion object {
         val TAG = ChatActivity::class.simpleName
-        private const val LOG_TAG = "RayMessage"
         private const val CONTENT_TYPE_CALL_STARTED: Byte = 1
         private const val CONTENT_TYPE_SYSTEM_MESSAGE: Byte = 2
         private const val CONTENT_TYPE_UNREAD_NOTICE_MESSAGE: Byte = 3
