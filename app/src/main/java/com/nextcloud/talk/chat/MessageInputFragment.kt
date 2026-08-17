@@ -59,6 +59,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import com.nextcloud.android.common.ui.theme.utils.ColorRole
 import com.nextcloud.talk.R
+import com.nextcloud.talk.BuildConfig
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
 import com.nextcloud.talk.callbacks.MentionAutocompleteCallback
@@ -459,9 +460,9 @@ class MessageInputFragment : Fragment() {
                     val mentionSpans = editable.getSpans(
                         0,
                         binding.fragmentMessageInputView.inputEditText!!.length(),
-                        Spans.MentionChipSpan::class.java
+                        Spans.MentionSpan::class.java
                     )
-                    var mentionSpan: Spans.MentionChipSpan
+                    var mentionSpan: Spans.MentionSpan
                     for (i in mentionSpans.indices) {
                         mentionSpan = mentionSpans[i]
                         if (start >= editable.getSpanStart(mentionSpan) &&
@@ -1051,7 +1052,7 @@ class MessageInputFragment : Fragment() {
         val mentionSpans = editable.getSpans(
             0,
             editable.length,
-            Spans.MentionChipSpan::class.java
+            Spans.MentionSpan::class.java
         )
         var messageParameters: HashMap<String?, HashMap<String?, String?>>? = null
         for (mentionSpan in mentionSpans) {
@@ -1362,25 +1363,39 @@ class MessageInputFragment : Fragment() {
                     val spanStart = atSignIndex + 1  // 跳过前导空格
                     val spanEnd = spanStart + name.length
 
-                    val drawable = DisplayUtils.getDrawableForMentionChipSpan(
-                        requireContext(),
-                        mentionId,
-                        chatActivity.roomToken,
-                        name,
-                        chatActivity.conversationUser!!,
-                        type,
-                        R.xml.chip_you,
-                        editText,
-                        viewThemeUtils,
-                        "federated_users" == type
-                    )
-
-                    val mentionChipSpan = Spans.MentionChipSpan(
-                        drawable,
-                        BetterImageSpan.ALIGN_CENTER,
-                        mentionId,
-                        name
-                    )
+                    val mentionChipSpan: Spans.MentionSpan
+                    if (BuildConfig.NEW_MENTION_CHIP_STYLE) {
+                        val isSelf = mentionId == chatActivity.conversationUser?.userId
+                        mentionChipSpan = Spans.MentionChipSpan(
+                            mentionId,
+                            name,
+                            "@",
+                            4f,
+                            20f,
+                            20f,
+                            requireContext().getColor(R.color.transparent),
+                            requireContext().getColor(if (isSelf) R.color.green_read else R.color.colorPrimary)
+                        )
+                    } else {
+                        val drawable = DisplayUtils.getDrawableForMentionChipSpan(
+                            requireContext(),
+                            mentionId,
+                            chatActivity.roomToken,
+                            name,
+                            chatActivity.conversationUser!!,
+                            type,
+                            R.xml.chip_you,
+                            editText,
+                            viewThemeUtils,
+                            "federated_users" == type
+                        )
+                        mentionChipSpan = Spans.MentionChipSpanWithHead(
+                            drawable,
+                            BetterImageSpan.ALIGN_CENTER,
+                            mentionId,
+                            name
+                        )
+                    }
                     editable.setSpan(
                         mentionChipSpan,
                         spanStart,
@@ -1389,12 +1404,14 @@ class MessageInputFragment : Fragment() {
                     )
 
                     // chip_you 需要额外设置前景色 span（白色文字）
-                    editable.setSpan(
-                        viewThemeUtils.talk.themeForegroundColorSpan(requireContext()),
-                        spanStart,
-                        spanEnd,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
+                    if (!BuildConfig.NEW_MENTION_CHIP_STYLE) {
+                        editable.setSpan(
+                            viewThemeUtils.talk.themeForegroundColorSpan(requireContext()),
+                            spanStart,
+                            spanEnd,
+                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
                 }
             }
         } else {

@@ -12,6 +12,7 @@ import android.text.Editable;
 import android.text.Spanned;
 import android.widget.EditText;
 
+import com.nextcloud.talk.BuildConfig;
 import com.nextcloud.talk.R;
 import com.nextcloud.talk.data.user.model.User;
 import com.nextcloud.talk.models.json.mention.Mention;
@@ -62,19 +63,36 @@ public class MentionAutocompleteCallback implements AutocompleteCallback<Mention
         editable.replace(range.getStart(), range.getEnd(), charSequence + replacementStringBuilder + " ");
         String id;
         if (item.getMentionId() != null) id = item.getMentionId(); else id = item.getId();
-        Spans.MentionChipSpan mentionChipSpan =
-            new Spans.MentionChipSpan(DisplayUtils.getDrawableForMentionChipSpan(context,
-                                                                                 item.getId(),
-                                                                                 item.getRoomToken(),
-                                                                                 item.getLabel(),
-                                                                                 conversationUser,
-                                                                                 item.getSource(),
-                                                                                 R.xml.chip_you,
-                                                                                 editText,
-                                                                                 viewThemeUtils,
-                                                                                 "federated_users".equals(item.getSource())),
-                                      BetterImageSpan.ALIGN_CENTER,
-                                      id, item.getLabel());
+        Spans.MentionSpan mentionChipSpan;
+        if (BuildConfig.NEW_MENTION_CHIP_STYLE) {
+            boolean isSelf = id != null && id.equals(conversationUser.getUserId());
+            mentionChipSpan = new Spans.MentionChipSpan(
+                id,
+                item.getLabel(),
+                "@",
+                4f,
+                20f,
+                20f,
+                context.getColor(R.color.transparent),
+                context.getColor(isSelf ? R.color.green_read : R.color.colorPrimary)
+            );
+        } else {
+            mentionChipSpan = new Spans.MentionChipSpanWithHead(
+                DisplayUtils.getDrawableForMentionChipSpan(context,
+                                                           item.getId(),
+                                                           item.getRoomToken(),
+                                                           item.getLabel(),
+                                                           conversationUser,
+                                                           item.getSource(),
+                                                           R.xml.chip_you,
+                                                           editText,
+                                                           viewThemeUtils,
+                                                           "federated_users".equals(item.getSource())),
+                BetterImageSpan.ALIGN_CENTER,
+                id,
+                item.getLabel()
+            );
+        }
         editable.setSpan(mentionChipSpan,
                          range.getStart() + charSequence.length(),
                          range.getStart() + replacementStringBuilder.length() + charSequence.length(),

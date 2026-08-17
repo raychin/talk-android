@@ -55,6 +55,7 @@ import coil.request.ImageRequest
 import coil.target.Target
 import coil.transform.CircleCropTransformation
 import com.google.android.material.chip.ChipDrawable
+import com.nextcloud.talk.BuildConfig
 import com.nextcloud.talk.PhoneUtils.isPhoneNumber
 import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication.Companion.sharedApplication
@@ -67,6 +68,7 @@ import com.nextcloud.talk.utils.ApiUtils.getUrlForAvatar
 import com.nextcloud.talk.utils.ApiUtils.getUrlForFederatedAvatar
 import com.nextcloud.talk.utils.ApiUtils.getUrlForGuestAvatar
 import com.nextcloud.talk.utils.preferences.AppPreferencesImpl
+import com.nextcloud.talk.utils.text.Spans
 import com.nextcloud.talk.utils.text.Spans.MentionChipSpan
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -313,31 +315,45 @@ object DisplayUtils {
         //     }
         // }
         var lastStartIndex = 0
-        var mentionChipSpan: MentionChipSpan
+        var mentionChipSpan: Spans.MentionSpan
         while (m.find()) {
             val start = stringText.indexOf(m.group(), lastStartIndex)
             val end = start + m.group().length
             lastStartIndex = end
-            val drawableForChip = getDrawableForMentionChipSpan(
-                context,
-                id,
-                roomToken,
-                label,
-                conversationUser,
-                type,
-                chipXmlRes,
-                null,
-                viewThemeUtils,
-                isFederated
-            )
-            mentionChipSpan = MentionChipSpan(
-                drawableForChip,
-                BetterImageSpan.ALIGN_CENTER,
-                id,
-                label
-            )
+            if (BuildConfig.NEW_MENTION_CHIP_STYLE) {
+                val isSelf = id == conversationUser.userId
+                mentionChipSpan = MentionChipSpan(
+                    id,
+                    label,
+                    "@",
+                    4f,
+                    20f,
+                    20f,
+                    context.getColor(R.color.transparent),
+                    context.getColor(if (isSelf) R.color.green_read else R.color.colorPrimary)
+                )
+            } else {
+                val drawableForChip = getDrawableForMentionChipSpan(
+                    context,
+                    id,
+                    roomToken,
+                    label,
+                    conversationUser,
+                    type,
+                    chipXmlRes,
+                    null,
+                    viewThemeUtils,
+                    isFederated
+                )
+                mentionChipSpan = Spans.MentionChipSpanWithHead(
+                    drawableForChip,
+                    BetterImageSpan.ALIGN_CENTER,
+                    id,
+                    label
+                )
+            }
             spannableString.setSpan(mentionChipSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            if (chipXmlRes == R.xml.chip_you) {
+            if (chipXmlRes == R.xml.chip_you && !BuildConfig.NEW_MENTION_CHIP_STYLE) {
                 spannableString.setSpan(
                     viewThemeUtils.talk.themeForegroundColorSpan(context),
                     start,
