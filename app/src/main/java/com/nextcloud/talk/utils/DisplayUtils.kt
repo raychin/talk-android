@@ -287,6 +287,7 @@ object DisplayUtils {
         return builder
     }
 
+    @Suppress("LongParameterList")
     fun searchAndReplaceWithMentionSpan(
         key: String,
         context: Context,
@@ -298,11 +299,12 @@ object DisplayUtils {
         conversationUser: User,
         @XmlRes chipXmlRes: Int,
         viewThemeUtils: ViewThemeUtils,
-        isFederated: Boolean
+        isFederated: Boolean,
+        literalSearchString: String? = null
     ): Spannable {
         val spannableString: Spannable = SpannableString(text)
         val stringText = text.toString()
-        val keyWithBrackets = "{$key}"
+        val keyWithBrackets = literalSearchString ?: "{$key}"
         val m = Pattern.compile(keyWithBrackets, Pattern.CASE_INSENSITIVE or Pattern.LITERAL or Pattern.MULTILINE)
             .matcher(spannableString)
         // val clickableSpan: ClickableSpan = object : ClickableSpan() {

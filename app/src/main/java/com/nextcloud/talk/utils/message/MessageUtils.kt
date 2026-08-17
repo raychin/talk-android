@@ -80,7 +80,7 @@ class MessageUtils(val context: Context) {
     ): Spanned {
         var processedMessageText = spannedText
         val messageParameters = message.messageParameters
-        if (messageParameters != null && messageParameters.size > 0) {
+        if (!messageParameters.isNullOrEmpty() && messageParameters.isNotEmpty()) {
             processedMessageText = processMessageParameters(
                 themingContext,
                 viewThemeUtils,
@@ -136,12 +136,13 @@ class MessageUtils(val context: Context) {
                             user,
                             chip,
                             viewThemeUtils,
-                            individualHashMap["server"] != null
+                            individualHashMap["server"] != null,
+                            if (message.isTemporary) buildRawMentionToken(id, type) else null
                         )
                     }
 
                     "file" -> {
-                        itemView?.setOnClickListener { v ->
+                        itemView?.setOnClickListener {
                             val browserIntent = Intent(Intent.ACTION_VIEW, individualHashMap["link"]?.toUri())
                             context.startActivity(browserIntent)
                         }
@@ -224,5 +225,35 @@ class MessageUtils(val context: Context) {
     companion object {
         private const val TAG = "MessageUtils"
         const val MAX_REPLY_LENGTH = 250
+
+        /**
+         * 从 mention id 推导服务端 messageParameters 使用的 type。
+         */
+        fun deriveMentionType(mentionId: String): String = when {
+            mentionId.startsWith("guest/") -> "guest"
+            mentionId.startsWith("group/") -> "user-group"
+            mentionId.startsWith("email/") -> "email"
+            mentionId.startsWith("team/") -> "team"
+            mentionId == "all" -> "call"
+            else -> "user"
+        }
+
+        /**
+         * 生成临时消息中原始提到文本（@id / @"guest/xxx" / @all），
+         * 与 MessageInputFragment.replaceMentionChipSpans 的规则保持一致。
+         */
+        fun buildRawMentionToken(mentionId: String, type: String?): String {
+            if (type == "call") {
+                return "@all"
+            }
+            var id = mentionId
+            val shouldQuote = id.contains(" ") || id.contains("@") ||
+                id.startsWith("guest/") || id.startsWith("group/") ||
+                id.startsWith("email/") || id.startsWith("team/")
+            if (shouldQuote) {
+                id = "\"$id\""
+            }
+            return "@$id"
+        }
     }
 }

@@ -160,7 +160,8 @@ class MessageInputViewModel :
         displayName: String,
         replyTo: Int,
         sendWithoutNotification: Boolean,
-        threadTitle: String?
+        threadTitle: String?,
+        messageParameters: HashMap<String?, HashMap<String?, String?>>? = null
     ) {
         val referenceId = SendMessageUtils().generateReferenceId()
         Log.d(TAG, "Random SHA-256 Hash: $referenceId")
@@ -171,7 +172,8 @@ class MessageInputViewModel :
                 displayName,
                 replyTo,
                 sendWithoutNotification,
-                referenceId
+                referenceId,
+                messageParameters
             ).collect { result ->
                 if (result.isSuccess) {
                     Log.d(TAG, "temp message ref id: " + (result.getOrNull()?.referenceId ?: "none"))

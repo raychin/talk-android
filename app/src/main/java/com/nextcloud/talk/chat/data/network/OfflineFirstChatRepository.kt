@@ -1050,7 +1050,8 @@ class OfflineFirstChatRepository @Inject constructor(
         displayName: String,
         replyTo: Int,
         sendWithoutNotification: Boolean,
-        referenceId: String
+        referenceId: String,
+        messageParameters: HashMap<String?, HashMap<String?, String?>>?
     ): Flow<Result<ChatMessage?>> =
         flow {
             try {
@@ -1059,7 +1060,8 @@ class OfflineFirstChatRepository @Inject constructor(
                     message.toString(),
                     replyTo,
                     sendWithoutNotification,
-                    referenceId
+                    referenceId,
+                    messageParameters
                 )
 
                 chatDao.upsertChatMessage(tempChatMessageEntity)
@@ -1281,12 +1283,14 @@ class OfflineFirstChatRepository @Inject constructor(
         Log.d("Ray", "Updated chat message with id: ${entity.id}")
     }
 
+    @Suppress("LongParameterList")
     private fun createChatMessageEntity(
         internalConversationId: String,
         message: String,
         replyTo: Int,
         sendWithoutNotification: Boolean,
-        referenceId: String
+        referenceId: String,
+        messageParameters: HashMap<String?, HashMap<String?, String?>>? = null
     ): ChatMessageEntity {
         val currentTimeMillies = System.currentTimeMillis()
 
@@ -1309,7 +1313,7 @@ class OfflineFirstChatRepository @Inject constructor(
             actorId = currentUser.userId!!,
             actorType = EnumActorTypeConverter().convertToString(Participant.ActorType.USERS),
             accountId = currentUser.id!!,
-            messageParameters = null,
+            messageParameters = messageParameters,
             messageType = "comment",
             parentMessageId = parentMessageId,
             systemMessageType = ChatMessage.SystemMessageType.DUMMY,

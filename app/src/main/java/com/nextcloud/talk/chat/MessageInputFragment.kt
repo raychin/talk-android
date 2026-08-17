@@ -1011,22 +1011,27 @@ class MessageInputFragment : Fragment() {
     private fun submitMessage(sendWithoutNotification: Boolean) {
         if (binding.fragmentMessageInputView.inputEditText != null) {
             val editable = binding.fragmentMessageInputView.inputEditText!!.editableText
-            replaceMentionChipSpans(editable)
+            val messageParameters = replaceMentionChipSpans(editable)
             binding.fragmentMessageInputView.inputEditText?.setText("")
             sendStopTypingMessage()
             sendMessage(
                 editable.toString(),
-                sendWithoutNotification
+                sendWithoutNotification,
+                messageParameters
             )
             cancelReply()
             cancelCreateThread()
         }
     }
 
-    private fun sendMessage(message: String, sendWithoutNotification: Boolean) {
+    private fun sendMessage(
+        message: String,
+        sendWithoutNotification: Boolean,
+        messageParameters: HashMap<String?, HashMap<String?, String?>>? = null
+    ) {
         messageInputViewModel.sendChatMessage(
-        // 发送文本消息 add by ray on 2026/04/20
-        // chatActivity.messageInputViewModel.sendChatMessage(
+            // 发送文本消息 add by ray on 2026/04/20
+            // chatActivity.messageInputViewModel.sendChatMessage(
             credentials = chatActivity.conversationUser!!.getCredentials(),
             url = ApiUtils.getUrlForChat(
                 chatActivity.chatApiVersion,
@@ -1037,16 +1042,18 @@ class MessageInputFragment : Fragment() {
             displayName = chatActivity.conversationUser!!.displayName ?: "",
             replyTo = chatActivity.getReplyToMessageId(),
             sendWithoutNotification = sendWithoutNotification,
-            threadTitle = chatActivity.chatViewModel.messageDraft.threadTitle
+            threadTitle = chatActivity.chatViewModel.messageDraft.threadTitle,
+            messageParameters = messageParameters
         )
     }
 
-    private fun replaceMentionChipSpans(editable: Editable) {
+    private fun replaceMentionChipSpans(editable: Editable): HashMap<String?, HashMap<String?, String?>>? {
         val mentionSpans = editable.getSpans(
             0,
             editable.length,
             Spans.MentionChipSpan::class.java
         )
+        var messageParameters: HashMap<String?, HashMap<String?, String?>>? = null
         for (mentionSpan in mentionSpans) {
             var mentionId = mentionSpan.id
             val shouldQuote = mentionId.contains(" ") ||
@@ -1063,7 +1070,16 @@ class MessageInputFragment : Fragment() {
                 editable.getSpanEnd(mentionSpan),
                 "@$mentionId"
             )
+            val params = messageParameters ?: HashMap<String?, HashMap<String?, String?>>().also {
+                messageParameters = it
+            }
+            params[mentionSpan.id] = hashMapOf<String?, String?>(
+                "id" to mentionSpan.id,
+                "name" to mentionSpan.label.toString(),
+                "type" to MessageUtils.deriveMentionType(mentionSpan.id)
+            )
         }
+        return messageParameters
     }
 
     private fun showSendButtonMenu() {
