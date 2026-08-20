@@ -274,6 +274,7 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
         ChatActivity chatActivity) {
         super(senderId, holders, imageLoader);
         this.chatActivity = chatActivity;
+        setHasStableIds(true);
 
 //        // ... existing code ...
 //        //  TODO RAY 设置长按监听器以进入选择模式，暂时不适用
@@ -294,6 +295,15 @@ public class TalkMessagesListAdapter<M extends IMessage> extends MessagesListAda
     
     public List<MessagesListAdapter.Wrapper> getItems() {
         return items;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        if (items != null && position >= 0 && position < items.size() &&
+            items.get(position).item instanceof ChatMessage) {
+            return ((ChatMessage) items.get(position).item).getJsonMessageId();
+        }
+        return super.getItemId(position);
     }
 
     @Override

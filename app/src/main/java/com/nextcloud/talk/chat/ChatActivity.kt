@@ -842,6 +842,7 @@ class ChatActivity :
                     if (adapter == null) {
                         initAdapter()
                         binding.messagesListView.setAdapter(adapter)
+                        binding.messagesListView.itemAnimator = null
                         layoutManager = binding.messagesListView.layoutManager as? LinearLayoutManager
                     }
 
@@ -1323,20 +1324,18 @@ class ChatActivity :
                     if (ChatMessage.SystemMessageType.CLEARED_CHAT == chatMessageList[0].systemMessageType) {
                         adapter?.clear()
                         adapter?.notifyDataSetChanged()
-                    }
-
-                    if (lookIntoFuture) {
-                        Log.d(TAG, "chatMessageList.size in getMessageFlow:" + chatMessageList.size)
-                        processMessagesFromTheFuture(chatMessageList, setUnreadMessagesMarker)
                     } else {
-                        processMessagesNotFromTheFuture(chatMessageList)
-                        collapseSystemMessages()
+                        if (lookIntoFuture) {
+                            Log.d(TAG, "chatMessageList.size in getMessageFlow:" + chatMessageList.size)
+                            processMessagesFromTheFuture(chatMessageList, setUnreadMessagesMarker)
+                        } else {
+                            processMessagesNotFromTheFuture(chatMessageList)
+                            collapseSystemMessages()
+                        }
+
+                        processExpiredMessages()
+                        processCallStartedMessages()
                     }
-
-                    processExpiredMessages()
-                    processCallStartedMessages()
-
-                    adapter?.notifyDataSetChanged()
                 }
                 .collect()
         }
@@ -3529,7 +3528,6 @@ class ChatActivity :
                     }
                 }
                 adapter!!.delete(messagesToDelete)
-                adapter!!.notifyDataSetChanged()
             }
         }
 
@@ -3543,13 +3541,21 @@ class ChatActivity :
     }
 
     private fun updateReadStatusOfAllMessages(xChatLastCommonRead: Int?) {
-        if (adapter != null) {
-            for (message in adapter!!.items) {
-                xChatLastCommonRead?.let {
-                    updateReadStatusOfMessage(message, it)
+        if (adapter == null || xChatLastCommonRead == null) return
+        for (i in adapter!!.items.indices) {
+            val wrapper = adapter!!.items[i]
+            if (wrapper.item is ChatMessage) {
+                val message = wrapper.item as ChatMessage
+                val newStatus = if (message.jsonMessageId <= xChatLastCommonRead) {
+                    ReadStatus.READ
+                } else {
+                    ReadStatus.SENT
+                }
+                if (message.readStatus != newStatus) {
+                    message.readStatus = newStatus
+                    adapter!!.notifyItemChanged(i, "read_status")
                 }
             }
-            adapter!!.notifyDataSetChanged()
         }
     }
 
@@ -3621,8 +3627,7 @@ class ChatActivity :
                 // 去重：如果 adapter 中已存在相同 id 的消息，则跳过
                 val existingPos = it.getMessagePositionById(chatMessage.id)
                 if (existingPos != null && existingPos >= 0) {
-                    // 已存在，原地更新而非重复添加
-                    it.update(chatMessage)
+                    // 已存在，不触发 rebind（长轮询回传的同一消息内容无变化）
                 } else {
                     // 不存在，添加新消息
                     val previousChatMessage = it.items?.getOrNull(1)?.item
