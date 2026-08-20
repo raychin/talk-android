@@ -468,11 +468,13 @@ class MessageInputFragment : Fragment() {
                         if (start >= editable.getSpanStart(mentionSpan) &&
                             start < editable.getSpanEnd(mentionSpan)
                         ) {
-                            if (editable.subSequence(
-                                    editable.getSpanStart(mentionSpan),
-                                    editable.getSpanEnd(mentionSpan)
-                                ).toString().trim() != mentionSpan.label
-                            ) {
+                            val spanText = editable.subSequence(
+                                editable.getSpanStart(mentionSpan),
+                                editable.getSpanEnd(mentionSpan)
+                            ).toString().trim()
+                            val labelText = mentionSpan.label.toString()
+                            // 新样式 marker 覆盖 "@名字"，旧样式覆盖 "名字"，都需保留
+                            if (spanText != labelText && spanText != Spans.mentionDisplayText(labelText)) {
                                 editable.removeSpan(mentionSpan)
                             }
                         }
@@ -1348,35 +1350,24 @@ class MessageInputFragment : Fragment() {
                 //         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 //     )
                 // }
-                val searchText = "@$name"
-                val atSignIndex = editable.indexOf(searchText, startPos)
-                if (atSignIndex != -1) {
-                    // val spanStart = atSignIndex + 1  // 跳过@符号，span 只覆盖名字
-                    // val spanEnd = atSignIndex + searchText.length
+                val displayName = Spans.mentionDisplayText(name)
+                val mentionStart = editable.indexOf(displayName, startPos)
+                if (mentionStart != -1) {
+                    val mentionEnd = mentionStart + displayName.length
 
-                    // 将 "@名字" 替换为 " 名字 "，去掉@符号，前后加空格
-                    // 和 MentionAutocompleteCallback 完全一致
-                    val replacement = " $name "
-                    editable.replace(atSignIndex, atSignIndex + searchText.length, replacement)
-
-                    // span 只覆盖 "名字" 部分（前导空格之后）
-                    val spanStart = atSignIndex + 1  // 跳过前导空格
-                    val spanEnd = spanStart + name.length
-
-                    val mentionChipSpan: Spans.MentionSpan
                     if (BuildConfig.NEW_MENTION_CHIP_STYLE) {
                         val isSelf = mentionId == chatActivity.conversationUser?.userId
-                        mentionChipSpan = Spans.MentionChipSpan(
-                            mentionId,
-                            name,
-                            "@",
-                            4f,
-                            20f,
-                            20f,
-                            requireContext().getColor(R.color.transparent),
-                            requireContext().getColor(if (isSelf) R.color.green_read else R.color.colorPrimary)
+                        val textColor = requireContext().getColor(
+                            if (isSelf) R.color.green_read else R.color.colorPrimary
                         )
+                        // 保留 @符号，@名字 整体着色
+                        Spans.applyMentionChipStyle(editable, mentionStart, mentionEnd, mentionId, name, textColor)
                     } else {
+                        // 旧样式：去掉 @，替换为 " 名字 "，chip 覆盖名字
+                        editable.replace(mentionStart, mentionEnd, " $name ")
+                        val spanStart = mentionStart + 1
+                        val spanEnd = spanStart + name.length
+
                         val drawable = DisplayUtils.getDrawableForMentionChipSpan(
                             requireContext(),
                             mentionId,
@@ -1389,22 +1380,13 @@ class MessageInputFragment : Fragment() {
                             viewThemeUtils,
                             "federated_users" == type
                         )
-                        mentionChipSpan = Spans.MentionChipSpanWithHead(
+                        val mentionChipSpan = Spans.MentionChipSpanWithHead(
                             drawable,
                             BetterImageSpan.ALIGN_CENTER,
                             mentionId,
                             name
                         )
-                    }
-                    editable.setSpan(
-                        mentionChipSpan,
-                        spanStart,
-                        spanEnd,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-
-                    // chip_you 需要额外设置前景色 span（白色文字）
-                    if (!BuildConfig.NEW_MENTION_CHIP_STYLE) {
+                        editable.setSpan(mentionChipSpan, spanStart, spanEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                         editable.setSpan(
                             viewThemeUtils.talk.themeForegroundColorSpan(requireContext()),
                             spanStart,

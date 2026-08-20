@@ -59,44 +59,43 @@ public class MentionAutocompleteCallback implements AutocompleteCallback<Mention
             replacementStringBuilder.delete(emojiRange.range.getStart(), emojiRange.range.getEndInclusive());
         }
 
-        String charSequence = " ";
-        editable.replace(range.getStart(), range.getEnd(), charSequence + replacementStringBuilder + " ");
         String id;
         if (item.getMentionId() != null) id = item.getMentionId(); else id = item.getId();
-        Spans.MentionSpan mentionChipSpan;
+        int spanStart = range.getStart() + 1;
         if (BuildConfig.NEW_MENTION_CHIP_STYLE) {
+            String displayText = Spans.mentionDisplayText(replacementStringBuilder);
+            editable.replace(range.getStart(), range.getEnd(), " " + displayText + " ");
             boolean isSelf = id != null && id.equals(conversationUser.getUserId());
-            mentionChipSpan = new Spans.MentionChipSpan(
-                id,
-                item.getLabel(),
-                "@",
-                4f,
-                20f,
-                20f,
-                context.getColor(R.color.transparent),
-                context.getColor(isSelf ? R.color.green_read : R.color.colorPrimary)
-            );
+            int textColor = context.getColor(isSelf ? R.color.green_read : R.color.colorPrimary);
+            Spans.applyMentionChipStyle(editable,
+                                        spanStart,
+                                        spanStart + displayText.length(),
+                                        id,
+                                        item.getLabel(),
+                                        textColor);
         } else {
-            mentionChipSpan = new Spans.MentionChipSpanWithHead(
-                DisplayUtils.getDrawableForMentionChipSpan(context,
-                                                           item.getId(),
-                                                           item.getRoomToken(),
-                                                           item.getLabel(),
-                                                           conversationUser,
-                                                           item.getSource(),
-                                                           R.xml.chip_you,
-                                                           editText,
-                                                           viewThemeUtils,
-                                                           "federated_users".equals(item.getSource())),
-                BetterImageSpan.ALIGN_CENTER,
-                id,
-                item.getLabel()
-            );
+            String charSequence = " ";
+            editable.replace(range.getStart(), range.getEnd(), charSequence + replacementStringBuilder + " ");
+            Spans.MentionChipSpanWithHead mentionChipSpan =
+                new Spans.MentionChipSpanWithHead(
+                    DisplayUtils.getDrawableForMentionChipSpan(context,
+                                                               item.getId(),
+                                                               item.getRoomToken(),
+                                                               item.getLabel(),
+                                                               conversationUser,
+                                                               item.getSource(),
+                                                               R.xml.chip_you,
+                                                               editText,
+                                                               viewThemeUtils,
+                                                               "federated_users".equals(item.getSource())),
+                    BetterImageSpan.ALIGN_CENTER,
+                    id,
+                    item.getLabel());
+            editable.setSpan(mentionChipSpan,
+                             spanStart,
+                             spanStart + replacementStringBuilder.length(),
+                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
-        editable.setSpan(mentionChipSpan,
-                         range.getStart() + charSequence.length(),
-                         range.getStart() + replacementStringBuilder.length() + charSequence.length(),
-                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
 
         return true;

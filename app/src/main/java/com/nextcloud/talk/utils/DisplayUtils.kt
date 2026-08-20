@@ -69,7 +69,6 @@ import com.nextcloud.talk.utils.ApiUtils.getUrlForFederatedAvatar
 import com.nextcloud.talk.utils.ApiUtils.getUrlForGuestAvatar
 import com.nextcloud.talk.utils.preferences.AppPreferencesImpl
 import com.nextcloud.talk.utils.text.Spans
-import com.nextcloud.talk.utils.text.Spans.MentionChipSpan
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -304,56 +303,64 @@ object DisplayUtils {
         isFederated: Boolean,
         literalSearchString: String? = null
     ): Spannable {
-        val spannableString: Spannable = SpannableString(text)
-        val stringText = text.toString()
         val keyWithBrackets = literalSearchString ?: "{$key}"
-        val m = Pattern.compile(keyWithBrackets, Pattern.CASE_INSENSITIVE or Pattern.LITERAL or Pattern.MULTILINE)
-            .matcher(spannableString)
-        // val clickableSpan: ClickableSpan = object : ClickableSpan() {
-        //     override fun onClick(widget: View) {
-        //         EventBus.getDefault().post(UserMentionClickEvent(id))
-        //     }
-        // }
+        val stringText = text.toString()
+        val pattern = Pattern.compile(keyWithBrackets, Pattern.CASE_INSENSITIVE or Pattern.LITERAL or Pattern.MULTILINE)
+
+        if (BuildConfig.NEW_MENTION_CHIP_STYLE) {
+            // 新样式：占位符替换为 @名字，透明背景、无边框彩色文字，普通文本可自动换行
+            val matches = mutableListOf<Pair<Int, Int>>()
+            var lastStartIndex = 0
+            val m = pattern.matcher(stringText)
+            while (m.find()) {
+                val start = stringText.indexOf(m.group(), lastStartIndex)
+                val end = start + m.group().length
+                lastStartIndex = end
+                matches.add(start to end)
+            }
+
+            val builder = SpannableStringBuilder(text)
+            val displayName = Spans.mentionDisplayText(label)
+            val textColor = context.getColor(
+                if (id == conversationUser.userId) R.color.green_read else R.color.colorPrimary
+            )
+            for ((start, end) in matches.reversed()) {
+                val nameEnd = start + displayName.length
+                builder.replace(start, end, displayName)
+                Spans.applyMentionChipStyle(builder, start, nameEnd, id, label, textColor)
+            }
+            return builder
+        }
+
+        // 旧样式：头像 drawable chip（单行原子，保持原行为）
+        val spannableString: Spannable = SpannableString(text)
+        val m = pattern.matcher(spannableString)
         var lastStartIndex = 0
-        var mentionChipSpan: Spans.MentionSpan
+        var mentionChipSpan: Spans.MentionChipSpanWithHead
         while (m.find()) {
             val start = stringText.indexOf(m.group(), lastStartIndex)
             val end = start + m.group().length
             lastStartIndex = end
-            if (BuildConfig.NEW_MENTION_CHIP_STYLE) {
-                val isSelf = id == conversationUser.userId
-                mentionChipSpan = MentionChipSpan(
-                    id,
-                    label,
-                    "@",
-                    4f,
-                    20f,
-                    20f,
-                    context.getColor(R.color.transparent),
-                    context.getColor(if (isSelf) R.color.green_read else R.color.colorPrimary)
-                )
-            } else {
-                val drawableForChip = getDrawableForMentionChipSpan(
-                    context,
-                    id,
-                    roomToken,
-                    label,
-                    conversationUser,
-                    type,
-                    chipXmlRes,
-                    null,
-                    viewThemeUtils,
-                    isFederated
-                )
-                mentionChipSpan = Spans.MentionChipSpanWithHead(
-                    drawableForChip,
-                    BetterImageSpan.ALIGN_CENTER,
-                    id,
-                    label
-                )
-            }
+            val drawableForChip = getDrawableForMentionChipSpan(
+                context,
+                id,
+                roomToken,
+                label,
+                conversationUser,
+                type,
+                chipXmlRes,
+                null,
+                viewThemeUtils,
+                isFederated
+            )
+            mentionChipSpan = Spans.MentionChipSpanWithHead(
+                drawableForChip,
+                BetterImageSpan.ALIGN_CENTER,
+                id,
+                label
+            )
             spannableString.setSpan(mentionChipSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            if (chipXmlRes == R.xml.chip_you && !BuildConfig.NEW_MENTION_CHIP_STYLE) {
+            if (chipXmlRes == R.xml.chip_you) {
                 spannableString.setSpan(
                     viewThemeUtils.talk.themeForegroundColorSpan(context),
                     start,

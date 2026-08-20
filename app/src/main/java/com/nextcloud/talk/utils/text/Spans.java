@@ -7,15 +7,13 @@
  */
 package com.nextcloud.talk.utils.text;
 
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.text.style.ReplacementSpan;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import third.parties.fresco.BetterImageSpan;
 
@@ -27,6 +25,71 @@ public class Spans {
         CharSequence getLabel();
     }
 
+    /**
+     * 新样式：纯标记 span，不参与绘制。
+     * 视觉由 ForegroundColorSpan（透明背景、无边框的彩色文字）呈现，长昵称完整显示并自动换行。
+     */
+    public static class MentionChipSpan implements MentionSpan {
+        private String id;
+        private CharSequence label;
+
+        public MentionChipSpan(String id, CharSequence label) {
+            this.id = id;
+            this.label = label;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public CharSequence getLabel() {
+            return label;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public void setLabel(CharSequence label) {
+            this.label = label;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+            if (!(o instanceof MentionChipSpan)) {
+                return false;
+            }
+            MentionChipSpan other = (MentionChipSpan) o;
+            Object thisId = getId();
+            Object otherId = other.getId();
+            if (thisId == null ? otherId != null : !thisId.equals(otherId)) {
+                return false;
+            }
+            Object thisLabel = getLabel();
+            Object otherLabel = other.getLabel();
+            return thisLabel == null ? otherLabel == null : thisLabel.equals(otherLabel);
+        }
+
+        @Override
+        public int hashCode() {
+            final int PRIME = 59;
+            int result = 1;
+            Object id = getId();
+            result = result * PRIME + (id == null ? 43 : id.hashCode());
+            Object label = getLabel();
+            return result * PRIME + (label == null ? 43 : label.hashCode());
+        }
+
+        @Override
+        public String toString() {
+            return "MentionChipSpan(id=" + getId() + ", label=" + getLabel() + ")";
+        }
+    }
+
+    // 旧样式：头像 drawable chip（单行原子，不换行），保持原样不变
     public static class MentionChipSpanWithHead extends BetterImageSpan implements MentionSpan {
         public String id;
         public CharSequence label;
@@ -71,7 +134,6 @@ public class Spans {
             }
             final Object this$label = this.getLabel();
             final Object other$label = other.getLabel();
-
             return this$label == null ? other$label == null : this$label.equals(other$label);
         }
 
@@ -93,139 +155,26 @@ public class Spans {
         }
     }
 
-    public static class MentionChipSpan extends ReplacementSpan implements MentionSpan {
-        private String id;
-        private CharSequence label;
-        private final String prefix;                       // 显示前缀，默认为 @
-        private final float cornerRadius;
-        private final float paddingLeft;
-        private final float paddingRight;
-        private final int backgroundColor;
-        private final int textColor;
-        private final Paint textPaint;
-        private final Paint bgPaint;
-        private final RectF rectF;
-        private final Rect textBounds;
+    /**
+     * 新样式统一装配：标记 span + 文字颜色（透明背景、无边框）。
+     */
+    public static void applyMentionChipStyle(
+        @NonNull Spannable spannable,
+        int start,
+        int end,
+        String id,
+        CharSequence label,
+        @ColorInt int textColor
+    ) {
+        spannable.setSpan(new MentionChipSpan(id, label), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannable.setSpan(new ForegroundColorSpan(textColor), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
 
-        // 构造方法：默认前缀为 "@"
-        public MentionChipSpan(String id, CharSequence label) {
-            this(id, label, "@", 8f, 12f, 12f, 0xFFE0E0E0, 0xFF000000);
-        }
-
-        // 完整构造方法，支持自定义前缀
-        public MentionChipSpan(String id, CharSequence label, String prefix,
-                               float cornerRadius, float paddingLeft, float paddingRight,
-                               int backgroundColor, int textColor) {
-            this.id = id;
-            this.label = label;
-            this.prefix = (prefix != null) ? prefix : "@";
-            this.cornerRadius = cornerRadius;
-            this.paddingLeft = paddingLeft;
-            this.paddingRight = paddingRight;
-            this.backgroundColor = backgroundColor;
-            this.textColor = textColor;
-
-            this.textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            this.textPaint.setColor(textColor);
-            this.textPaint.setTextSize(46f);
-            this.bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            this.bgPaint.setColor(backgroundColor);
-            this.rectF = new RectF();
-            this.textBounds = new Rect();
-        }
-
-        @Override
-        public int getSize(@NonNull Paint paint, CharSequence text, int start, int end,
-                           @Nullable Paint.FontMetricsInt fm) {
-            String labelStr = label.toString();
-            String displayText = labelStr.startsWith(prefix) ? labelStr : prefix + labelStr;
-            textPaint.getTextBounds(displayText, 0, displayText.length(), textBounds);
-            float textWidth = textBounds.width();
-            return (int) (textWidth + paddingLeft + paddingRight);
-        }
-
-        @Override
-        public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end,
-                         float x, int top, int y, int bottom, @NonNull Paint paint) {
-            int originalColor = paint.getColor();
-            Paint.Style originalStyle = paint.getStyle();
-
-            String labelStr = label.toString();
-            String displayText = labelStr.startsWith(prefix) ? labelStr : prefix + labelStr;
-            textPaint.getTextBounds(displayText, 0, displayText.length(), textBounds);
-            float textWidth = textBounds.width();
-
-            float left = x;
-            float right = x + textWidth + paddingLeft + paddingRight;
-            float topF = top;
-            float bottomF = bottom;
-            rectF.set(left, topF, right, bottomF);
-            canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, bgPaint);
-
-            Paint.FontMetricsInt fm = textPaint.getFontMetricsInt();
-            int baselineY = (top + bottom - fm.top - fm.bottom) / 2;
-            float textX = x + paddingLeft;
-            canvas.drawText(displayText, textX, baselineY, textPaint);
-
-            paint.setColor(originalColor);
-            paint.setStyle(originalStyle);
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public CharSequence getLabel() {
-            return label;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public void setLabel(CharSequence label) {
-            this.label = label;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == this) {
-                return true;
-            }
-            if (!(o instanceof MentionChipSpan)) {
-                return false;
-            }
-            MentionChipSpan other = (MentionChipSpan) o;
-            if (!other.canEqual(this)) {
-                return false;
-            }
-            Object thisId = getId();
-            Object otherId = other.getId();
-            if (thisId == null ? otherId != null : !thisId.equals(otherId)) {
-                return false;
-            }
-            Object thisLabel = getLabel();
-            Object otherLabel = other.getLabel();
-            return thisLabel == null ? otherLabel == null : thisLabel.equals(otherLabel);
-        }
-
-        protected boolean canEqual(Object other) {
-            return other instanceof MentionChipSpan;
-        }
-
-        @Override
-        public int hashCode() {
-            final int PRIME = 59;
-            int result = 1;
-            Object id = getId();
-            result = result * PRIME + (id == null ? 43 : id.hashCode());
-            Object label = getLabel();
-            return result * PRIME + (label == null ? 43 : label.hashCode());
-        }
-
-        @Override
-        public String toString() {
-            return "MentionChipSpan(id=" + getId() + ", label=" + getLabel() + ")";
-        }
+    /**
+     * 计算 @成员 的统一显示文本："@名字"；label 本身以 @ 开头（如 @all）时不重复加 @。
+     */
+    public static String mentionDisplayText(CharSequence label) {
+        String text = label.toString();
+        return text.startsWith("@") ? text : "@" + text;
     }
 }
