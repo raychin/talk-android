@@ -169,14 +169,7 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         Log.d(TAG, "pushMessage.notificationId: " + pushMessage.notificationId)
         Log.d(TAG, "pushMessage.notificationIds: " + pushMessage.notificationIds)
         Log.d(TAG, "pushMessage.timestamp: " + pushMessage.timestamp)
-        Log.d(TAG, "appPreferences.getSyncLatestMessage(): " + appPreferences.getSyncLatestMessage())
-
         if (pushMessage.delete) {
-            val timestampPoor = System.currentTimeMillis() - appPreferences.getSyncLatestMessage()
-            if (3000 > timestampPoor || 0L == appPreferences.getSyncLatestMessage()) {
-                return Result.success()
-            }
-            // 拉取消息会触发delete消息，增加3s缓冲
             cancelNotification(context, signatureVerification.user!!, pushMessage.notificationId)
         } else if (pushMessage.deleteAll) {
             cancelAllNotificationsForAccount(context, signatureVerification.user!!)
@@ -1190,9 +1183,6 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
         }
 
         try {
-            // 3s缓冲，拉取消息触发delete推送的消息
-            appPreferences.setSyncLatestMessage(System.currentTimeMillis())
-
             // Step 1: 获取 Conversation 信息 (token, accountId, capabilities)
             val conversation = chatNetworkDataSource?.getRoom(user, roomToken)
                 ?.blockingFirst()
@@ -1213,31 +1203,29 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             // Step 3: 获取 Chat API 版本 (chat endpoint 用 v1，不是 conversation v4)
             val spreedCapabilities = chatNetworkDataSource?.getCapabilities(user, roomToken)
                 ?.blockingFirst()
-            val chatApiVersion = if (spreedCapabilities != null) {
-                try {
-                    ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(ApiUtils.API_V1))
-                } catch (e: Exception) {
-                    Log.w(TAG, "syncLatestMessagesToDb: getChatApiVersion failed, fallback to 1", e)
-                    ApiUtils.API_V1
+                ?: run {
+                    Log.w(TAG, "syncLatestMessagesToDb: capabilities unavailable, skip background sync")
+                    return
                 }
-            } else {
-                Log.w(TAG, "syncLatestMessagesToDb: capabilities null, fallback to API_V1")
+            if (!canSafelySyncChatMessagesInBackground(spreedCapabilities.features)) {
+                Log.w(
+                    TAG,
+                    "syncLatestMessagesToDb: chat-keep-notifications is unavailable, skip background sync"
+                )
+                return
+            }
+            val chatApiVersion = try {
+                ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(ApiUtils.API_V1))
+            } catch (e: Exception) {
+                Log.w(TAG, "syncLatestMessagesToDb: getChatApiVersion failed, fallback to 1", e)
                 ApiUtils.API_V1
             }
 
             /**
              * Step 4: 构建请求参数 - 使用 lookIntoFuture=1, timeout=0 获取最新消息（非长轮询）
-             * lookIntoFuture=1，会拉去最新消息，同时也会发送delete notification消息，=0不会更新消息
+             * setReadMarker=0 保留聊天未读状态，markNotificationsAsRead=0 保留桌面端依赖的服务端通知。
              */
-            val fieldMap = HashMap<String, Int>()
-            fieldMap["lookIntoFuture"] = 1
-            fieldMap["timeout"] = 0
-            fieldMap["setReadMarker"] = 0
-            fieldMap["limit"] = 100
-            if (newestMessageIdFromDb > 0) {
-                fieldMap["lastKnownMessageId"] = newestMessageIdFromDb.toInt()
-            }
-            fieldMap["includeLastKnown"] = if (newestMessageIdFromDb > 0) 1 else 0
+            val fieldMap = buildBackgroundChatSyncRequestParameters(newestMessageIdFromDb)
 
             val credentialsForSync = ApiUtils.getCredentials(user.username, user.token)
             val urlForChatting = ApiUtils.getUrlForChat(chatApiVersion, user.baseUrl, roomToken)
