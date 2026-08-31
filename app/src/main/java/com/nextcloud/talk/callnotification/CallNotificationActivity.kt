@@ -69,6 +69,8 @@ class CallNotificationActivity : CallBaseActivity() {
     private var leavingScreen = false
     private var handler: Handler? = null
     private var binding: CallNotificationActivityBinding? = null
+    private var isResumed = false
+    private var pendingProceedToCall = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -185,8 +187,10 @@ class CallNotificationActivity : CallBaseActivity() {
             override fun run() {
                 if (NotificationUtils.isNotificationVisible(context, notificationTimestamp!!.toInt())) {
                     notificationHandler.postDelayed(this, ONE_SECOND)
-                } else {
+                } else if (isResumed) {
                     finish()
+                } else {
+                    notificationHandler.post(this)
                 }
             }
         })
@@ -228,6 +232,14 @@ class CallNotificationActivity : CallBaseActivity() {
     }
 
     private fun proceedToCall() {
+        if (isResumed) {
+            doProceedToCall()
+        } else {
+            pendingProceedToCall = true
+        }
+    }
+
+    private fun doProceedToCall() {
         // 修复锁屏、其他应用及app内部接听崩溃问题
         val callIntent = Intent(sharedApplication, CallActivity::class.java)
         intent.putExtra(KEY_ROOM_ONE_TO_ONE, isOneToOneCall)
@@ -293,6 +305,20 @@ class CallNotificationActivity : CallBaseActivity() {
             handler = null
         }
         super.onDestroy()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isResumed = true
+        if (pendingProceedToCall) {
+            pendingProceedToCall = false
+            doProceedToCall()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        isResumed = false
     }
 
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
