@@ -8,19 +8,20 @@
 package com.nextcloud.talk.jobs.clps
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Log
 import androidx.work.CoroutineWorker
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import autodagger.AutoInjector
 import cn.jpush.android.api.JPushInterface
 import com.nextcloud.talk.application.NextcloudTalkApplication
+import com.nextcloud.talk.jobs.PushRegistrationWorker
 import com.nextcloud.talk.utils.preferences.AppPreferences
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.Base64
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -30,77 +31,59 @@ class TalkBackgroundWorker(context: Context, workerParams: WorkerParameters) : C
 
     @Inject
     lateinit var appPreferences: AppPreferences
-    private var context: Context? = null
-
-    @Inject
-    lateinit var okHttpClient: OkHttpClient
 
     override suspend fun doWork(): Result {
         NextcloudTalkApplication.Companion.sharedApplication!!.componentApplication.inject(this)
-        context = applicationContext
 
-        Log.e("Ray", "TalkBackgroundWorker 任务 - ${
-            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
+        Log.d(TAG, "TalkBackgroundWorker 推送保活检查 - ${
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        }")
 
-        // isPushStopped已废弃
-        // val pushStopped = JPushInterface.isPushStopped(applicationContext)
-        // Log.e("Ray", "TalkBackgroundWorker PushStopped = $pushStopped")
-        // if (pushStopped) {
-        //     JPushInterface.resumePush(applicationContext)
-        //     Log.e("Ray", "TalkBackgroundWorker PushStopped2= ${JPushInterface.isPushStopped(applicationContext)}")
-        // }
-        // 调用获取推送状态，在 JPushMessageReceiver 中接收回调 public void onCommandResult
-        JPushInterface.getPushStatus(context);
+        // 网络不可用时直接跳过，AlarmManager 保活会处理网络恢复后的恢复逻辑
+        if (!isNetworkAvailable(applicationContext)) {
+            Log.w(TAG, "Network not available, skip this round")
+            return Result.success()
+        }
 
-        // makeGetRequest()
+        // 1. 主动恢复推送（如果被系统/用户停止）
+        JPushInterface.resumePush(applicationContext)
 
-        // // 创建 xx 秒后执行的一次性任务 45S可行
-        // val delayedWorker = OneTimeWorkRequest.Builder(TalkBackgroundWorker::class.java)
-        //     .setInitialDelay(TALK_WORK_DELAY, TimeUnit.SECONDS)
-        //     .build()
-        // // WorkManager.getInstance(applicationContext).enqueue(delayedWorker)
-        // WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-        //     TALK_WORK_ID,
-        //     // 如果已存在则不再执行
-        //     ExistingWorkPolicy.REPLACE,
-        //     delayedWorker
-        // )
+        // 2. 获取 RegistrationID，为空说明推送服务未就绪
+        val registrationId = JPushInterface.getRegistrationID(applicationContext)
+        if (registrationId.isNullOrEmpty()) {
+            Log.w(TAG, "RegistrationID is null, reinitializing JPush")
+            JPushInterface.init(applicationContext)
+        }
 
-        // return Result.failure()
+        // 3. 检查厂商通道 token 状态
+        JPushInterface.getPushStatus(applicationContext)
+
+        // 4. 如果 RegistrationID 变化了，重新注册到 Nextcloud 服务端
+        if (!registrationId.isNullOrEmpty() && registrationId != appPreferences.pushToken) {
+            Log.d(TAG, "RegistrationID changed: ${registrationId.take(8)}..., re-registering")
+            appPreferences.pushToken = registrationId
+            val data = Data.Builder()
+                .putString(PushRegistrationWorker.ORIGIN, "TalkBackgroundWorker")
+                .build()
+            val work = OneTimeWorkRequest.Builder(PushRegistrationWorker::class.java)
+                .setInputData(data)
+                .build()
+            WorkManager.getInstance(applicationContext).enqueue(work)
+        }
+
         return Result.success()
     }
 
-    private fun makeGetRequest() {
-        val appKey = "37674722073737cd729faf02"
-        val masterSecret = "1a938464d5c1db479a218618"
-        val credentials = "$appKey:$masterSecret"
-        val encodedCredentials = Base64.getEncoder().encodeToString(credentials.toByteArray())
-
-        val httpUrl = "https://api.jpush.cn/v3/messages".toHttpUrlOrNull()?.newBuilder()
-        httpUrl?.addQueryParameter("registration_id", appPreferences.pushToken)
-
-        // val request = Request.Builder()
-        //     .url("https://api.jpush.cn/v3/messages")
-        val request = Request.Builder()
-            .url(httpUrl?.build().toString())
-            .header("Authorization", "Basic $encodedCredentials")
-            .get()
-            .build()
-
-        okHttpClient.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                Log.e(TAG, "Request failed: ${e.message}")
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                response.body?.let { responseBody ->
-                    Log.d(TAG, "Response: ${responseBody.string()}")
-                }
-            }
-        })
+    private fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities != null &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     companion object {
-        val TAG = TalkBackgroundWorker::class.simpleName
+        private val TAG = TalkBackgroundWorker::class.simpleName
     }
 }

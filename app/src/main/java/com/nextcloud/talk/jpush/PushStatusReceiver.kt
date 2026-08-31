@@ -10,8 +10,8 @@ package com.nextcloud.talk.jpush
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import cn.jpush.android.api.JPushInterface
+import com.nextcloud.talk.services.KeepAliveManager
 
 /**
  * 利用系统广播（覆盖被杀后重启场景）
@@ -23,6 +23,11 @@ class PushStatusReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 JPushInterface.getPushStatus(context)
+                JPushInterface.resumePush(context)
+                // 重启保活定时器
+                if (KeepAliveManager.isEnabled(context)) {
+                    KeepAliveManager.start(context)
+                }
             }
         }
     }

@@ -31,6 +31,7 @@ import androidx.multidex.MultiDexApplication
 import androidx.work.BackoffPolicy
 import androidx.work.Configuration
 import androidx.work.Constraints
+import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
@@ -65,6 +66,8 @@ import com.nextcloud.talk.jobs.CapabilitiesWorker
 import com.nextcloud.talk.jobs.SignalingSettingsWorker
 import com.nextcloud.talk.jobs.WebsocketConnectionsWorker
 import com.nextcloud.talk.jobs.clps.TalkBackgroundWorker
+import com.nextcloud.talk.jobs.PushRegistrationWorker
+import com.nextcloud.talk.services.KeepAliveManager
 import com.nextcloud.talk.ui.theme.ThemeModule
 import com.nextcloud.talk.utils.ClosedInterfaceImpl
 import com.nextcloud.talk.utils.DeviceUtils
@@ -72,6 +75,7 @@ import com.nextcloud.talk.utils.NotificationUtils
 import com.nextcloud.talk.utils.download.OtaUpgradeManager
 import com.nextcloud.talk.utils.database.arbitrarystorage.ArbitraryStorageModule
 import com.nextcloud.talk.utils.database.user.UserModule
+import com.nextcloud.talk.utils.preferences.AppPreferencesImpl
 import com.nextcloud.talk.utils.preferences.AppPreferences
 import com.vanniktech.emoji.EmojiManager
 import com.vanniktech.emoji.google.GoogleEmojiProvider
@@ -218,6 +222,10 @@ class NextcloudTalkApplication :
 
         initWorkers()
 
+        if (AppPreferencesImpl(this).isKeepAliveEnabled) {
+            KeepAliveManager.start(this)
+        }
+
         val config = BundledEmojiCompatConfig(this)
         config.setReplaceAll(true)
         val emojiCompat = EmojiCompat.init(config)
@@ -254,52 +262,62 @@ class NextcloudTalkApplication :
     private fun initPush() {
         JPushInterface.setDebugMode(BuildConfig.DEBUG)
         JPushInterface.init(this)
-        // 主进程重启后立即检查推送状态
-        JPushInterface.getPushStatus(this)
+        JPushInterface.resumePush(this)
 
         // 监听应用前后台切换
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
-                // 应用回到前台时检查推送状态
-                JPushInterface.getPushStatus(applicationContext)
+                // 应用回到前台时：主动恢复推送 + 刷新 RegistrationID
+                JPushInterface.resumePush(applicationContext)
+                val registrationId = JPushInterface.getRegistrationID(applicationContext)
+                if (!registrationId.isNullOrEmpty() && registrationId != appPreferences.pushToken) {
+                    appPreferences.pushToken = registrationId
+                    val data = Data.Builder()
+                        .putString(PushRegistrationWorker.ORIGIN, "initPush#onStart")
+                        .build()
+                    val work = OneTimeWorkRequest.Builder(PushRegistrationWorker::class.java)
+                        .setInputData(data)
+                        .build()
+                    WorkManager.getInstance(applicationContext).enqueue(work)
+                }
             }
         })
 
-        val networkMonitor = NetworkMonitorImpl(applicationContext)
         // 监听网络从离线变为在线
+        val networkMonitor = NetworkMonitorImpl(applicationContext)
         ProcessLifecycleOwner.get().lifecycleScope.launch {
             var wasOnline = false
             networkMonitor.isOnline.collect { isOnline ->
                 if (isOnline && !wasOnline) {
-                    // 网络从离线恢复为在线，检查推送状态
+                    Log.d(TAG, "Network recovered, resuming push")
+                    JPushInterface.resumePush(applicationContext)
                     JPushInterface.getPushStatus(applicationContext)
                 }
                 wasOnline = isOnline
             }
         }
 
+        // 后台周期性保活任务
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)       // 有网络才执行
-            .setRequiresDeviceIdle(false)                          // 不需要设备空闲
-            .setRequiresBatteryNotLow(true)                        // 电量不低时才执行
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresDeviceIdle(false)
+            .setRequiresBatteryNotLow(false)   // 低电量也执行保活
             .build()
 
         val periodicPushCheckWork = PeriodicWorkRequest.Builder(
             TalkBackgroundWorker::class.java,
-            // 改为15分钟
             15, TimeUnit.MINUTES
         )
             .setConstraints(constraints)
-            .setBackoffCriteria(         // 失败后指数退避
+            .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
-                30,
-                TimeUnit.MINUTES
+                30, TimeUnit.SECONDS   // 失败后快速重试
             )
             .build()
 
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             "PushStatusCheckWork",
-            ExistingPeriodicWorkPolicy.KEEP,  // 已有则保留，不重复创建
+            ExistingPeriodicWorkPolicy.KEEP,
             periodicPushCheckWork
         )
     }

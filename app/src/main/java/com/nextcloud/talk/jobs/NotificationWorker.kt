@@ -31,6 +31,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.emoji2.text.EmojiCompat
@@ -809,7 +810,9 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             } else {
                 ApiUtils.getUrlForGuestAvatar(baseUrl!!, notificationUser.name, false)
             }
-            person.setIcon(loadAvatarSync(avatarUrl, context!!))
+            val avatarIcon = loadAvatarSync(avatarUrl, context!!)
+                ?: IconCompat.createWithResource(context!!, R.mipmap.ic_launcher)
+            person.setIcon(avatarIcon)
         }
         notificationBuilder.setStyle(getStyle(person.build(), style))
     }
@@ -1180,130 +1183,132 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
 
     @Suppress("TooGenericExceptionCaught", "LongMethod")
     private fun syncLatestMessagesToDb() {
-        val user = signatureVerification.user ?: run {
-            Log.w(TAG, "syncLatestMessagesToDb: user is null, skip")
-            return
-        }
-        val roomToken = pushMessage.id ?: run {
-            Log.w(TAG, "syncLatestMessagesToDb: roomToken is null, skip")
-            return
-        }
+        // TODO RAY 这个接口拉取消息会设置已读，其他端就不会收到消息，同时也会导致主动推送清空notification推送消息
 
-        try {
-            // 3s缓冲，拉取消息触发delete推送的消息
-            appPreferences.setSyncLatestMessage(System.currentTimeMillis())
-
-            // Step 1: 获取 Conversation 信息 (token, accountId, capabilities)
-            val conversation = chatNetworkDataSource?.getRoom(user, roomToken)
-                ?.blockingFirst()
-                ?: run {
-                    Log.w(TAG, "syncLatestMessagesToDb: getRoom returned null")
-                    return
-                }
-
-            val internalConversationId = "${user.id}@$roomToken"
-
-            // Step 2: 获取本地最新消息 ID
-            val db = TalkDatabase.getInstance(applicationContext)
-            val newestMessageIdFromDb = runBlocking {
-                db.chatBlocksDao().getNewestMessageIdFromChatBlocks(internalConversationId, null)
-            }
-            Log.d(TAG, "syncLatestMessagesToDb: newestMessageIdFromDb=$newestMessageIdFromDb for $internalConversationId")
-
-            // Step 3: 获取 Chat API 版本 (chat endpoint 用 v1，不是 conversation v4)
-            val spreedCapabilities = chatNetworkDataSource?.getCapabilities(user, roomToken)
-                ?.blockingFirst()
-            val chatApiVersion = if (spreedCapabilities != null) {
-                try {
-                    ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(ApiUtils.API_V1))
-                } catch (e: Exception) {
-                    Log.w(TAG, "syncLatestMessagesToDb: getChatApiVersion failed, fallback to 1", e)
-                    ApiUtils.API_V1
-                }
-            } else {
-                Log.w(TAG, "syncLatestMessagesToDb: capabilities null, fallback to API_V1")
-                ApiUtils.API_V1
-            }
-
-            /**
-             * Step 4: 构建请求参数 - 使用 lookIntoFuture=1, timeout=0 获取最新消息（非长轮询）
-             * lookIntoFuture=1，会拉去最新消息，同时也会发送delete notification消息，=0不会更新消息
-             */
-            val fieldMap = HashMap<String, Int>()
-            fieldMap["lookIntoFuture"] = 1
-            fieldMap["timeout"] = 0
-            fieldMap["setReadMarker"] = 0
-            fieldMap["limit"] = 100
-            if (newestMessageIdFromDb > 0) {
-                fieldMap["lastKnownMessageId"] = newestMessageIdFromDb.toInt()
-            }
-            fieldMap["includeLastKnown"] = if (newestMessageIdFromDb > 0) 1 else 0
-
-            val credentialsForSync = ApiUtils.getCredentials(user.username, user.token)
-            val urlForChatting = ApiUtils.getUrlForChat(chatApiVersion, user.baseUrl, roomToken)
-
-            // Step 5: 拉取消息
-            val response = chatNetworkDataSource?.pullChatMessages(credentialsForSync!!, urlForChatting, fieldMap)
-                ?.blockingFirst()
-
-            if (response == null || !response.isSuccessful || response.code() != 200) {
-                Log.d(
-                    TAG,
-                    "syncLatestMessagesToDb: pullChatMessages returned no data or error, code=${response?.code()}"
-                )
-                return
-            }
-
-            val chatOverall = response.body() as? ChatOverall
-            val messagesJson = chatOverall?.ocs?.data
-
-            if (messagesJson.isNullOrEmpty()) {
-                Log.d(TAG, "syncLatestMessagesToDb: no new messages from server")
-                return
-            }
-
-            Log.d(TAG, "syncLatestMessagesToDb: received ${messagesJson.size} messages")
-            // appPreferences.setSyncLatestMessage(System.currentTimeMillis())
-
-            // Step 5: JSON -> Entity 并写入 DB
-            val messageEntities = messagesJson.map { it.asEntity(user.id!!) }
-            runBlocking {
-                db.chatMessagesDao().upsertChatMessages(messageEntities)
-            }
-
-            // Step 6: 创建/更新 ChatBlock
-            val oldestIdFromSync = messageEntities.minByOrNull { it.id }!!.id
-            val newestIdFromSync = messageEntities.maxByOrNull { it.id }!!.id
-
-            var oldestForBlock = oldestIdFromSync
-            var newestForBlock = newestIdFromSync
-
-            // 如果本地已有 block，合并范围
-            if (newestMessageIdFromDb > 0) {
-                // lookIntoFuture 模式，新消息在已知消息之后，oldest 取自已有 block 的 oldest
-                oldestForBlock = newestMessageIdFromDb
-            }
-
-            val newChatBlock = ChatBlockEntity(
-                internalConversationId = internalConversationId,
-                accountId = conversation.accountId,
-                token = roomToken,
-                threadId = null,
-                oldestMessageId = oldestForBlock,
-                newestMessageId = newestForBlock,
-                hasHistory = true
-            )
-            runBlocking {
-                db.chatBlocksDao().upsertChatBlock(newChatBlock)
-            }
-
-            // Step 7: 合并相邻的 ChatBlocks
-            updateBlocksIfNeeded(db.chatBlocksDao(), internalConversationId, newChatBlock)
-
-            Log.d(TAG, "syncLatestMessagesToDb: completed successfully for $roomToken")
-        } catch (e: Exception) {
-            Log.e(TAG, "syncLatestMessagesToDb: error", e)
-        }
+        // val user = signatureVerification.user ?: run {
+        //     Log.w(TAG, "syncLatestMessagesToDb: user is null, skip")
+        //     return
+        // }
+        // val roomToken = pushMessage.id ?: run {
+        //     Log.w(TAG, "syncLatestMessagesToDb: roomToken is null, skip")
+        //     return
+        // }
+        //
+        // try {
+        //     // 3s缓冲，拉取消息触发delete推送的消息
+        //     appPreferences.setSyncLatestMessage(System.currentTimeMillis())
+        //
+        //     // Step 1: 获取 Conversation 信息 (token, accountId, capabilities)
+        //     val conversation = chatNetworkDataSource?.getRoom(user, roomToken)
+        //         ?.blockingFirst()
+        //         ?: run {
+        //             Log.w(TAG, "syncLatestMessagesToDb: getRoom returned null")
+        //             return
+        //         }
+        //
+        //     val internalConversationId = "${user.id}@$roomToken"
+        //
+        //     // Step 2: 获取本地最新消息 ID
+        //     val db = TalkDatabase.getInstance(applicationContext)
+        //     val newestMessageIdFromDb = runBlocking {
+        //         db.chatBlocksDao().getNewestMessageIdFromChatBlocks(internalConversationId, null)
+        //     }
+        //     Log.d(TAG, "syncLatestMessagesToDb: newestMessageIdFromDb=$newestMessageIdFromDb for $internalConversationId")
+        //
+        //     // Step 3: 获取 Chat API 版本 (chat endpoint 用 v1，不是 conversation v4)
+        //     val spreedCapabilities = chatNetworkDataSource?.getCapabilities(user, roomToken)
+        //         ?.blockingFirst()
+        //     val chatApiVersion = if (spreedCapabilities != null) {
+        //         try {
+        //             ApiUtils.getChatApiVersion(spreedCapabilities, intArrayOf(ApiUtils.API_V1))
+        //         } catch (e: Exception) {
+        //             Log.w(TAG, "syncLatestMessagesToDb: getChatApiVersion failed, fallback to 1", e)
+        //             ApiUtils.API_V1
+        //         }
+        //     } else {
+        //         Log.w(TAG, "syncLatestMessagesToDb: capabilities null, fallback to API_V1")
+        //         ApiUtils.API_V1
+        //     }
+        //
+        //     /**
+        //      * Step 4: 构建请求参数 - 使用 lookIntoFuture=1, timeout=0 获取最新消息（非长轮询）
+        //      * lookIntoFuture=1，会拉去最新消息，同时也会发送delete notification消息，=0不会更新消息
+        //      */
+        //     val fieldMap = HashMap<String, Int>()
+        //     fieldMap["lookIntoFuture"] = 1
+        //     fieldMap["timeout"] = 0
+        //     fieldMap["setReadMarker"] = 0
+        //     fieldMap["limit"] = 100
+        //     if (newestMessageIdFromDb > 0) {
+        //         fieldMap["lastKnownMessageId"] = newestMessageIdFromDb.toInt()
+        //     }
+        //     fieldMap["includeLastKnown"] = if (newestMessageIdFromDb > 0) 1 else 0
+        //
+        //     val credentialsForSync = ApiUtils.getCredentials(user.username, user.token)
+        //     val urlForChatting = ApiUtils.getUrlForChat(chatApiVersion, user.baseUrl, roomToken)
+        //
+        //     // Step 5: 拉取消息
+        //     val response = chatNetworkDataSource?.pullChatMessages(credentialsForSync!!, urlForChatting, fieldMap)
+        //         ?.blockingFirst()
+        //
+        //     if (response == null || !response.isSuccessful || response.code() != 200) {
+        //         Log.d(
+        //             TAG,
+        //             "syncLatestMessagesToDb: pullChatMessages returned no data or error, code=${response?.code()}"
+        //         )
+        //         return
+        //     }
+        //
+        //     val chatOverall = response.body() as? ChatOverall
+        //     val messagesJson = chatOverall?.ocs?.data
+        //
+        //     if (messagesJson.isNullOrEmpty()) {
+        //         Log.d(TAG, "syncLatestMessagesToDb: no new messages from server")
+        //         return
+        //     }
+        //
+        //     Log.d(TAG, "syncLatestMessagesToDb: received ${messagesJson.size} messages")
+        //     // appPreferences.setSyncLatestMessage(System.currentTimeMillis())
+        //
+        //     // Step 5: JSON -> Entity 并写入 DB
+        //     val messageEntities = messagesJson.map { it.asEntity(user.id!!) }
+        //     runBlocking {
+        //         db.chatMessagesDao().upsertChatMessages(messageEntities)
+        //     }
+        //
+        //     // Step 6: 创建/更新 ChatBlock
+        //     val oldestIdFromSync = messageEntities.minByOrNull { it.id }!!.id
+        //     val newestIdFromSync = messageEntities.maxByOrNull { it.id }!!.id
+        //
+        //     var oldestForBlock = oldestIdFromSync
+        //     var newestForBlock = newestIdFromSync
+        //
+        //     // 如果本地已有 block，合并范围
+        //     if (newestMessageIdFromDb > 0) {
+        //         // lookIntoFuture 模式，新消息在已知消息之后，oldest 取自已有 block 的 oldest
+        //         oldestForBlock = newestMessageIdFromDb
+        //     }
+        //
+        //     val newChatBlock = ChatBlockEntity(
+        //         internalConversationId = internalConversationId,
+        //         accountId = conversation.accountId,
+        //         token = roomToken,
+        //         threadId = null,
+        //         oldestMessageId = oldestForBlock,
+        //         newestMessageId = newestForBlock,
+        //         hasHistory = true
+        //     )
+        //     runBlocking {
+        //         db.chatBlocksDao().upsertChatBlock(newChatBlock)
+        //     }
+        //
+        //     // Step 7: 合并相邻的 ChatBlocks
+        //     updateBlocksIfNeeded(db.chatBlocksDao(), internalConversationId, newChatBlock)
+        //
+        //     Log.d(TAG, "syncLatestMessagesToDb: completed successfully for $roomToken")
+        // } catch (e: Exception) {
+        //     Log.e(TAG, "syncLatestMessagesToDb: error", e)
+        // }
     }
 
     private fun updateBlocksIfNeeded(chatBlocksDao: ChatBlocksDao, internalConversationId: String, chatBlock: ChatBlockEntity) {
