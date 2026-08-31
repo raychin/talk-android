@@ -1054,4 +1054,12 @@ How to translate with transifex:
     <string name="ota_update_cancel">取消</string>
     <string name="ota_update_sure_">立即更新</string>
     <string name="ota_update_cancel_later">暫不更新</string>
+
+    <!-- Keep Alive Service -->
+    <string name="keep_alive_channel_name">連接服務</string>
+    <string name="keep_alive_channel_description">保持應用連接穩定</string>
+    <string name="keep_alive_setting_title">Talk 服務</string>
+    <string name="keep_alive_setting_description">保持後台連接，更快接收訊息</string>
+    <string name="keep_alive_notification_title">Talk 服務</string>
+    <string name="keep_alive_notification_text">點擊管理後台連接設定</string>
 </resources>

@@ -1062,4 +1062,8 @@ How to translate with transifex:
     <string name="ota_update_cancel">Cancel</string>
     <string name="ota_update_sure_">Update Now</string>
     <string name="ota_update_cancel_later">Not Now</string>
+
+    <!-- Push Keep Alive -->
+    <string name="keep_alive_setting_title">Push Keep-Alive</string>
+    <string name="keep_alive_setting_description">Maintain background connection for receiving push messages faster. When disabled, message delivery may be delayed when the app is in the background.</string>
 </resources>

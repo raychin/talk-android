@@ -126,6 +126,12 @@ public interface AppPreferences {
 
     void removeShowEcosystem();
 
+    boolean getIsKeepAliveEnabled();
+
+    void setKeepAliveEnabled(boolean value);
+
+    void removeKeepAliveEnabled();
+
     boolean isPhoneBookIntegrationEnabled();
 
     void setPhoneBookIntegration(boolean value);

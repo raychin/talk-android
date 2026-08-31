@@ -66,6 +66,7 @@ import com.nextcloud.talk.jobs.AccountRemovalWorker
 import com.nextcloud.talk.jobs.CapabilitiesWorker
 import com.nextcloud.talk.jobs.ContactAddressBookWorker
 import com.nextcloud.talk.jobs.clps.OtaUpgradeWorker
+import com.nextcloud.talk.services.KeepAliveManager
 import com.nextcloud.talk.jobs.ContactAddressBookWorker.Companion.checkPermission
 import com.nextcloud.talk.jobs.ContactAddressBookWorker.Companion.deleteAll
 import com.nextcloud.talk.models.json.generic.GenericOverall
@@ -92,6 +93,8 @@ import com.nextcloud.talk.utils.singletons.ApplicationWideMessageHolder
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -144,6 +147,7 @@ class SettingsActivity :
     private var profileQueryDisposable: Disposable? = null
     private var dbQueryDisposable: Disposable? = null
     private var openedByNotificationWarning: Boolean = false
+    private var openedByKeepAlive: Boolean = false
     private var isOnline: MutableState<Boolean> = mutableStateOf(false)
 
     @SuppressLint("StringFormatInvalid")
@@ -198,6 +202,7 @@ class SettingsActivity :
     private fun handleIntent(intent: Intent) {
         val extras: Bundle? = intent.extras
         openedByNotificationWarning = extras?.getBoolean(KEY_SCROLL_TO_NOTIFICATION_CATEGORY) ?: false
+        openedByKeepAlive = extras?.getBoolean("scroll_to_keep_alive", false) ?: false
     }
 
     override fun onResume() {
@@ -254,6 +259,10 @@ class SettingsActivity :
             scrollToNotificationCategory()
         }
 
+        if (openedByKeepAlive) {
+            scrollToKeepAliveSetting()
+        }
+
         setupCheckForUpdate()
     }
 
@@ -273,6 +282,17 @@ class SettingsActivity :
             val targetLocation = IntArray(2)
             binding.scrollView.getLocationOnScreen(scrollViewLocation)
             binding.settingsNotificationsCategory.getLocationOnScreen(targetLocation)
+            val offset = targetLocation[1] - scrollViewLocation[1]
+            binding.scrollView.scrollBy(0, offset)
+        }
+    }
+
+    private fun scrollToKeepAliveSetting() {
+        binding.scrollView.post {
+            val scrollViewLocation = IntArray(2)
+            val targetLocation = IntArray(2)
+            binding.scrollView.getLocationOnScreen(scrollViewLocation)
+            binding.settingsKeepAliveWrapper.getLocationOnScreen(targetLocation)
             val offset = targetLocation[1] - scrollViewLocation[1]
             binding.scrollView.scrollBy(0, offset)
         }
@@ -560,6 +580,30 @@ class SettingsActivity :
         }
     }
 
+    private fun setupKeepAliveSetting() {
+        binding.settingsKeepAliveSwitch.isChecked = appPreferences.isKeepAliveEnabled
+
+        viewThemeUtils.platform.colorCircularProgressBar(
+            binding.settingsKeepAliveProgress, ColorRole.PRIMARY
+        )
+
+        if (appPreferences.isKeepAliveEnabled) {
+            KeepAliveManager.start(this)
+        }
+
+        binding.settingsKeepAliveWrapper.setOnClickListener {
+            val newState = !appPreferences.isKeepAliveEnabled
+            appPreferences.setKeepAliveEnabled(newState)
+            binding.settingsKeepAliveSwitch.isChecked = newState
+
+            if (newState) {
+                KeepAliveManager.start(this)
+            } else {
+                KeepAliveManager.stop(this)
+            }
+        }
+    }
+
     private fun setupPrivacyUrl(isOnline: Boolean) {
         if (!TextUtils.isEmpty(resources!!.getString(R.string.nc_privacy_url)) && isOnline) {
             binding.settingsPrivacy.visibility = View.VISIBLE
@@ -793,7 +837,8 @@ class SettingsActivity :
                 settingsPhoneBookIntegrationSwitch,
                 settingsReadPrivacySwitch,
                 settingsTypingStatusSwitch,
-                settingsProxyUseCredentialsSwitch
+                settingsProxyUseCredentialsSwitch,
+                settingsKeepAliveSwitch
             ).forEach(viewThemeUtils.talk::colorSwitch)
         }
     }
@@ -999,6 +1044,8 @@ class SettingsActivity :
         } else {
             binding.settingsShowNotificationWarning.visibility = View.GONE
         }
+
+        setupKeepAliveSetting()
 
         // PM新需求要求暂时隐藏此功能入口 modify by ray on 2026/06/24
         // if (CapabilitiesUtil.isReadStatusAvailable(currentUser?.capabilities?.spreedCapability) &&

@@ -657,6 +657,22 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
             async { writeString(APP_LANGUAGE, language) }
         }
 
+    override fun getIsKeepAliveEnabled(): Boolean =
+        runBlocking {
+            async { readBoolean(KEEP_ALIVE_ENABLED).first() }
+        }.getCompleted()
+
+    override fun setKeepAliveEnabled(value: Boolean) =
+        runBlocking<Unit> {
+            async {
+                writeBoolean(KEEP_ALIVE_ENABLED, value)
+            }
+        }
+
+    override fun removeKeepAliveEnabled() {
+        setKeepAliveEnabled(false)
+    }
+
     // ====== 撤回消息缓存（重新编辑功能）======
     private val recalledMessagesPrefs: SharedPreferences by lazy {
         context.getSharedPreferences("recalled_messages_cache", Context.MODE_PRIVATE)
@@ -756,6 +772,7 @@ class AppPreferencesImpl(val context: Context) : AppPreferences {
         const val NOTIFICATION_SYNC_LATEST_MESSAGE = "notification_sync_latest_message"
 
         const val APP_LANGUAGE = "app_language"
+        const val KEEP_ALIVE_ENABLED = "keep_alive_enabled"
 
         private fun String.convertStringToArray(): Array<Float> {
             var varString = this
