@@ -31,6 +31,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.emoji2.text.EmojiCompat
@@ -802,7 +803,9 @@ class NotificationWorker(context: Context, workerParams: WorkerParameters) : Wor
             } else {
                 ApiUtils.getUrlForGuestAvatar(baseUrl!!, notificationUser.name, false)
             }
-            person.setIcon(loadAvatarSync(avatarUrl, context!!))
+            val avatarIcon = loadAvatarSync(avatarUrl, context!!)
+                ?: IconCompat.createWithResource(context!!, R.mipmap.ic_launcher)
+            person.setIcon(avatarIcon)
         }
         notificationBuilder.setStyle(getStyle(person.build(), style))
     }
